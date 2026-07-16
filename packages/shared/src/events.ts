@@ -22,8 +22,14 @@ export type AgentSSEEvent =
   | { type: "hunk_delta"; proposalId: string; delta: string }
   /** A proposal is fully generated and anchored; Accept may now enable. */
   | { type: "hunk_complete"; proposal: DiffProposal }
-  /** A hunk was blocked (e.g. citation verification failed). */
-  | { type: "hunk_blocked"; hunkIndex: number; reason: string; citations: Citation[] }
+  /**
+   * A hunk was blocked (e.g. citation verification failed) or dropped (e.g.
+   * out of scope). proposalId lets the client discard any dangling
+   * client-side streaming preview it had already built for this hunk via
+   * hunk_delta — without this, a blocked hunk's live preview would stay
+   * stuck in "streaming" forever since hunk_complete never arrives for it.
+   */
+  | { type: "hunk_blocked"; proposalId: string; hunkIndex: number; reason: string; citations: Citation[] }
   /** Viki needs a fact instead of inventing it. */
   | { type: "clarifying_question"; question: string }
   | { type: "run_complete"; agentRunId: string }

@@ -64,7 +64,7 @@ export function AgentProvider({
   children: ReactNode;
 }) {
   const { editor } = useEditorInstance();
-  const { upsertLocal, setActive } = useStaging();
+  const { upsertLocal, discardLocal, setActive } = useStaging();
 
   const [running, setRunning] = useState(false);
   const [runId, setRunId] = useState<string | null>(null);
@@ -137,6 +137,11 @@ export function AgentProvider({
             ...b,
             { hunkIndex: evt.hunkIndex, reason: evt.reason, citations: evt.citations },
           ]);
+          // hunk_complete will never arrive for this proposalId — discard its
+          // streaming preview so it doesn't sit stuck forever with a dead
+          // Accept button. The block reason above is the permanent record.
+          discardLocal(evt.proposalId);
+          bufferRef.current.delete(evt.proposalId);
           break;
         case "clarifying_question":
           setClarifying(evt.question);
@@ -162,7 +167,7 @@ export function AgentProvider({
           break;
       }
     },
-    [documentId, upsertLocal],
+    [documentId, upsertLocal, discardLocal],
   );
 
   const openStream = useCallback(

@@ -101,6 +101,26 @@ export async function runAgent(run: ActiveRun): Promise<void> {
 
   const scopedText = selectionBounds ? snapshot.slice(selectionBounds.start, selectionBounds.end) : snapshot;
 
+  // This agent locates and replaces EXISTING text — it cannot draft a whole
+  // document from a blank page (there is nothing to locate). Rather than let
+  // Viki improvise oldText that doesn't exist and produce a pile of confusing
+  // blocked/dangling hunks, redirect up front to the tools built for this:
+  // "Draft with Viki" (chat intake) or Templates → Generate.
+  if (scope === "document" && scopedText.trim().length === 0) {
+    // Not a clarifying question — there's nothing to "answer" that would let
+    // this run usefully resume, so don't invite that interaction. Just
+    // explain clearly and finish; the intent line persists on screen.
+    emit(runId, {
+      type: "intent",
+      text:
+        "This document is empty — I make targeted edits to existing text, so there's nothing here yet to locate and revise. Use \"Draft with Viki\" or generate from a template to draft a new document from scratch, then come back here for edits.",
+    });
+    emit(runId, { type: "run_state", state: "awaiting_review" });
+    await audit(documentId, "agent_run_completed", run, { agentRunId: runId, detail: { hunks: 0, redirectedEmptyDoc: true } });
+    emit(runId, { type: "run_complete", agentRunId: runId });
+    return;
+  }
+
   const userContent =
     `DOCUMENT${scope === "selection" ? " (selection only — you may only edit within this text)" : ""}:\n"""\n${scopedText}\n"""\n\n` +
     `INSTRUCTION: ${instruction}`;
@@ -231,7 +251,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
         const verification = await verifyHunkCitationsFull(rawCitations, h.newText, run.userId);
         if (!verification.ok) {
           await audit(documentId, "citation_blocked", run, { agentRunId: runId, detail: { hunkIndex: k, reason: verification.blockedReason ?? "citation failed" } });
-          emit(runId, { type: "hunk_blocked", hunkIndex: k, reason: verification.blockedReason ?? "Citation verification failed", citations: verification.citations });
+          emit(runId, { type: "hunk_blocked", proposalId: pid, hunkIndex: k, reason: verification.blockedReason ?? "Citation verification failed", citations: verification.citations });
           continue;
         }
 
@@ -239,20 +259,36 @@ export async function runAgent(run: ActiveRun): Promise<void> {
         const flat = flattenFragment(getFragment(doc));
         const located = locateText(flat.text, h.oldText, h.contextBefore, h.contextAfter);
         if (!located) {
-          emit(runId, { type: "hunk_blocked", hunkIndex: k, reason: "Could not locate the target text unambiguously in the current document.", citations: verification.citations });
+          emit(runId, {
+            type: "hunk_blocked",
+            proposalId: pid,
+            hunkIndex: k,
+            reason:
+              flat.text.trim().length === 0
+                ? "The document is empty, so there is no existing text to locate and edit. Use \"Draft with Viki\" or generate from a template to create a new document from scratch."
+                : "Could not locate the target text unambiguously in the current document.",
+            citations: verification.citations,
+          });
           continue;
         }
 
         // Scope enforcement: selection runs may only stage inside the selection.
         if (selectionBounds && (located.start < selectionBounds.start || located.end > selectionBounds.end)) {
           console.warn(`[viki] dropped out-of-scope hunk k=${k} range=${located.start}-${located.end} bounds=${selectionBounds.start}-${selectionBounds.end}`);
+          emit(runId, {
+            type: "hunk_blocked",
+            proposalId: pid,
+            hunkIndex: k,
+            reason: "This change falls outside the selection you scoped the run to, so it was dropped.",
+            citations: verification.citations,
+          });
           continue;
         }
 
         const anchorStart = anchorAtOffset(flat, located.start, 1);
         const anchorEnd = anchorAtOffset(flat, located.end, -1);
         if (!anchorStart || !anchorEnd) {
-          emit(runId, { type: "hunk_blocked", hunkIndex: k, reason: "Failed to create stable anchors.", citations: verification.citations });
+          emit(runId, { type: "hunk_blocked", proposalId: pid, hunkIndex: k, reason: "Failed to create stable anchors.", citations: verification.citations });
           continue;
         }
 

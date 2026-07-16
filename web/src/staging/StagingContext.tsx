@@ -33,6 +33,8 @@ interface StagingState {
   editAccept: (id: string, editedText: string) => Promise<void>;
   /** Streaming preview upsert (from the agent run before it hits the Y.Map). */
   upsertLocal: (p: DiffProposal) => void;
+  /** Discard a streaming-only preview that got blocked and will never complete. */
+  discardLocal: (id: string) => void;
   /** Pending action id, for disabling buttons mid-request. */
   pendingId: string | null;
   /** Force a resync against the server (manual refresh control). */
@@ -81,6 +83,20 @@ export function StagingProvider({
     },
     [upsert],
   );
+
+  const discardLocal = useCallback((id: string) => {
+    // Only ever removes a client-only "streaming" preview that turned out to
+    // be blocked server-side (hunk_complete will never arrive for it, so it
+    // would otherwise sit stuck in "streaming" forever). Never removes a
+    // proposal the server has actually persisted/broadcast — invariant #3
+    // (rejected proposals stay visible) only applies to real, staged
+    // proposals, not to a preview that was never staged in the first place.
+    const existing = store.current.get(id);
+    if (existing && existing.status === "streaming") {
+      store.current.delete(id);
+      force();
+    }
+  }, []);
 
   // Initial load + live Y.Map subscription.
   useEffect(() => {
@@ -196,11 +212,12 @@ export function StagingProvider({
       reject,
       editAccept,
       upsertLocal,
+      discardLocal,
       pendingId,
       refresh,
       refreshing,
     }),
-    [proposals, activeId, accept, reject, editAccept, upsertLocal, pendingId, refresh, refreshing],
+    [proposals, activeId, accept, reject, editAccept, upsertLocal, discardLocal, pendingId, refresh, refreshing],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
