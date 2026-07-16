@@ -92,4 +92,6 @@ Architecture map:
 - `server/src/routes` — auth, documents/members, proposals, agent-runs (SSE), versions, audit.
 - `web/src` — editor (Tiptap+Yjs), staging (feed + decorations), agent (streaming UI), versions, audit.
 
-Known seams (need real inputs before production): `DATABASE_URL`/`ANTHROPIC_API_KEY` credentials; `server/src/agent/citations.ts` is a stand-in registry — replace with Docket v1's verification; comments use the minimal mark-based implementation (no Tiptap Pro license).
+Known seams (need real inputs before production): `DATABASE_URL`/`ANTHROPIC_API_KEY` credentials; comments use the minimal mark-based implementation (no Tiptap Pro license).
+
+Citation verification (`server/src/agent/citations.ts`) is aligned to the current Indian statutory framework — ~30 civil/commercial/tax/procedure statutes with section-range checks, plus rejection-and-redirect for the criminal codes repealed on 1 July 2024 (IPC→BNS 2023, CrPC→BNSS 2023, Evidence Act→BSA 2023). It remains a registry-based sanity check, not a live section-text lookup — the production port seam is to defer to India Code (indiacode.nic.in) or Docket v1's verifier for actual provision text.

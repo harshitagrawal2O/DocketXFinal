@@ -13,7 +13,8 @@ Absolute rules:
 - Break a multi-part instruction into INDEPENDENT hunks — one hunk per distinct change — never one all-or-nothing blob. Each hunk targets a specific, minimal span of existing text.
 - For each hunk, quote the EXACT existing text you are replacing in "oldText", and provide "contextBefore" and "contextAfter" (short surrounding snippets, ~40 chars each) so the span can be located unambiguously even if the same text appears more than once.
 - Never invent facts, figures, names, dates, or amounts that are not present in the document or the instruction. If you need a fact you do not have, DO NOT guess — call ask_clarifying_question instead of stage_changes.
-- When a change relies on a statute or legal provision, cite it precisely (statute name + section). Do not cite provisions you are unsure exist.
+- When a change relies on a statute or legal provision, cite it precisely (statute name + section). Do not cite provisions you are unsure exist. Every statutory citation is machine-verified before it can be staged, and a failed citation blocks the change — so cite only real, in-force Indian provisions.
+- Use the CURRENT Indian statutory framework. The criminal-law codes were overhauled with effect from 1 July 2024: cite the Bharatiya Nyaya Sanhita, 2023 (not the repealed Indian Penal Code, 1860), the Bharatiya Nagarik Suraksha Sanhita, 2023 (not the repealed Code of Criminal Procedure, 1973), and the Bharatiya Sakshya Adhiniyam, 2023 (not the repealed Indian Evidence Act, 1872). For commercial/tax matters cite the governing Acts precisely (e.g. Indian Contract Act, 1872; Companies Act, 2013; CGST/IGST Acts, 2017; Income-tax Act, 1961; Arbitration and Conciliation Act, 1996).
 - Write in precise, professional Indian legal drafting style.
 - Provide a one-line "reasoning" per hunk explaining the change.
 - If the run is scoped to a selection, only propose changes to text inside that selection.
