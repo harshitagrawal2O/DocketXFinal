@@ -1,0 +1,113 @@
+// Docket v2 data model. Neon Postgres + Prisma (fixed stack).
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String            @id @default(cuid())
+  email        String            @unique
+  name         String
+  passwordHash String?
+  color        String            @default("#4f46e5")
+  createdAt    DateTime          @default(now())
+
+  memberships  DocumentMember[]
+  documents    Document[]        @relation("DocumentOwner")
+  auditEvents  AuditEvent[]
+  versions     Version[]
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  title     String
+  kind      String   @default("contract") // contract | opinion | filing | memo
+  ownerId   String
+  owner     User     @relation("DocumentOwner", fields: [ownerId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members   DocumentMember[]
+  proposals DiffProposal[]
+  audit     AuditEvent[]
+  versions  Version[]
+}
+
+model DocumentMember {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  role       String // owner | editor | commenter | viewer
+  createdAt  DateTime @default(now())
+
+  @@unique([documentId, userId])
+}
+
+model DiffProposal {
+  id               String    @id @default(cuid())
+  documentId       String
+  document         Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  agentRunId       String
+
+  // Serialized Yjs RELATIVE positions (base64). Never absolute offsets.
+  anchorStart      String
+  anchorEnd        String
+
+  oldText          String
+  newText          String
+  editedText       String?
+
+  reasoning        String
+  citations        Json      @default("[]")
+
+  status           String    @default("staged")
+  hunkIndex        Int       @default(0)
+
+  createdAt        DateTime  @default(now())
+  resolvedAt       DateTime?
+  resolvedByUserId String?
+  resolvedByName   String?
+
+  @@index([documentId, status])
+  @@index([agentRunId])
+}
+
+// Append-only. NEVER stores document contents — only non-privileged metadata.
+model AuditEvent {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  type       String
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  userName   String?
+  proposalId String?
+  agentRunId String?
+  detail     Json?
+  createdAt  DateTime @default(now())
+
+  @@index([documentId, createdAt])
+}
+
+// Named Yjs snapshots (gc disabled so history survives). Rollback creates a new version.
+model Version {
+  id           String   @id @default(cuid())
+  documentId   String
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  name         String
+  auto         Boolean  @default(false)
+  snapshot     Bytes // encoded Yjs snapshot (Y.encodeSnapshot)
+  createdByUserId String?
+  createdBy    User?    @relation(fields: [createdByUserId], references: [id])
+  createdByName String?
+  createdAt    DateTime @default(now())
+
+  @@index([documentId, createdAt])
+}

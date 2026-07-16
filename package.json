@@ -1,0 +1,23 @@
+{
+  "name": "docket-v2",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Agentic collaborative legal-document platform (Docket v2)",
+  "workspaces": [
+    "packages/shared",
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,magenta \"npm run dev -w server\" \"npm run dev -w web\"",
+    "build": "npm run build -w packages/shared && npm run build -w server && npm run build -w web",
+    "test": "npm run test -w server && npm run test -w web",
+    "db:generate": "npm run db:generate -w server",
+    "db:migrate": "npm run db:migrate -w server",
+    "db:seed": "npm run db:seed -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.6.3"
+  }
+}
