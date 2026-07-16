@@ -29,6 +29,12 @@ interface Props {
   initialHtml: string | null;
 }
 
+/** Shared classes for a grouped toolbar icon button (Bold/Italic/Heading/List). */
+const TOOLBAR_ICON_BTN =
+  "group rounded p-2 transition-colors hover:bg-surface-container-low disabled:pointer-events-none disabled:opacity-40";
+const TOOLBAR_ICON =
+  "material-symbols-outlined text-[20px] text-on-surface-variant transition-colors group-hover:text-primary group-data-[active=true]:text-primary";
+
 export function Editor({
   ydoc,
   provider,
@@ -208,107 +214,183 @@ export function Editor({
   const hasSelection = editor ? editor.state.selection.from !== editor.state.selection.to : false;
 
   if (!editor) {
-    return <div className="intent-line editor-loading">Opening the document…</div>;
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <p className="italic text-on-surface-variant">Opening the document…</p>
+      </div>
+    );
   }
 
   return (
-    <div className="editor-wrap">
-      <div className="editor-toolbar">
-        <button
-          className="btn btn-sm"
-          disabled={!editable}
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          data-active={editor.isActive("bold")}
-        >
-          Bold
-        </button>
-        <button
-          className="btn btn-sm"
-          disabled={!editable}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          data-active={editor.isActive("italic")}
-        >
-          Italic
-        </button>
-        <button
-          className="btn btn-sm"
-          disabled={!editable}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          data-active={editor.isActive("heading", { level: 2 })}
-        >
-          H2
-        </button>
-        <button
-          className="btn btn-sm"
-          disabled={!editable}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          data-active={editor.isActive("bulletList")}
-        >
-          • List
-        </button>
-        <div className="toolbar-spacer" />
-        {can(role, "comment") && (
-          <button
-            className="btn btn-sm"
-            disabled={!hasSelection}
-            title={hasSelection ? "Comment on selection" : "Select text to comment"}
-            onClick={() => setShowCommentBox((v) => !v)}
-          >
-            💬 Comment
-          </button>
-        )}
-        <span className="toolbar-divider" />
-        <button className="btn btn-sm" onClick={handlePrint} title="Print or Save as PDF">
-          🖨 Print
-        </button>
-        <button
-          className="btn btn-sm"
-          onClick={() => void handleDownloadDocx()}
-          disabled={exporting}
-          title="Download as Word (.docx)"
-        >
-          {exporting ? "Preparing…" : "⬇ .docx"}
-        </button>
-        <button
-          className="btn btn-sm"
-          onClick={handleDownloadHtml}
-          title="Download as HTML"
-        >
-          ⬇ .html
-        </button>
-      </div>
-
-      {exportError && <div className="error-line">{exportError}</div>}
-
-      {showCommentBox && (
-        <div className="comment-compose">
-          <textarea
-            autoFocus
-            placeholder="Add a comment on the selected text…"
-            value={commentDraft}
-            onChange={(e) => setCommentDraft(e.target.value)}
-          />
-          <div className="comment-compose-actions">
-            <button className="btn btn-sm" onClick={() => setShowCommentBox(false)}>
-              Cancel
-            </button>
-            <button className="btn btn-primary btn-sm" onClick={addComment}>
-              Comment
+    <>
+      <div className="w-full max-w-[850px] px-4 py-8 md:px-0">
+        {/* Restrained floating toolbar */}
+        <div className="sticky top-0 z-20 mb-6 flex items-center justify-between gap-2 rounded-lg border border-outline-variant/50 bg-surface-container-lowest/80 p-2 ink-shadow backdrop-blur-md">
+          <div className="flex items-center gap-1">
+            <div className="mr-2 flex items-center gap-1 border-r border-outline-variant pr-2">
+              <button
+                type="button"
+                className={TOOLBAR_ICON_BTN}
+                disabled={!editable}
+                data-active={editor.isActive("bold")}
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                title="Bold"
+              >
+                <span className={TOOLBAR_ICON}>format_bold</span>
+              </button>
+              <button
+                type="button"
+                className={TOOLBAR_ICON_BTN}
+                disabled={!editable}
+                data-active={editor.isActive("italic")}
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                title="Italic"
+              >
+                <span className={TOOLBAR_ICON}>format_italic</span>
+              </button>
+            </div>
+            <div className="mr-2 flex items-center border-r border-outline-variant pr-2">
+              <button
+                type="button"
+                className={TOOLBAR_ICON_BTN}
+                disabled={!editable}
+                data-active={editor.isActive("heading", { level: 2 })}
+                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                title="Heading 2"
+              >
+                <span
+                  className={`px-1 text-label-md font-label-md text-on-surface-variant transition-colors group-hover:text-primary group-data-[active=true]:text-primary`}
+                >
+                  H2
+                </span>
+              </button>
+            </div>
+            <button
+              type="button"
+              className={TOOLBAR_ICON_BTN}
+              disabled={!editable}
+              data-active={editor.isActive("bulletList")}
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              title="Bulleted list"
+            >
+              <span className={TOOLBAR_ICON}>format_list_bulleted</span>
             </button>
           </div>
-        </div>
-      )}
 
-      <EditorContent editor={editor} className="editor-surface" />
+          {can(role, "comment") && (
+            <button
+              type="button"
+              className="flex items-center gap-1 whitespace-nowrap rounded border border-secondary/30 bg-transparent px-4 py-2 text-label-md font-label-md text-secondary transition-all hover:bg-secondary/5 disabled:pointer-events-none disabled:opacity-40"
+              disabled={!hasSelection}
+              title={hasSelection ? "Comment on selection" : "Select text to comment"}
+              onClick={() => setShowCommentBox((v) => !v)}
+            >
+              <span className="material-symbols-outlined text-[18px]">add_comment</span>
+              Comment
+            </button>
+          )}
+        </div>
+
+        {exportError && (
+          <div className="mb-4 rounded border border-error/30 bg-error-container px-3 py-2 text-label-md text-on-error-container">
+            {exportError}
+          </div>
+        )}
+
+        {showCommentBox && (
+          <div className="mb-6 rounded-lg border border-outline-variant/60 bg-surface-container-lowest p-stack-md ink-shadow">
+            <textarea
+              autoFocus
+              placeholder="Add a comment on the selected text…"
+              value={commentDraft}
+              onChange={(e) => setCommentDraft(e.target.value)}
+              className="min-h-[80px] w-full resize-none rounded border border-outline-variant bg-surface p-2 text-body-md text-on-surface focus:border-secondary focus:outline-none"
+            />
+            <div className="mt-2 flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded border border-outline-variant px-4 py-2 text-label-md font-label-md text-on-surface-variant transition-colors hover:bg-surface-container-high"
+                onClick={() => setShowCommentBox(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded bg-primary px-4 py-2 text-label-md font-label-md text-on-primary transition-opacity hover:opacity-90"
+                onClick={addComment}
+              >
+                Comment
+              </button>
+            </div>
+          </div>
+        )}
+
+        <EditorContent editor={editor} className="pb-24" />
+      </div>
+
+      {/* Floating pill toolbar: Print / Download .docx / Download .html.
+          Kept clear of the mobile bottom nav (DocumentWorkspace) via the
+          responsive bottom offset. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-24 z-30 flex justify-center md:bottom-6">
+        <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-primary bg-opacity-95 px-2 py-1.5 text-on-primary shadow-2xl backdrop-blur-md">
+          <button
+            type="button"
+            className="rounded-full p-2.5 transition-colors hover:bg-on-primary/10"
+            onClick={handlePrint}
+            title="Print or Save as PDF"
+          >
+            <span className="material-symbols-outlined text-[20px]">print</span>
+          </button>
+          <div className="h-5 w-px bg-on-primary/20" />
+          <button
+            type="button"
+            className="rounded-full p-2.5 transition-colors hover:bg-on-primary/10 disabled:opacity-50"
+            onClick={() => void handleDownloadDocx()}
+            disabled={exporting}
+            title={exporting ? "Preparing…" : "Download as Word (.docx)"}
+          >
+            <span className={`material-symbols-outlined text-[20px] ${exporting ? "animate-spin" : ""}`}>
+              {exporting ? "progress_activity" : "description"}
+            </span>
+          </button>
+          <div className="h-5 w-px bg-on-primary/20" />
+          <button
+            type="button"
+            className="rounded-full p-2.5 transition-colors hover:bg-on-primary/10"
+            onClick={handleDownloadHtml}
+            title="Download as HTML"
+          >
+            <span className="material-symbols-outlined text-[20px]">code</span>
+          </button>
+        </div>
+      </div>
 
       {/* Clean print view: hidden on screen, revealed only by the print
           stylesheet (@media print) so window.print() / Save-as-PDF is tidy. */}
       {printHtml !== null && (
         <div className="print-doc" aria-hidden="true">
+          <header className="print-doc-letterhead">
+            <div>
+              <p className="print-doc-privileged">Privileged &amp; Confidential</p>
+            </div>
+            <div className="print-doc-meta">
+              <p>Prepared by {user.name}</p>
+              <p>
+                {new Date().toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+          </header>
           <h1 className="print-doc-title">{title}</h1>
           <div className="print-doc-body" dangerouslySetInnerHTML={{ __html: printHtml }} />
+          <footer className="print-doc-signature">
+            <p>Exported via Docket by {user.name}.</p>
+          </footer>
         </div>
       )}
-    </div>
+    </>
   );
 }

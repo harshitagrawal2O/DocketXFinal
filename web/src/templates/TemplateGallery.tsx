@@ -95,62 +95,93 @@ export function TemplateGallery({
   const mine = filtered.filter((t) => !isPreset(t));
 
   return (
-    <div className="templates-view">
-      <header className="templates-head">
+    <div className="max-w-container-max-width mx-auto px-margin-page py-stack-lg">
+      {/* Header */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-stack-md mb-stack-lg border-b border-outline-variant pb-stack-md">
         <div>
-          <h2>Templates</h2>
-          <p className="muted">
+          <h1 className="font-headline-display text-headline-display text-primary italic mb-2">
+            Templates
+          </h1>
+          <p className="text-on-surface-variant font-body-md max-w-xl">
             Start a case-specific document from a reusable, fillable skeleton.
           </p>
         </div>
-        <div className="templates-head-actions">
-          <button className="btn viki-cta" onClick={onDraftWithViki}>
-            ✨ Draft with Viki
-          </button>
-          <button className="btn btn-sm" onClick={onUpload}>
+        <div className="flex items-center gap-stack-sm shrink-0">
+          <button
+            onClick={onUpload}
+            className="px-gutter py-2.5 border border-outline-variant text-on-surface-variant rounded-lg font-label-md text-label-md hover:bg-surface-container-high transition-all"
+          >
             Upload / draft
           </button>
-          <button className="btn btn-primary" onClick={onCreate}>
-            ＋ Create Template
+          <button
+            onClick={onCreate}
+            className="bg-secondary text-white hover:bg-[#5b421c] hover:-translate-y-0.5 px-stack-lg py-3 rounded-full flex items-center gap-2 font-label-md text-label-md transition-all shadow-sm"
+          >
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              add
+            </span>
+            New Template
           </button>
         </div>
       </header>
 
-      <button className="viki-banner" onClick={onDraftWithViki}>
-        <span className="viki-banner-icon" aria-hidden="true">
-          ✨
-        </span>
-        <span className="viki-banner-text">
-          <strong>Not sure which template?</strong>
-          <span className="muted">
-            Chat with Viki — describe your matter and she'll draft the whole document.
-          </span>
-        </span>
-        <span className="viki-banner-arrow" aria-hidden="true">
-          →
+      {/* Draft with Viki promo banner */}
+      <button
+        onClick={onDraftWithViki}
+        className="w-full text-left rounded-xl p-stack-lg mb-stack-lg flex flex-col md:flex-row items-center justify-between gap-stack-md text-on-primary bg-gradient-to-br from-primary to-primary-container relative overflow-hidden hover:opacity-95 transition-opacity"
+      >
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="material-symbols-outlined text-secondary-fixed" aria-hidden="true">
+              auto_awesome
+            </span>
+            <h3 className="font-headline-md text-headline-md italic">Draft with Viki</h3>
+          </div>
+          <p className="text-on-primary-container max-w-lg font-body-md">
+            Describe your requirements and let Viki generate a custom legal template based on
+            your firm's historical filings and latest judicial precedents.
+          </p>
+        </div>
+        <span className="relative z-10 shrink-0 px-8 py-3 bg-on-primary text-primary font-label-md text-label-md rounded-full shadow-lg uppercase tracking-wide">
+          Start generating
         </span>
       </button>
 
-      <div className="gallery-controls">
-        <select
-          className="gallery-select"
-          value={category}
-          onChange={(e) => setCategory(e.target.value as TemplateCategory | "all")}
-          aria-label="Filter by category"
-        >
-          <option value="all">All categories</option>
-          {categoriesPresent.map((c) => (
-            <option key={c} value={c}>
-              {CATEGORY_LABEL[c]}
-            </option>
-          ))}
-        </select>
+      {/* Controls row */}
+      <div className="flex flex-wrap items-center gap-stack-md mb-stack-lg">
+        <div className="relative min-w-[180px]">
+          <select
+            className="w-full appearance-none pl-4 pr-9 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-label-md font-label-md text-on-surface cursor-pointer"
+            value={category}
+            onChange={(e) => setCategory(e.target.value as TemplateCategory | "all")}
+            aria-label="Filter by category"
+          >
+            <option value="all">All categories</option>
+            {categoriesPresent.map((c) => (
+              <option key={c} value={c}>
+                {CATEGORY_LABEL[c]}
+              </option>
+            ))}
+          </select>
+          <span
+            className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-lg"
+            aria-hidden="true"
+          >
+            expand_more
+          </span>
+        </div>
 
-        <div className="seg-control" role="tablist" aria-label="Source">
+        <div className="flex bg-surface-container-high p-1 rounded-full border border-outline-variant" role="tablist" aria-label="Source">
           {(["mine", "presets", "all"] as SourceFilter[]).map((s) => (
             <button
               key={s}
-              className={source === s ? "active" : ""}
+              role="tab"
+              aria-selected={source === s}
+              className={`px-4 py-1.5 rounded-full text-label-sm font-label-md transition-all ${
+                source === s
+                  ? "bg-primary text-on-primary"
+                  : "text-on-surface-variant hover:bg-surface-container-highest"
+              }`}
               onClick={() => setSource(s)}
             >
               {s === "mine" ? "Mine" : s === "presets" ? "Presets" : "All"}
@@ -158,68 +189,102 @@ export function TemplateGallery({
           ))}
         </div>
 
-        <select
-          className="gallery-select"
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-          aria-label="Sort templates"
-        >
-          {(Object.keys(SORT_LABEL) as SortKey[]).map((k) => (
-            <option key={k} value={k}>
-              {SORT_LABEL[k]}
-            </option>
-          ))}
-        </select>
+        <div className="relative min-w-[160px]">
+          <select
+            className="w-full appearance-none pl-4 pr-9 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-label-md font-label-md text-on-surface cursor-pointer"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            aria-label="Sort templates"
+          >
+            {(Object.keys(SORT_LABEL) as SortKey[]).map((k) => (
+              <option key={k} value={k}>
+                {SORT_LABEL[k]}
+              </option>
+            ))}
+          </select>
+          <span
+            className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-lg"
+            aria-hidden="true"
+          >
+            expand_more
+          </span>
+        </div>
 
-        <input
-          className="gallery-search"
-          type="search"
-          placeholder="Search templates…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label="Search templates"
-        />
+        <div className="flex-1 min-w-[220px] relative">
+          <span
+            className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg"
+            aria-hidden="true"
+          >
+            search
+          </span>
+          <input
+            className="w-full pl-10 pr-4 py-2 bg-transparent border-b border-outline-variant focus:border-primary focus:outline-none transition-colors placeholder:text-outline font-body-md text-on-surface"
+            type="search"
+            placeholder="Search by statute, clause, or title…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search templates"
+          />
+        </div>
       </div>
 
       {templates === null && !error && (
-        <div className="intent-line">Loading the template library…</div>
+        <div className="text-on-surface-variant font-body-md italic py-stack-lg">
+          Loading the template library…
+        </div>
       )}
-      {error && <div className="error-line">{error}</div>}
+      {error && (
+        <div className="bg-error-container text-on-error-container rounded-lg px-4 py-3 font-body-md mb-stack-md">
+          {error}
+        </div>
+      )}
       {templates && filtered.length === 0 && !error && (
-        <div className="empty-state">
-          <p className="empty-title">No templates match</p>
-          <p className="muted">
+        <div className="text-center py-stack-lg border-2 border-dashed border-outline-variant rounded-xl bg-surface-container-low">
+          <p className="font-headline-md text-headline-md text-primary mb-2">No templates match</p>
+          <p className="text-on-surface-variant font-body-md">
             Try a different filter, or create a template from scratch or one of your firm's
             documents.
           </p>
         </div>
       )}
 
-      {mine.length > 0 && (
-        <section className="template-group">
-          <h3 className="template-group-title">
-            Your Templates <span className="group-count">{mine.length}</span>
-          </h3>
-          <div className="template-grid">
-            {mine.map((t) => (
-              <TemplateCard key={t.id} t={t} onOpen={onOpenTemplate} />
-            ))}
-          </div>
-        </section>
-      )}
+      <div className="space-y-stack-lg">
+        {presets.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between border-b border-outline-variant/60 pb-2 mb-stack-md">
+              <h2 className="font-label-md text-label-md tracking-widest text-outline uppercase">
+                System Presets
+              </h2>
+              <span className="text-label-sm text-outline">
+                {presets.length} TEMPLATE{presets.length === 1 ? "" : "S"}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+              {presets.map((t) => (
+                <TemplateCard key={t.id} t={t} onOpen={onOpenTemplate} />
+              ))}
+            </div>
+          </section>
+        )}
 
-      {presets.length > 0 && (
-        <section className="template-group">
-          <h3 className="template-group-title">
-            System Presets <span className="group-count">{presets.length}</span>
-          </h3>
-          <div className="template-grid">
-            {presets.map((t) => (
-              <TemplateCard key={t.id} t={t} onOpen={onOpenTemplate} />
-            ))}
-          </div>
-        </section>
-      )}
+        {mine.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between border-b border-outline-variant/60 pb-2 mb-stack-md">
+              <h2 className="font-label-md text-label-md tracking-widest text-outline uppercase">
+                Your Templates
+              </h2>
+              <span className="text-label-sm text-outline">
+                {mine.length} TEMPLATE{mine.length === 1 ? "" : "S"}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+              {mine.map((t) => (
+                <TemplateCard key={t.id} t={t} onOpen={onOpenTemplate} />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
     </div>
   );
 }
@@ -233,21 +298,36 @@ function TemplateCard({
 }) {
   const preset = isPreset(t);
   return (
-    <button className="template-card" onClick={() => onOpen(t.id)}>
-      <div className="template-card-head">
-        <span className="template-card-title">{t.title}</span>
-        <span className={`tpl-badge ${preset ? "tpl-badge--builtin" : "tpl-badge--custom"}`}>
+    <button
+      onClick={() => onOpen(t.id)}
+      className="p-stack-md border border-outline-variant bg-white hover:bg-surface-container transition-all cursor-pointer flex flex-col h-full text-left rounded-sm"
+    >
+      <div className="flex justify-between items-start gap-2 mb-4">
+        <span className="px-2 py-1 bg-surface-container-high rounded text-[10px] font-label-md text-secondary uppercase tracking-tighter">
+          {CATEGORY_LABEL[t.category]}
+        </span>
+        <span
+          className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-label-md uppercase tracking-tight ${
+            preset
+              ? "bg-secondary-container text-on-secondary-container"
+              : "bg-surface-container-highest text-on-surface-variant"
+          }`}
+        >
           {preset ? "⭐ Preset" : "Custom"}
         </span>
       </div>
-      <div className="template-card-badges">
-        <span className="tpl-chip-sm">{CATEGORY_LABEL[t.category]}</span>
-        <span className="tpl-chip-sm">{t.kind}</span>
+      <h3 className="font-headline-md text-headline-md text-primary mb-2">{t.title}</h3>
+      <p className="text-on-surface-variant text-label-md font-body-md flex-1 line-clamp-2">
+        {t.description}
+      </p>
+      <div className="mt-stack-md pt-stack-md border-t border-outline-variant/30 flex justify-between items-center text-outline">
+        <span className="text-[11px] font-label-md uppercase tracking-wide">
+          {t.variableCount} field{t.variableCount === 1 ? "" : "s"}
+        </span>
+        <span className="material-symbols-outlined text-sm" aria-hidden="true">
+          {preset ? "open_in_new" : "edit"}
+        </span>
       </div>
-      <p className="template-card-desc muted">{t.description}</p>
-      <span className="template-card-meta muted">
-        {t.variableCount} field{t.variableCount === 1 ? "" : "s"}
-      </span>
     </button>
   );
 }

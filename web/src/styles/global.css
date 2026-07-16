@@ -254,6 +254,16 @@
     text-transform: uppercase;
     margin: 0 0 10pt;
   }
+  .print-doc-meta {
+    text-align: right;
+    font-family: "Inter", sans-serif;
+    font-size: 8.5pt;
+    color: #44474b;
+    line-height: 1.5;
+  }
+  .print-doc-meta p {
+    margin: 0;
+  }
   .print-doc-title {
     font-size: 20pt;
     font-weight: 600;

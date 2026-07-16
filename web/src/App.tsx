@@ -1,28 +1,39 @@
 import { useState } from "react";
+import type { DocumentSummary } from "@docket/shared";
 import { useSession } from "@/session/SessionContext";
 import { AuthScreen } from "@/session/AuthScreen";
-import { Sidebar } from "@/documents/Sidebar";
+import { docsApi } from "@/lib/api";
+import { TopNav, type NavView } from "@/shell/TopNav";
+import { DocumentsDashboard } from "@/documents/DocumentsDashboard";
 import { DocumentWorkspace } from "@/documents/DocumentWorkspace";
 import { TemplatesView } from "@/templates/TemplatesView";
+import { SettingsShell } from "@/settings/SettingsShell";
+
+type Screen = "dashboard" | "templates" | "settings";
 
 export function App() {
   const { user, loading, error } = useSession();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showTemplates, setShowTemplates] = useState(false);
+  const [screen, setScreen] = useState<Screen>("dashboard");
   const [docsReloadKey, setDocsReloadKey] = useState(0);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   if (loading) {
     return (
-      <div className="boot-screen">
-        <div className="intent-line">Checking your session…</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="font-label-md text-label-md text-on-surface-variant">
+          Checking your session…
+        </div>
       </div>
     );
   }
 
   if (error && !user) {
     return (
-      <div className="boot-screen">
-        <div className="error-line">{error}</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="rounded-lg bg-error-container px-4 py-3 font-body-md text-on-error-container">
+          {error}
+        </div>
       </div>
     );
   }
@@ -31,38 +42,67 @@ export function App() {
     return <AuthScreen />;
   }
 
+  const activeNav: NavView = screen === "dashboard" && selectedId ? "dashboard" : screen;
+
+  function goToDashboard() {
+    setScreen("dashboard");
+    setSelectedId(null);
+  }
+
+  function handleNavigate(view: NavView) {
+    if (view === "dashboard") {
+      goToDashboard();
+    } else {
+      setScreen(view);
+      setSelectedId(null);
+    }
+  }
+
+  async function handleCreateBlank() {
+    setCreateError(null);
+    const defaultKind: DocumentSummary["kind"] = "contract";
+    try {
+      const doc = await docsApi.create("Untitled document", defaultKind);
+      setDocsReloadKey((k) => k + 1);
+      setScreen("dashboard");
+      setSelectedId(doc.id);
+    } catch {
+      setCreateError("Could not create the document. Please try again.");
+    }
+  }
+
   return (
-    <div className="app-shell">
-      <Sidebar
-        selectedId={showTemplates ? null : selectedId}
-        onSelect={(id) => {
-          setShowTemplates(false);
-          setSelectedId(id);
-        }}
-        templatesActive={showTemplates}
-        onOpenTemplates={() => setShowTemplates(true)}
-        reloadKey={docsReloadKey}
-      />
-      <div className="app-main">
-        {showTemplates ? (
+    <div className="min-h-screen bg-background paper-texture">
+      <TopNav active={activeNav} onNavigate={handleNavigate} />
+      <div className="pt-16">
+        {createError && (
+          <div className="mx-auto max-w-container-max-width px-margin-page pt-6">
+            <div className="rounded-lg bg-error-container px-4 py-3 font-body-md text-on-error-container">
+              {createError}
+            </div>
+          </div>
+        )}
+
+        {screen === "settings" ? (
+          <SettingsShell />
+        ) : screen === "templates" ? (
           <TemplatesView
             onOpenDocument={(id) => {
-              setShowTemplates(false);
+              setScreen("dashboard");
               setSelectedId(id);
-              // The generated doc isn't in the sidebar list yet — refresh it.
+              // The generated doc isn't in the dashboard's list yet — refresh it.
               setDocsReloadKey((k) => k + 1);
             }}
           />
         ) : selectedId ? (
           <DocumentWorkspace key={selectedId} documentId={selectedId} user={user} />
         ) : (
-          <div className="empty-state app-empty">
-            <p className="empty-title">Select a document</p>
-            <p className="muted">
-              Choose a document from the sidebar, start a new one, or generate one from a
-              template.
-            </p>
-          </div>
+          <DocumentsDashboard
+            reloadKey={docsReloadKey}
+            onOpenDocument={setSelectedId}
+            onCreateBlank={() => void handleCreateBlank()}
+            onOpenTemplates={() => setScreen("templates")}
+          />
         )}
       </div>
     </div>
