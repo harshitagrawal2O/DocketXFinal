@@ -6,6 +6,7 @@ build/
 *.log
 .DS_Store
 server/prisma/*.db
+.yjs-data/
 server/.yjs-data/
 coverage/
 .vite/
