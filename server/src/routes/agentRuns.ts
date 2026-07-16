@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../db.js";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
 import { requireCap } from "../auth/roles.js";
+import { requireLLM } from "../llm/availability.js";
 import { createId } from "../util/id.js";
 import { createRun, getRun, subscribe, stopRun } from "../agent/runManager.js";
 import { runAgent } from "../agent/runner.js";
@@ -13,6 +14,7 @@ export const agentRunsRouter = Router();
 agentRunsRouter.post(
   "/documents/:id/agent-runs",
   requireAuth,
+  requireLLM,
   requireCap("run_agent"),
   async (req: AuthedRequest, res) => {
     const body = req.body as StartAgentRunRequest;

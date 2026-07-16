@@ -8,6 +8,7 @@ import { upsertProposal } from "../proposals/broadcast.js";
 import { toDTO } from "../proposals/service.js";
 import { verifyHunkCitations } from "./citations.js";
 import { recordUsage } from "./usage.js";
+import { withLLMSlot } from "../llm/limiter.js";
 import { SYSTEM_PROMPT, TOOLS } from "./vikiPrompt.js";
 import { extractNewTexts } from "./streamParse.js";
 import { emit, endRun, type ActiveRun } from "./runManager.js";
@@ -109,6 +110,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
   };
 
   try {
+    const finalMsg = await withLLMSlot(async () => {
     const stream = client().messages.stream(
       {
         model: MODEL,
@@ -152,7 +154,8 @@ export async function runAgent(run: ActiveRun): Promise<void> {
       }
     }
 
-    const finalMsg = await stream.finalMessage();
+    return await stream.finalMessage();
+    });
     await recordUsage({ kind: "agent_run", model: MODEL, usage: finalMsg.usage, userId: run.userId, documentId });
     const toolUse = finalMsg.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
     if (!toolUse) throw new Error("Viki returned no tool call");

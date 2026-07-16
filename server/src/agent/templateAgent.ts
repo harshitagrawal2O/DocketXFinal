@@ -1,6 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { TemplateDraft, TemplateDTO, TemplateVariable } from "@docket/shared";
 import { recordUsage } from "./usage.js";
+import { withLLMSlot } from "../llm/limiter.js";
+
+/** All non-streaming Viki calls go through the concurrency limiter. */
+function createMessage(params: Anthropic.MessageCreateParamsNonStreaming): Promise<Anthropic.Message> {
+  return withLLMSlot(() => client().messages.create(params));
+}
 
 const MODEL = process.env.VIKI_MODEL ?? "claude-opus-4-8";
 const WEB_SEARCH_ENABLED = process.env.VIKI_WEB_SEARCH === "true";
@@ -81,7 +87,7 @@ function extractRegisterTemplate(msg: Anthropic.Message): TemplateDraft {
 
 /** Turn an uploaded document into a fillable template. */
 export async function analyzeTemplate(text: string, title?: string, userId?: string): Promise<TemplateDraft> {
-  const msg = await client().messages.create({
+  const msg = await createMessage({
     model: MODEL,
     max_tokens: 8192,
     system: ANALYZE_SYSTEM,
@@ -106,7 +112,7 @@ export async function draftTemplate(instruction: string, useWebSearch = false, u
     // Anthropic server-side web search tool; executed by the API within the turn.
     tools.push({ type: "web_search_20250305", name: "web_search", max_uses: 3 } as unknown as Anthropic.ToolUnion);
   }
-  const msg = await client().messages.create({
+  const msg = await createMessage({
     model: MODEL,
     max_tokens: 8192,
     system: DRAFT_SYSTEM,
@@ -145,7 +151,7 @@ export async function fillTemplateFromBrief(
   userId?: string,
 ): Promise<Record<string, string>> {
   const varSpec = template.variables.map((v) => `- ${v.key} (${v.type}${v.required ? ", required" : ""}): ${v.label}${v.hint ? ` — ${v.hint}` : ""}`).join("\n");
-  const msg = await client().messages.create({
+  const msg = await createMessage({
     model: MODEL,
     max_tokens: 4096,
     system:
@@ -210,7 +216,7 @@ const FROM_SCRATCH_SYSTEM = `You are Viki, an advanced legal/CA drafting assista
 
 /** Draft a full document from scratch (no template) for the intake flow. */
 export async function draftDocumentFromScratch(instruction: string, userId?: string): Promise<PersonalizedDocument> {
-  const msg = await client().messages.create({
+  const msg = await createMessage({
     model: MODEL,
     max_tokens: 8192,
     system: FROM_SCRATCH_SYSTEM,
@@ -245,7 +251,7 @@ export async function personalizeDocument(
   const varSpec = template.variables
     .map((v) => `- {{${v.key}}} (${v.type}${v.required ? ", required" : ""}): ${v.label}${v.hint ? ` — ${v.hint}` : ""}`)
     .join("\n");
-  const msg = await client().messages.create({
+  const msg = await createMessage({
     model: MODEL,
     max_tokens: 8192,
     system: PERSONALIZE_SYSTEM,

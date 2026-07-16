@@ -3,13 +3,14 @@ import { requireAuth, type AuthedRequest } from "../auth/session.js";
 import { createId } from "../util/id.js";
 import { createSession, getSession, subscribeIntake, emitIntake } from "../agent/intakeManager.js";
 import { runIntakeTurn, GREETING } from "../agent/intake.js";
+import { requireLLM } from "../llm/availability.js";
 import type { IntakeMessageRequest, IntakeStartResponse } from "@docket/shared";
 
 export const intakeRouter = Router();
 intakeRouter.use(requireAuth);
 
 // Start a chat intake session. Viki's opening greeting is canned (no model call).
-intakeRouter.post("/intake", (req: AuthedRequest, res) => {
+intakeRouter.post("/intake", requireLLM, (req: AuthedRequest, res) => {
   const sessionId = createId("intake");
   const session = createSession(sessionId, req.user!.id, req.user!.name);
   session.history.push({ role: "assistant", content: GREETING });

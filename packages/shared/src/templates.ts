@@ -80,7 +80,28 @@ export interface GenerateFromTemplateRequest {
 export interface GenerateBatchRequest {
   /** e.g. "NDA — {{counterparty}}"; {{vars}} resolved per row. */
   titlePattern: string;
-  rows: Record<string, string>[];
+  /** Deterministic form-fill rows (fast, synchronous). */
+  rows?: Record<string, string>[];
+  /** Case briefs — one personalised document per brief, run on the durable queue. */
+  briefs?: string[];
+}
+
+export interface BatchStatus {
+  id: string;
+  templateId: string;
+  titlePattern: string;
+  total: number;
+  done: number;
+  failed: number;
+  status: "running" | "complete" | "failed";
+  documentIds: string[];
+  errors: string[];
+  createdAt: string;
+}
+
+/** Async (queued) batch response. */
+export interface QueuedBatchResult {
+  batchId: string;
 }
 
 /** Create/update a template manually (Create Template / edit an owned one). */

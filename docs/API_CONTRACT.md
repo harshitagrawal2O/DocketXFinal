@@ -51,7 +51,10 @@ Auth: session cookie `docket_session` (set by login). Dev shortcut header `x-use
 - `POST /api/templates/:id/generate` `GenerateFromTemplateRequest {documentTitle, values?, brief?}` → `GenerateResult {documentId, personalizationNotes?, unresolved?}`
   - `values` (no brief) = deterministic form-fill.
   - `brief` present = ADVANCED Viki personalisation: Viki drafts the whole document tailored to the case (clause-level, not just variable fill) and returns `personalizationNotes[]` (what it tailored, show to the reviewer) + `unresolved[]` (facts to confirm; left as `[TO CONFIRM: …]` blanks in the body).
-- `POST /api/templates/:id/generate-batch` `GenerateBatchRequest {titlePattern, rows[]}` → `GenerateBatchResult {documentIds[]}` (one doc per row; `{{vars}}` resolved in the title too)
+- `POST /api/templates/:id/generate-batch` `GenerateBatchRequest {titlePattern, rows?, briefs?}`:
+  - `rows[]` → deterministic form-fill, synchronous → `{documentIds[]}`.
+  - `briefs[]` → Viki personalises one document per brief on the DURABLE QUEUE → `{batchId}`. Poll `GET /api/batches/:batchId` → `BatchStatus {total,done,failed,status,documentIds,errors}`.
+- LLM endpoints (intake, agent-runs, analyze, draft, generate-with-brief) return **503 `{code:"llm_unavailable"}`** when no `ANTHROPIC_API_KEY` — the rest of the app keeps working. All LLM calls are concurrency-bounded (`LLM_CONCURRENCY`).
 
 ## Interactive intake (chat-first document creation)
 Viki drives a conversation: asks what document you need, matches the template

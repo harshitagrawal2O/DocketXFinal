@@ -50,6 +50,13 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 const httpServer = createServer(app);
 httpServer.listen(PORT, () => console.log(`[docket] API on http://localhost:${PORT}`));
 
+// Start queue workers in-process unless a standalone worker is used.
+if (process.env.WORKER_MODE !== "external") {
+  import("./jobs/queue.js")
+    .then((m) => m.startWorkers())
+    .catch((err) => console.error("[queue] failed to start workers:", (err as Error).message));
+}
+
 // Yjs realtime on a dedicated port (per-doc rooms via path).
 const yjsServer = createServer();
 const wss = new WebSocketServer({ server: yjsServer });

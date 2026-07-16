@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../db.js";
-import type { TemplateDraft, TemplateDTO, TemplateSummary, TemplateVariable } from "@docket/shared";
+import type { BatchStatus, TemplateDraft, TemplateDTO, TemplateSummary, TemplateVariable } from "@docket/shared";
 
 type Row = Prisma.TemplateGetPayload<{}>;
 
@@ -190,6 +190,23 @@ export async function generateDocument(
     },
   });
   return doc.id;
+}
+
+export async function getBatch(batchId: string, ownerId: string): Promise<BatchStatus | null> {
+  const b = await prisma.batch.findUnique({ where: { id: batchId } });
+  if (!b || b.ownerId !== ownerId) return null;
+  return {
+    id: b.id,
+    templateId: b.templateId,
+    titlePattern: b.titlePattern,
+    total: b.total,
+    done: b.done,
+    failed: b.failed,
+    status: b.status as BatchStatus["status"],
+    documentIds: (b.documentIds as string[]) ?? [],
+    errors: (b.errors as string[]) ?? [],
+    createdAt: b.createdAt.toISOString(),
+  };
 }
 
 /**

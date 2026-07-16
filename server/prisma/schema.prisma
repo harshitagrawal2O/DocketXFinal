@@ -101,6 +101,24 @@ model AuditEvent {
   @@index([documentId, createdAt])
 }
 
+// A durable batch of case-personalised documents generated via the queue.
+model Batch {
+  id            String   @id @default(cuid())
+  ownerId       String
+  templateId    String
+  titlePattern  String
+  total         Int
+  done          Int      @default(0)
+  failed        Int      @default(0)
+  status        String   @default("running") // running | complete | failed
+  documentIds   Json     @default("[]")
+  errors        Json     @default("[]")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([ownerId, createdAt])
+}
+
 // Per-call LLM usage for cost metering + billing. NEVER stores prompt content.
 model UsageEvent {
   id           String   @id @default(cuid())

@@ -79,6 +79,7 @@ Setup (once):
 Run:
 
 - `npm run dev` — runs server (API on :4000, Yjs WS on :4001) and web (Vite on :5173) together.
+- `npm run worker -w server` — standalone queue worker (only if `WORKER_MODE=external`; otherwise workers run in-process). Durable batch generation runs here.
 - `npm run dev -w server` / `npm run dev -w web` — run one side.
 - `npm test` — server (vitest: anchoring, accept, reject, outdated) + web tests.
 - `npm run build` — typecheck/build shared → server → web.

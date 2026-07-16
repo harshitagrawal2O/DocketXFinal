@@ -3,6 +3,7 @@ import { listTemplates, getTemplate, generateDocumentFromHtml } from "../templat
 import { personalizeDocument, draftDocumentFromScratch } from "./templateAgent.js";
 import { recordUsage } from "./usage.js";
 import { emitIntake, type IntakeSession } from "./intakeManager.js";
+import { withLLMSlot } from "../llm/limiter.js";
 import type { IntakeTemplateMatch } from "@docket/shared";
 
 const MODEL = process.env.VIKI_MODEL ?? "claude-opus-4-8";
@@ -76,23 +77,23 @@ export async function runIntakeTurn(session: IntakeSession): Promise<void> {
     for (let iter = 0; iter < MAX_TOOL_ITERS; iter++) {
       emitIntake(id, { type: "state", state: iter === 0 ? "thinking" : "drafting" });
 
-      const stream = client().messages.stream({
-        model: MODEL,
-        max_tokens: 4096,
-        system,
-        tools: TOOLS,
-        messages: session.history,
-      });
-
       let assistantText = "";
-      for await (const ev of stream) {
-        if (ev.type === "content_block_delta" && ev.delta.type === "text_delta") {
-          assistantText += ev.delta.text;
-          emitIntake(id, { type: "assistant_delta", text: ev.delta.text });
+      const final = await withLLMSlot(async () => {
+        const stream = client().messages.stream({
+          model: MODEL,
+          max_tokens: 4096,
+          system,
+          tools: TOOLS,
+          messages: session.history,
+        });
+        for await (const ev of stream) {
+          if (ev.type === "content_block_delta" && ev.delta.type === "text_delta") {
+            assistantText += ev.delta.text;
+            emitIntake(id, { type: "assistant_delta", text: ev.delta.text });
+          }
         }
-      }
-
-      const final = await stream.finalMessage();
+        return await stream.finalMessage();
+      });
       await recordUsage({ kind: "intake", model: MODEL, usage: final.usage, userId });
       session.history.push({ role: "assistant", content: final.content });
 
