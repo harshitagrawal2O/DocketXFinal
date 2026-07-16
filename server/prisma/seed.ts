@@ -1,3 +1,4 @@
+import "../src/loadEnv.js";
 import { PrismaClient, Prisma } from "@prisma/client";
 import * as Y from "yjs";
 import { getDoc, whenLoaded, persistence } from "../src/yjs/docStore.js";
