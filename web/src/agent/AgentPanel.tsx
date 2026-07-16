@@ -111,16 +111,20 @@ export function AgentPanel({ role }: { role: Role }) {
 
   return (
     <div className="flex h-full flex-col bg-surface-dim">
-      <div className="flex items-center justify-between gap-2 border-b border-outline-variant bg-surface-container-lowest px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px] text-secondary" style={FILL_1}>
-            auto_awesome
-          </span>
-          <h3 className="text-label-md font-label-md uppercase tracking-wider text-primary">
-            {agent.running ? "Viki AI Active Run" : "Viki AI"}
-          </h3>
-        </div>
-        {agent.running && (
+      {/* The parent tab strip already labels this tab "Viki AI" — only show
+          our own header when it says something the tab doesn't: that a run
+          is actively in progress, with a Stop control. Repeating a plain
+          "Viki AI" title here when idle would just duplicate the tab. */}
+      {agent.running && (
+        <div className="flex items-center justify-between gap-2 border-b border-outline-variant bg-surface-container-lowest px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px] text-secondary" style={FILL_1}>
+              auto_awesome
+            </span>
+            <h3 className="text-label-md font-label-md uppercase tracking-wider text-primary">
+              Viki AI Active Run
+            </h3>
+          </div>
           <button
             className="flex items-center gap-1.5 rounded border border-error/20 bg-error-container px-2.5 py-1 text-on-error-container transition-all hover:bg-error hover:text-on-error"
             onClick={() => void agent.stop()}
@@ -128,8 +132,8 @@ export function AgentPanel({ role }: { role: Role }) {
             <span className="material-symbols-outlined text-[16px]">stop_circle</span>
             <span className="text-[11px] font-label-md font-bold uppercase">Stop</span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {showComposer && (
         <div className="space-y-3 border-b border-outline-variant bg-surface-container-high/50 p-6">
