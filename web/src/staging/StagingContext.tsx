@@ -35,6 +35,9 @@ interface StagingState {
   upsertLocal: (p: DiffProposal) => void;
   /** Pending action id, for disabling buttons mid-request. */
   pendingId: string | null;
+  /** Force a resync against the server (manual refresh control). */
+  refresh: () => Promise<void>;
+  refreshing: boolean;
 }
 
 const Ctx = createContext<StagingState | null>(null);
@@ -62,6 +65,7 @@ export function StagingProvider({
   const [, force] = useReducer((n: number) => n + 1, 0);
   const [activeId, setActive] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const upsert = useCallback((p: DiffProposal) => {
     store.current.set(p.id, p);
@@ -163,6 +167,16 @@ export function StagingProvider({
     [upsert],
   );
 
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const list = await proposalsApi.list(documentId);
+      for (const p of list) upsert(p); // server is authoritative on an explicit refresh
+    } finally {
+      setRefreshing(false);
+    }
+  }, [documentId, upsert]);
+
   const proposals = useMemo(() => {
     return Array.from(store.current.values()).sort((a, b) => {
       // Newest runs first; stable within a run by hunkIndex.
@@ -183,8 +197,10 @@ export function StagingProvider({
       editAccept,
       upsertLocal,
       pendingId,
+      refresh,
+      refreshing,
     }),
-    [proposals, activeId, accept, reject, editAccept, upsertLocal, pendingId],
+    [proposals, activeId, accept, reject, editAccept, upsertLocal, pendingId, refresh, refreshing],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

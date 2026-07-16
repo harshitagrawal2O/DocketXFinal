@@ -3,7 +3,11 @@ import type { Role } from "@docket/shared";
 import { can } from "@docket/shared";
 import { useAgent, type LiveRunState } from "./AgentContext";
 import { useEditorInstance } from "@/editor/EditorContext";
+import { useStaging } from "@/staging/StagingContext";
+import { ProposalCard } from "@/staging/ProposalCard";
 import { EmptyState, ErrorState } from "@/shell/States";
+
+const FILL_1 = { fontVariationSettings: "'FILL' 1" };
 
 const STATE_LABEL: Record<LiveRunState, string> = {
   thinking: "Thinking",
@@ -40,10 +44,13 @@ function RunStateChip({ state }: { state: LiveRunState }) {
 
 export function AgentPanel({ role }: { role: Role }) {
   const agent = useAgent();
+  const staging = useStaging();
   const { editor } = useEditorInstance();
   const [answerText, setAnswerText] = useState("");
+  const [editingPrompt, setEditingPrompt] = useState(false);
 
   const canRun = can(role, "run_agent");
+  const canReview = can(role, "review");
   const hasSelection = editor
     ? editor.state.selection.from !== editor.state.selection.to
     : false;
@@ -60,83 +67,139 @@ export function AgentPanel({ role }: { role: Role }) {
     );
   }
 
+  // Sub-tasks status: our ChecklistItem only tracks done/not-done. The first
+  // not-done item is treated as "active" (in progress) purely by position —
+  // a derived UI cue, not a fabricated backend state.
+  const firstPendingIdx = agent.checklist.findIndex((i) => !i.done);
+
+  // This run's own hunks, still in flight — a contextual "live proposals"
+  // view. Reuses the same ProposalCard as the Activity tab, so Accept/Reject
+  // here is the real thing, not a decorative preview.
+  const liveProposals = agent.runId
+    ? staging.proposals.filter(
+        (p) =>
+          p.agentRunId === agent.runId &&
+          (p.status === "streaming" || p.status === "staged" || p.status === "outdated"),
+      )
+    : [];
+  const acceptableLive = liveProposals.filter(
+    (p) => p.status === "staged" && !p.citations.some((c) => c.verified === false),
+  );
+
+  // The composer hides whenever there's a recent/active run to review (the
+  // mockup keeps the summary + live proposals on screen through completion,
+  // rather than snapping back to the empty composer) — unless the user
+  // explicitly asked to edit the prompt, or there's truly nothing to show.
+  const hasRunContent =
+    agent.running ||
+    Boolean(agent.intent) ||
+    liveProposals.length > 0 ||
+    Boolean(agent.clarifying) ||
+    Boolean(agent.error) ||
+    agent.blocked.length > 0;
+  const showComposer = editingPrompt || !hasRunContent;
+  const showFooterActions = !showComposer;
+
+  async function applyChanges() {
+    for (const p of acceptableLive) await staging.accept(p.id);
+  }
+
+  async function editPrompt() {
+    if (agent.running) await agent.stop();
+    setEditingPrompt(true);
+  }
+
   return (
     <div className="flex h-full flex-col bg-surface-dim">
-      <div className="space-y-3 border-b border-outline-variant bg-surface-container-high/50 p-6">
-        <textarea
-          className="w-full resize-none rounded-lg border border-outline-variant bg-surface-container-lowest p-3 text-body-md text-on-surface placeholder:text-outline/70 focus:border-brass focus:outline-none disabled:opacity-60"
-          placeholder="Tell Viki what to draft or revise — e.g. “Tighten the indemnity clause and cap liability at fees paid.”"
-          value={agent.draft.instruction}
-          onChange={(e) => agent.setDraft({ ...agent.draft, instruction: e.target.value })}
-          rows={3}
-          disabled={agent.running}
-        />
-
-        <div className="flex items-center justify-between gap-3">
-          <div
-            className="flex rounded-full border border-outline-variant bg-surface-container-high p-1"
-            role="tablist"
-            aria-label="Run scope"
+      <div className="flex items-center justify-between gap-2 border-b border-outline-variant bg-surface-container-lowest px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-[18px] text-secondary" style={FILL_1}>
+            auto_awesome
+          </span>
+          <h3 className="text-label-md font-label-md uppercase tracking-wider text-primary">
+            {agent.running ? "Viki AI Active Run" : "Viki AI"}
+          </h3>
+        </div>
+        {agent.running && (
+          <button
+            className="flex items-center gap-1.5 rounded border border-error/20 bg-error-container px-2.5 py-1 text-on-error-container transition-all hover:bg-error hover:text-on-error"
+            onClick={() => void agent.stop()}
           >
-            <button
-              role="tab"
-              aria-selected={agent.draft.scope === "document"}
-              className={`rounded-full px-3 py-1 text-label-sm font-label-md transition-all ${
-                agent.draft.scope === "document"
-                  ? "bg-primary text-on-primary"
-                  : "text-on-surface-variant hover:bg-surface-container-highest"
-              }`}
-              onClick={() => agent.setDraft({ ...agent.draft, scope: "document" })}
-              disabled={agent.running}
-            >
-              Whole document
-            </button>
-            <button
-              role="tab"
-              aria-selected={agent.draft.scope === "selection"}
-              className={`rounded-full px-3 py-1 text-label-sm font-label-md transition-all ${
-                agent.draft.scope === "selection"
-                  ? "bg-primary text-on-primary"
-                  : "text-on-surface-variant hover:bg-surface-container-highest"
-              }`}
-              onClick={() => agent.setDraft({ ...agent.draft, scope: "selection" })}
-              disabled={agent.running}
-              title={hasSelection ? "Run on the current selection" : "Select text first"}
-            >
-              Selection
-            </button>
-          </div>
+            <span className="material-symbols-outlined text-[16px]">stop_circle</span>
+            <span className="text-[11px] font-label-md font-bold uppercase">Stop</span>
+          </button>
+        )}
+      </div>
 
-          {agent.running ? (
-            <button
-              className="flex items-center gap-2 rounded border border-error/20 bg-error-container px-3 py-1.5 text-on-error-container transition-all hover:bg-error hover:text-on-error"
-              onClick={() => void agent.stop()}
+      {showComposer && (
+        <div className="space-y-3 border-b border-outline-variant bg-surface-container-high/50 p-6">
+          <textarea
+            className="w-full resize-none rounded-lg border border-outline-variant bg-surface-container-lowest p-3 text-body-md text-on-surface placeholder:text-outline/70 focus:border-brass focus:outline-none disabled:opacity-60"
+            placeholder="Tell Viki what to draft or revise — e.g. “Tighten the indemnity clause and cap liability at fees paid.”"
+            value={agent.draft.instruction}
+            onChange={(e) => agent.setDraft({ ...agent.draft, instruction: e.target.value })}
+            rows={3}
+            autoFocus={editingPrompt}
+          />
+
+          <div className="flex items-center justify-between gap-3">
+            <div
+              className="flex rounded-full border border-outline-variant bg-surface-container-high p-1"
+              role="tablist"
+              aria-label="Run scope"
             >
-              <span className="material-symbols-outlined text-[16px]">stop_circle</span>
-              <span className="text-label-sm font-label-sm font-bold uppercase">Stop</span>
-            </button>
-          ) : (
+              <button
+                role="tab"
+                aria-selected={agent.draft.scope === "document"}
+                className={`rounded-full px-3 py-1 text-label-sm font-label-md transition-all ${
+                  agent.draft.scope === "document"
+                    ? "bg-primary text-on-primary"
+                    : "text-on-surface-variant hover:bg-surface-container-highest"
+                }`}
+                onClick={() => agent.setDraft({ ...agent.draft, scope: "document" })}
+              >
+                Whole document
+              </button>
+              <button
+                role="tab"
+                aria-selected={agent.draft.scope === "selection"}
+                className={`rounded-full px-3 py-1 text-label-sm font-label-md transition-all ${
+                  agent.draft.scope === "selection"
+                    ? "bg-primary text-on-primary"
+                    : "text-on-surface-variant hover:bg-surface-container-highest"
+                }`}
+                onClick={() => agent.setDraft({ ...agent.draft, scope: "selection" })}
+                title={hasSelection ? "Run on the current selection" : "Select text first"}
+              >
+                Selection
+              </button>
+            </div>
+
             <button
               className="rounded bg-primary px-4 py-1.5 text-label-md font-label-md text-on-primary transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={
                 !agent.draft.instruction.trim() ||
                 (agent.draft.scope === "selection" && !hasSelection)
               }
-              onClick={() => void agent.submit()}
+              onClick={() => {
+                setEditingPrompt(false);
+                void agent.submit();
+              }}
             >
               Run Viki
             </button>
+          </div>
+          {agent.draft.scope === "selection" && !hasSelection && (
+            <p className="text-label-sm text-on-surface-variant">
+              Select text in the document to scope the run.
+            </p>
           )}
         </div>
-        {agent.draft.scope === "selection" && !hasSelection && !agent.running && (
-          <p className="text-label-sm text-on-surface-variant">
-            Select text in the document to scope the run.
-          </p>
-        )}
-      </div>
+      )}
 
       <div className="flex-1 space-y-6 overflow-y-auto p-6 no-scrollbar">
         {!agent.running &&
+          !editingPrompt &&
           !agent.intent &&
           agent.blocked.length === 0 &&
           !agent.clarifying &&
@@ -176,30 +239,54 @@ export function AgentPanel({ role }: { role: Role }) {
                   Sub-tasks status
                 </h4>
                 <div className="space-y-3">
-                  {agent.checklist.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`flex items-center gap-3 ${item.done ? "" : "opacity-40"}`}
-                    >
+                  {agent.checklist.map((item, i) => {
+                    const isActive = i === firstPendingIdx;
+                    return (
                       <div
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
-                          item.done ? "border-secondary bg-secondary/10" : "border-outline"
-                        }`}
+                        key={item.id}
+                        className={`flex items-center gap-3 ${!item.done && !isActive ? "opacity-40" : ""}`}
                       >
-                        {item.done && (
-                          <span className="material-symbols-outlined text-[14px] text-secondary">
-                            check
-                          </span>
-                        )}
+                        <div
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
+                            item.done
+                              ? "border-secondary bg-secondary/10"
+                              : isActive
+                                ? "border-secondary"
+                                : "border-outline"
+                          }`}
+                        >
+                          {item.done ? (
+                            <span className="material-symbols-outlined text-[14px] text-secondary">
+                              check
+                            </span>
+                          ) : isActive ? (
+                            <span className="h-2 w-2 rounded-full bg-secondary" aria-hidden />
+                          ) : null}
+                        </div>
+                        <span
+                          className={`text-body-md ${item.done || isActive ? "text-on-surface font-medium" : ""}`}
+                        >
+                          {item.label}
+                        </span>
                       </div>
-                      <span className={`text-body-md ${item.done ? "text-on-surface" : ""}`}>
-                        {item.label}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {liveProposals.length > 0 && (
+          <div>
+            <h4 className="mb-3 text-label-sm font-label-sm uppercase tracking-tighter text-outline">
+              Live proposals
+            </h4>
+            <div className="space-y-3">
+              {liveProposals.map((p) => (
+                <ProposalCard key={p.id} proposal={p} role={role} />
+              ))}
+            </div>
           </div>
         )}
 
@@ -271,6 +358,31 @@ export function AgentPanel({ role }: { role: Role }) {
           />
         )}
       </div>
+
+      {canReview && showFooterActions && (
+        <div className="space-y-2 border-t border-outline-variant bg-surface-container-lowest p-4">
+          <div className="flex gap-2">
+            <button
+              className="flex-1 rounded border border-outline-variant py-2 text-label-sm font-label-md text-on-surface-variant transition-colors hover:bg-surface-container-high"
+              onClick={() => void editPrompt()}
+            >
+              Edit Prompt
+            </button>
+            <button
+              className="flex flex-1 items-center justify-center gap-1.5 rounded bg-primary py-2 text-label-sm font-label-md text-on-primary transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={acceptableLive.length === 0}
+              title={acceptableLive.length === 0 ? "Nothing from this run is ready to accept yet" : undefined}
+              onClick={() => void applyChanges()}
+            >
+              <span className="material-symbols-outlined text-[16px]">done_all</span>
+              Apply Changes
+            </button>
+          </div>
+          <p className="text-center text-[10px] uppercase tracking-widest text-outline">
+            Powered by Viki
+          </p>
+        </div>
+      )}
     </div>
   );
 }
