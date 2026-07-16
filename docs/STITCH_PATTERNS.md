@@ -627,3 +627,88 @@ AI-specific: `auto_awesome` (Viki everywhere), `smart_toy` (AI actor in logs), `
 - **Timeline/vertical-line list**: `absolute w-[1px] bg-outline-variant` spine + circular node per row — used for version history and generation logs, worth one shared `<Timeline>` component.
 - **Bottom sheet drawer** (mobile only): `translate-y-full` ↔ `translate-y-0`, `rounded-t-3xl`, drag-handle bar, backdrop scrim — reusable for Outline/Comments/Viki panels.
 - **Variable/placeholder chip**: two competing visual treatments for the same `{{Variable}}` concept — solid pill (`.brass-variable`, template_detail_read_only) vs. dashed-underline chip (`.variable-chip`, template_editor_edit_create) — pick one for build.
+
+---
+
+## Reconciled design decisions (BINDING — overrides any per-screen inconsistency above)
+
+The 20 Stitch mockups each declare their own inline `tailwind.config` and drift from each
+other (see deltas noted per-section above). **The real app has ONE shared config**:
+`web/tailwind.config.js`. It is the complete, correct union of every token used anywhere in
+the mockups, PLUS these additions made to resolve the conflicts this doc found:
+
+- `brass: "#9A7B4F"` — a first-class token now. Use `brass` (not `secondary`) for: Viki's
+  brand color/icon (`auto_awesome`), decorative surface fills/highlights, active-tab
+  underlines, dashed "in-progress" borders, the seal/stamp motif. Keep `secondary: "#755a31"`
+  (the canonical darker umber) for small TEXT/links that need solid AA contrast on paper
+  (e.g. "Forgot?", inline text links, label emphasis). Do not override `secondary` in any
+  component the way `generate_from_template_multi_mode` did — that was a mockup-only hack.
+- `mono: ["JetBrains Mono", ...]` added — use `font-mono` for timestamps, hashes, template
+  variable KEY display, and anywhere a mockup used an ad-hoc `mono-font`/`font-mono` class.
+- `info: "#1E4D7B"` / `info-container: "#E8F1F8"` and `success` / `success-container`
+  (`#2F6F5B` / `#DCEEE7`) added as real tokens — use these instead of any mockup's raw inline
+  hex badge colors (`audit_trail_compliance`'s `#E8F1F8`/`#1E4D7B` etc. are now token-backed).
+- `diff-added-bg` / `diff-added-text` / `diff-removed-bg` / `diff-removed-text` added — the
+  ONE diff palette for the whole app (added/removed text highlighting in the activity feed
+  AND version diff view). Do not invent a second palette.
+
+### Status badge — ONE mapping for the whole app (do not reinvent per screen)
+
+Use a shared `<StatusBadge>` (small pill: `px-2 py-0.5 rounded text-[11px] font-label-md
+uppercase tracking-tight`) with this fixed color mapping, applied to REAL data (not fictional
+mockup statuses):
+
+| Meaning | Classes |
+|---|---|
+| Draft / staged / queued / pending | `bg-secondary-container text-on-secondary-container` (amber-ish) |
+| In review / streaming / drafting / in-progress | `bg-info-container text-info` (blue) |
+| Accepted / edited-accepted / success / final / ready | `bg-success-container text-success` (emerald) |
+| Rejected / outdated / blocked / failed / rollback | `bg-error-container text-on-error-container` (oxblood) |
+| Neutral / system / access-log / role-changed | `bg-surface-container-highest text-on-surface-variant` |
+
+Concrete mappings using our REAL enums:
+- `DiffProposal.status`: `staged`→Draft-amber (awaiting review, brass box-shadow accent per
+  the existing `.proposal-deco--staged` treatment), `streaming`→In-review-blue (pulsing),
+  `accepted`/`edited_accepted`→success-emerald with `check_circle`, `rejected`→neutral (struck
+  through, stays visible per invariant #3 — do not hide it), `outdated`→error-oxblood with
+  `history` icon.
+- `AuditEventDTO.type`: `agent_run_started`/`agent_run_completed`→info-blue with `smart_toy`
+  icon (AI actor), `agent_run_interrupted`→neutral, `proposal_accepted`/`edited_accepted`→
+  success, `proposal_rejected`/`proposal_outdated`/`citation_blocked`→error, `version_saved`→
+  neutral, `version_rollback`→error (destructive-adjacent, matches the mockup), `role_changed`/
+  `human_edit_session`→neutral.
+- **Document "status" is DERIVED, not stored** — there is no workflow-status field on
+  `Document` in the schema (a deliberate simplification, not an oversight). On the dashboard,
+  compute: has any `staged`/`streaming` proposals → "In Review" (blue); otherwise → "Draft"
+  (amber). Do not fabricate a "Final" state — there is no finalize action in the product yet.
+
+### Variable/placeholder chip — two treatments, kept, given distinct meaning
+
+Both of `template_detail_read_only`'s solid pill and `template_editor_edit_create`'s
+dashed-underline chip are kept, but scoped by CONTEXT rather than picked arbitrarily:
+- **Read-only rendering** (template preview/detail, generate-panel live preview): solid pill —
+  `bg-secondary-container text-on-secondary-container px-1.5 rounded-sm font-semibold`.
+- **Editable authoring context** (template editor's variable list/inline chips you can click
+  to edit or delete): dashed-underline chip — `bg-brass/15 text-secondary border-b-2
+  border-brass px-1 rounded-sm cursor-pointer`.
+
+### Settings information architecture — pick `settings_firm_profile`'s IA
+
+`usage_billing_dashboard` and `settings_firm_profile` disagree on navigation (one replaces the
+logo with the word "Settings" and puts a subnav in the top header; the other keeps the
+standard Docket top nav and puts a settings-scoped subnav in the LEFT sidebar). **Use
+`settings_firm_profile`'s pattern everywhere**: the standard persistent top nav (Docket logo +
+Dashboard/Documents/Templates links) stays on screen at all times, and a dedicated left
+sidebar (Workspace/Firm Profile, Members, Billing & Usage, Viki AI, Security) scopes the
+Settings section. "Usage & Billing" is one item in that same sidebar, not a separate IA.
+
+### Diff-view text (activity feed AND version diff) — one shared treatment
+`<span className="line-through bg-diff-removed-bg text-diff-removed-text">...</span>` for
+removed text, `<span className="bg-diff-added-bg text-diff-added-text font-medium">...</span>`
+for added text. Use this in both the AI-proposal hunk cards and the version-compare view —
+do not use two different diff palettes.
+
+### Everything else in this doc is non-binding reference
+Layout structure, icon choices, copy tone, and the cross-cutting component library
+(button/badge/avatar/progress-bar/timeline recipes) above are the real reference — follow them
+closely. Only the specific conflicts resolved in this section override a mockup's own file.

@@ -58,11 +58,21 @@ export default {
         "tertiary-fixed": "#e4e2df",
         "inverse-primary": "#bec7d6",
         "primary-fixed": "#dae3f2",
-        // Semantic additions (not in the base M3 token set, needed for status
-        // pills/diffs across screens: Draft=amber, In Review=blue, Final=emerald,
-        // Blocked/Failed=oxblood-error, Viki accent stays `secondary` brass).
+        // Semantic additions (not in the base M3 token set; reconciled across
+        // the 20 Stitch mockups — see docs/STITCH_PATTERNS.md "Reconciled
+        // design decisions"). `secondary` (#755a31, muted umber) stays the
+        // token for small text/links needing AA contrast on paper; `brass`
+        // (#9A7B4F) is the lighter, warmer surface/icon/decoration accent —
+        // Viki's brand color and the "seal of authority" motif.
+        brass: "#9A7B4F",
         success: "#2F6F5B",
         "success-container": "#DCEEE7",
+        info: "#1E4D7B",
+        "info-container": "#E8F1F8",
+        "diff-added-bg": "#ECFDF5",
+        "diff-added-text": "#065F46",
+        "diff-removed-bg": "#FEF2F2",
+        "diff-removed-text": "#7F1D1D",
       },
       borderRadius: {
         DEFAULT: "0.25rem",
@@ -92,6 +102,7 @@ export default {
         "headline-md": ["Newsreader", "serif"],
         serif: ["Newsreader", "serif"],
         sans: ["Inter", "sans-serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
       fontSize: {
         "headline-lg": ["32px", { lineHeight: "1.2", fontWeight: "500" }],
