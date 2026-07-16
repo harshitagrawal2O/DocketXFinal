@@ -14,6 +14,20 @@ import { auditRouter } from "./routes/audit.js";
 import { templatesRouter } from "./routes/templates.js";
 import { exportRouter } from "./routes/export.js";
 import { intakeRouter } from "./routes/intake.js";
+import { usageRouter } from "./routes/usage.js";
+
+// Backstop: Express 4 does not forward a rejected promise from an async
+// middleware/handler to the error middleware — an uncaught rejection would
+// otherwise crash the ENTIRE process (all connected users, all WS/SSE
+// streams) on any transient error (e.g. a serverless Postgres cold start).
+// Route handlers should still catch their own errors; this is the last line
+// of defense so one bad request degrades to a failed response, not an outage.
+process.on("unhandledRejection", (reason) => {
+  console.error("[server] unhandled rejection:", reason instanceof Error ? reason.message : reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("[server] uncaught exception:", err.message);
+});
 
 const PORT = Number(process.env.PORT ?? 4000);
 const YJS_PORT = Number(process.env.YJS_PORT ?? 4001);
@@ -39,6 +53,7 @@ app.use("/api", auditRouter);
 app.use("/api", templatesRouter);
 app.use("/api", exportRouter);
 app.use("/api", intakeRouter);
+app.use("/api", usageRouter);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

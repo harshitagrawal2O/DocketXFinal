@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket - Share Document</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#c5c6cc",
+                        "outline": "#75777c",
+                        "tertiary-container": "#242423",
+                        "on-surface": "#1d1b16",
+                        "on-primary-fixed": "#131c27",
+                        "primary": "#07101a",
+                        "surface-container-high": "#ede7de",
+                        "on-secondary-fixed": "#291800",
+                        "on-background": "#1d1b16",
+                        "tertiary-fixed-dim": "#c8c6c4",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#474745",
+                        "surface-container-highest": "#e8e2d9",
+                        "on-secondary-fixed-variant": "#5b421c",
+                        "tertiary": "#0e0f0e",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#1c2530",
+                        "secondary-container": "#fdd7a4",
+                        "inverse-surface": "#33302a",
+                        "primary-fixed": "#dae3f2",
+                        "on-primary-container": "#838c9a",
+                        "secondary-fixed-dim": "#e5c18f",
+                        "surface": "#fff8ef",
+                        "surface-tint": "#565f6c",
+                        "secondary": "#755a31",
+                        "on-primary-fixed-variant": "#3e4754",
+                        "surface-bright": "#fff8ef",
+                        "surface-variant": "#e8e2d9",
+                        "inverse-on-surface": "#f6f0e7",
+                        "surface-dim": "#dfd9d0",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#1b1c1a",
+                        "tertiary-fixed": "#e4e2df",
+                        "surface-container": "#f3ede4",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#8c8b89",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#44474b",
+                        "secondary-fixed": "#ffddb1",
+                        "background": "#fff8ef",
+                        "on-secondary-container": "#785c33",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#bec7d6",
+                        "surface-container-low": "#f9f3ea",
+                        "primary-fixed-dim": "#bec7d6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "stack-sm": "8px",
+                        "container-max-width": "1440px",
+                        "stack-md": "16px",
+                        "unit": "4px",
+                        "margin-page": "48px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "headline-md": ["Newsreader"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Newsreader"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-display": ["Newsreader"]
+                    },
+                    "fontSize": {
+                        "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                        "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                        "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #fff8ef;
+            color: #1d1b16;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .ink-shadow {
+            box-shadow: 0 20px 40px -10px rgba(28, 37, 48, 0.08);
+        }
+        .hairline-border {
+            border: 1px solid #e8e2d9;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c5c6cc;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-stack-md bg-surface">
+<!-- Modal Container -->
+<div class="w-full max-w-[560px] bg-surface-container-lowest hairline-border rounded-lg ink-shadow overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
+<!-- Header -->
+<div class="px-stack-lg pt-stack-lg pb-stack-md flex justify-between items-start">
+<div class="space-y-1">
+<h1 class="font-headline-md text-headline-md text-primary">Share document</h1>
+<p class="font-body-md text-body-md text-on-surface-variant italic">Partnership Agreement - Project Astra (Rev 4)</p>
+</div>
+<button aria-label="Close modal" class="p-2 hover:bg-surface-container transition-colors rounded-full">
+<span class="material-symbols-outlined text-outline">close</span>
+</button>
+</div>
+<!-- Invite Section -->
+<div class="px-stack-lg py-stack-md">
+<label class="font-label-md text-label-md text-on-surface-variant block mb-2">ADD MEMBERS BY EMAIL</label>
+<div class="flex gap-2">
+<div class="relative flex-grow group">
+<input class="w-full bg-transparent border-b hairline-border focus:border-primary focus:ring-0 transition-all py-2 font-body-md text-body-md placeholder:text-outline-variant outline-none" placeholder="e.g., senior.counsel@chambers.in" type="email"/>
+</div>
+<div class="relative min-w-[120px]">
+<select class="w-full bg-transparent border-b hairline-border focus:border-primary focus:ring-0 appearance-none py-2 px-1 font-label-md text-label-md cursor-pointer">
+<option>Editor</option>
+<option>Commenter</option>
+<option>Viewer</option>
+</select>
+<span class="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-outline text-sm">expand_more</span>
+</div>
+<button class="bg-primary text-on-primary px-stack-md py-2 font-label-md text-label-md hover:bg-opacity-90 active:scale-95 transition-all rounded-sm flex items-center gap-2">
+                    Invite
+                </button>
+</div>
+</div>
+<!-- Members List -->
+<div class="flex-grow px-stack-lg py-stack-md">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-label-md text-label-md text-on-surface-variant">PEOPLE WITH ACCESS</h3>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">4 Members</span>
+</div>
+<div class="space-y-4 max-h-[280px] overflow-y-auto custom-scrollbar pr-2">
+<!-- Member Row: Owner -->
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden hairline-border bg-surface-container-high">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a senior legal partner in a formal black suit, set against a blurred background of a law library with mahogany shelves and leather-bound books. The lighting is warm and cinematic, suggesting high-status professionalism and wisdom. Minimalist digital photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_RyvJKcuX_vlxXLR6Pi9RHY7tP5GTYGDShgtXzfNCteuBzDHdVBw7bD9Wue9b1g1uH5oIFc1odnxjY4S3Xr0pL5JAaSsS4SBs3PenOyVyaBxMs5TC-IbL5wVD3hvSho-f6eTS8nmA8-7ZC4NSZFlToA1kVzg8slFbEluzd8QOtan0JITMTm8VfqOZaoF3f3cRXDP0CqB3Pg3W1mN_gSi_Rdgv73dVprlJIy5qz1C5IWhifRjB7yQYOg"/>
+</div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Siddharth Rao</p>
+<p class="font-label-sm text-label-sm text-outline">s.rao@chambers.in</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md text-outline italic pr-4">Owner</span>
+</div>
+</div>
+<!-- Member Row: Editor -->
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden hairline-border bg-surface-container-high">
+<img class="w-full h-full object-cover" data-alt="A close-up portrait of a young female corporate lawyer in a structured white blazer. Her expression is focused and capable. The setting is a bright, modern office with soft-focus architectural glass and neutral tones. High-key lighting, editorial aesthetic, extremely sharp detail." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcEHMX4ESI0n2DVGb59_1dc804-hXZo9AOeB-ESR3zBzwzOV6ryLtEsNSHdPGZfI3WhqK7YYQOlFkYZGnGiXfd2zoVHAu4haTY5Mi1-RqYZlNrrxeyyfXSyAhGFD3eAXCLy-ruIpQW3S6tkDbV0MTx6RaBQF9UB9Cw5BQs20vdmnwIJ81aSOAxkLi9QqAwY-LsukeaQp911n3F1p4ch06Cgc-8WnzaYg3cD5Qo3IulDKb-qq9qJByETw"/>
+</div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Anjali Mehta</p>
+<p class="font-label-sm text-label-sm text-outline">amehta@firm.com</p>
+</div>
+</div>
+<select class="bg-transparent border-none font-label-md text-label-md text-primary cursor-pointer focus:ring-0 p-1 text-right">
+<option selected="">Editor</option>
+<option>Commenter</option>
+<option>Viewer</option>
+<option class="text-error">Remove</option>
+</select>
+</div>
+<!-- Member Row: Commenter -->
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden hairline-border bg-surface-container-high">
+<img class="w-full h-full object-cover" data-alt="Portrait of a middle-aged male associate with glasses, wearing a light blue linen shirt. He has a friendly and approachable demeanor. Background is a minimalist office wall with subtle textures. Soft natural lighting from a large window. Professional and clean digital stationery aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqXIQL_xXuHYTqiYoWgVGwAYqDiBaAMW5f9Yo9OmVIo3GECyTXyIkNnT_CtLad0PmgffGSlnQikYKPP5cNqsvcxc6HlUtWW4dAkjUe7zXHjnSP3Sbg-seYBbp47ZMau2gLxVWOaO4gR6VtGu_4OSzBaOys51lpywtBJOACprzNd50Y353TuVXpEbmzbYnzJ74dr6VID20xSnyMlI3M0g-PEm6v_LhWh-FOfS-kyz1rpJuFSEwfWSnbtA"/>
+</div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Vikram Singh</p>
+<p class="font-label-sm text-label-sm text-outline">v.singh@legal.org</p>
+</div>
+</div>
+<select class="bg-transparent border-none font-label-md text-label-md text-primary cursor-pointer focus:ring-0 p-1 text-right">
+<option>Editor</option>
+<option selected="">Commenter</option>
+<option>Viewer</option>
+<option class="text-error">Remove</option>
+</select>
+</div>
+<!-- Member Row: Viewer -->
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container text-primary font-bold hairline-border">
+                            PL
+                        </div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Priya Lakhani</p>
+<p class="font-label-sm text-label-sm text-outline">priya@external-audit.in</p>
+</div>
+</div>
+<select class="bg-transparent border-none font-label-md text-label-md text-primary cursor-pointer focus:ring-0 p-1 text-right">
+<option>Editor</option>
+<option>Commenter</option>
+<option selected="">Viewer</option>
+<option class="text-error">Remove</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Footer / Restrictions Note -->
+<div class="bg-surface-container-low px-stack-lg py-stack-md flex flex-col gap-4">
+<div class="flex items-start gap-3 p-3 bg-surface-bright hairline-border rounded">
+<span class="material-symbols-outlined text-secondary text-sm pt-0.5">info</span>
+<p class="font-body-md text-label-sm text-on-surface-variant leading-relaxed">
+<span class="font-bold text-primary">Restriction Note:</span> Viewers and Commenters are restricted from printing, downloading, or copying the sensitive artifacts within this case folder. Editors may modify content but cannot manage permissions.
+                </p>
+</div>
+<div class="flex justify-between items-center">
+<button class="flex items-center gap-2 font-label-md text-label-md text-secondary hover:text-primary transition-colors py-2">
+<span class="material-symbols-outlined text-base">link</span>
+                    Copy link
+                </button>
+<div class="flex gap-3">
+<button class="font-label-md text-label-md text-on-surface-variant px-4 py-2 hover:bg-surface-container rounded transition-all">
+                        Cancel
+                    </button>
+<button class="bg-primary text-on-primary px-6 py-2 font-label-md text-label-md rounded shadow-sm hover:opacity-95 transition-all">
+                        Save Changes
+                    </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Micro-interaction Script -->
+<script>
+        // Simple micro-interaction for dropdowns and focus states
+        document.querySelectorAll('select').forEach(select => {
+            select.addEventListener('change', (e) => {
+                if (e.target.value === 'Remove') {
+                    const row = e.target.closest('.group');
+                    row.style.opacity = '0.5';
+                    row.style.filter = 'grayscale(1)';
+                    // In a real app, this would trigger an undo toast or immediate deletion
+                }
+            });
+        });
+
+        // Focus ring effect for the custom email field
+        const emailInput = document.querySelector('input[type="email"]');
+        emailInput.addEventListener('focus', () => {
+            emailInput.parentElement.classList.add('border-primary');
+        });
+        emailInput.addEventListener('blur', () => {
+            emailInput.parentElement.classList.remove('border-primary');
+        });
+    </script>
+</body></html>

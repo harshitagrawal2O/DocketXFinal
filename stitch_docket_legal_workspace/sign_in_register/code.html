@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket | Secure Authentication</title>
+<!-- Google Fonts: Newsreader for Serifs, Inter for Sans -->
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72@1,500&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed": "#131c27",
+                    "primary-fixed-dim": "#bec7d6",
+                    "surface-tint": "#565f6c",
+                    "on-surface-variant": "#44474b",
+                    "secondary-container": "#fdd7a4",
+                    "surface-container-high": "#ede7de",
+                    "surface-container-highest": "#e8e2d9",
+                    "on-tertiary-fixed": "#1b1c1a",
+                    "on-secondary-fixed": "#291800",
+                    "on-secondary-container": "#785c33",
+                    "background": "#fff8ef",
+                    "tertiary-fixed-dim": "#c8c6c4",
+                    "secondary-fixed-dim": "#e5c18f",
+                    "primary": "#07101a",
+                    "primary-container": "#1c2530",
+                    "on-surface": "#1d1b16",
+                    "surface-variant": "#e8e2d9",
+                    "surface-container-low": "#f9f3ea",
+                    "on-background": "#1d1b16",
+                    "error-container": "#ffdad6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed": "#ffddb1",
+                    "secondary": "#755a31",
+                    "outline": "#75777c",
+                    "inverse-on-surface": "#f6f0e7",
+                    "on-tertiary-fixed-variant": "#474745",
+                    "tertiary": "#0e0f0e",
+                    "on-primary-container": "#838c9a",
+                    "outline-variant": "#c5c6cc",
+                    "surface": "#fff8ef",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed-variant": "#5b421c",
+                    "on-primary-fixed-variant": "#3e4754",
+                    "on-tertiary": "#ffffff",
+                    "surface-container": "#f3ede4",
+                    "surface-dim": "#dfd9d0",
+                    "tertiary-container": "#242423",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "surface-bright": "#fff8ef",
+                    "inverse-surface": "#33302a",
+                    "on-tertiary-container": "#8c8b89",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#e4e2df",
+                    "inverse-primary": "#bec7d6",
+                    "primary-fixed": "#dae3f2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "32px",
+                    "unit": "4px",
+                    "margin-page": "48px",
+                    "gutter": "24px",
+                    "stack-sm": "8px",
+                    "container-max-width": "1440px",
+                    "stack-md": "16px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Newsreader"],
+                    "label-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-display": ["Newsreader"],
+                    "body-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "headline-md": ["Newsreader"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #FAF8F5; /* Specific warm off-white paper color */
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .paper-shadow {
+            box-shadow: 0 4px 20px rgba(28, 37, 48, 0.06);
+        }
+        .seal-watermark {
+            opacity: 0.03;
+            pointer-events: none;
+            user-select: none;
+        }
+        .tab-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-stack-md font-body-md text-on-surface">
+<!-- Auth Container -->
+<main class="w-full max-w-[1100px] h-[720px] flex overflow-hidden rounded-lg paper-shadow bg-surface-container-lowest">
+<!-- Left Panel: Editorial Panel -->
+<section class="hidden md:flex flex-col justify-between w-[45%] bg-primary-container p-margin-page relative overflow-hidden">
+<!-- Seal Watermark -->
+<div class="absolute -bottom-20 -left-20 seal-watermark">
+<span class="material-symbols-outlined text-[400px] text-white">verified_user</span>
+</div>
+<div class="relative z-10">
+<div class="text-white">
+<span class="font-headline-md text-headline-md italic tracking-tight">Docket</span>
+</div>
+</div>
+<div class="relative z-10 max-w-xs">
+<h1 class="font-headline-lg text-headline-lg text-white mb-stack-sm leading-tight">
+                    Draft, review, and finalise legal documents with your team and Viki.
+                </h1>
+<div class="h-1 w-12 bg-secondary rounded-full mt-stack-md"></div>
+</div>
+<div class="relative z-10">
+<p class="font-label-sm text-label-sm text-on-primary-container uppercase tracking-widest">
+                    The Gold Standard for Modern Chambers
+                </p>
+</div>
+</section>
+<!-- Right Panel: Auth Controls -->
+<section class="flex-1 bg-surface-container-lowest flex flex-col justify-between p-margin-page relative">
+<div class="w-full max-w-sm mx-auto flex flex-col flex-grow justify-center">
+<!-- Toggle Tab -->
+<div class="flex bg-surface-container-low p-1 rounded-lg mb-stack-lg">
+<button class="flex-1 py-2 font-label-md text-label-md rounded tab-transition bg-white text-primary shadow-sm" id="toggle-signin" onclick="switchAuth('signin')">
+                        Sign in
+                    </button>
+<button class="flex-1 py-2 font-label-md text-label-md rounded tab-transition text-on-surface-variant hover:text-primary" id="toggle-signup" onclick="switchAuth('signup')">
+                        Create account
+                    </button>
+</div>
+<div class="space-y-stack-md">
+<!-- Form Content -->
+<form class="space-y-stack-md" id="auth-form" onsubmit="event.preventDefault();">
+<!-- Name Field (Hidden by default for Sign In) -->
+<div class="hidden transition-all duration-300" id="name-field">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Full Name</label>
+<input class="w-full border-b border-outline-variant bg-transparent py-2 focus:border-secondary outline-none transition-colors font-body-md placeholder:text-outline/50" placeholder="Adv. Rajesh Khanna" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Email Address</label>
+<input class="w-full border-b border-outline-variant bg-transparent py-2 focus:border-secondary outline-none transition-colors font-body-md placeholder:text-outline/50" placeholder="counsel@chambers.in" type="email"/>
+</div>
+<div>
+<div class="flex justify-between items-center mb-1">
+<label class="block font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Password</label>
+<a class="text-label-sm font-label-sm text-secondary hover:underline" href="#" id="forgot-link">Forgot?</a>
+</div>
+<input class="w-full border-b border-outline-variant bg-transparent py-2 focus:border-secondary outline-none transition-colors font-body-md placeholder:text-outline/50" placeholder="••••••••" type="password"/>
+</div>
+<button class="w-full mt-stack-lg bg-secondary text-white py-3 font-label-md text-label-md uppercase tracking-widest rounded-sm hover:opacity-90 active:scale-[0.99] transition-all" id="submit-btn">
+                            Sign In
+                        </button>
+</form>
+<div class="relative flex items-center py-stack-md">
+<div class="flex-grow border-t border-outline-variant"></div>
+<span class="flex-shrink mx-4 font-label-sm text-label-sm text-on-surface-variant">or</span>
+<div class="flex-grow border-t border-outline-variant"></div>
+</div>
+<!-- Social Login -->
+<button class="w-full border border-outline-variant py-2.5 font-label-md text-label-md text-primary flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors rounded-sm">
+<img alt="Google" class="w-4 h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApzL1eZTqR097_OwlaL7FnqkzTbl8oKuV21alRo0wNwjMpHIDH2UP_r7Gj49jxoiopVfLzRCC02prCN2liDwzmSvnrt529ifjLNwZ4A_srr5uvMJtDASBfTYNR5I2why28dWcx_d8dr9l8cKoRxJi7Ojr--uYa5ikRFA060I7-f_3WrHdVNjuwNv4QnzRMspHWfHBg5HGXUe_Y62LBvGAvioKCOZK3_XSMCWQlDPjPcu6EqbUxue12ag"/>
+                        Continue with Google
+                    </button>
+</div>
+</div>
+<!-- Footer Reassurance -->
+<footer class="mt-stack-lg text-center pt-stack-md">
+<div class="flex items-center justify-center gap-2 text-on-surface-variant opacity-60">
+<span class="material-symbols-outlined text-[16px]">lock</span>
+<p class="font-label-sm text-label-sm">
+                        Bank-grade security. Your documents stay privileged.
+                    </p>
+</div>
+</footer>
+</section>
+</main>
+<script>
+        function switchAuth(mode) {
+            const toggleSignIn = document.getElementById('toggle-signin');
+            const toggleSignUp = document.getElementById('toggle-signup');
+            const nameField = document.getElementById('name-field');
+            const submitBtn = document.getElementById('submit-btn');
+            const forgotLink = document.getElementById('forgot-link');
+
+            if (mode === 'signup') {
+                // UI States
+                toggleSignUp.classList.add('bg-white', 'text-primary', 'shadow-sm');
+                toggleSignUp.classList.remove('text-on-surface-variant');
+                
+                toggleSignIn.classList.remove('bg-white', 'text-primary', 'shadow-sm');
+                toggleSignIn.classList.add('text-on-surface-variant');
+
+                // Form States
+                nameField.classList.remove('hidden');
+                submitBtn.innerText = 'Create Account';
+                forgotLink.classList.add('invisible');
+            } else {
+                // UI States
+                toggleSignIn.classList.add('bg-white', 'text-primary', 'shadow-sm');
+                toggleSignIn.classList.remove('text-on-surface-variant');
+                
+                toggleSignUp.classList.remove('bg-white', 'text-primary', 'shadow-sm');
+                toggleSignUp.classList.add('text-on-surface-variant');
+
+                // Form States
+                nameField.classList.add('hidden');
+                submitBtn.innerText = 'Sign In';
+                forgotLink.classList.remove('invisible');
+            }
+        }
+
+        // Micro-interaction: Input field focus effects
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.querySelector('label').classList.add('text-secondary');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.querySelector('label').classList.remove('text-secondary');
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket | Version Control</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Design System Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c5c6cc",
+                    "outline": "#75777c",
+                    "tertiary-container": "#242423",
+                    "on-surface": "#1d1b16",
+                    "on-primary-fixed": "#131c27",
+                    "primary": "#07101a",
+                    "surface-container-high": "#ede7de",
+                    "on-secondary-fixed": "#291800",
+                    "on-background": "#1d1b16",
+                    "tertiary-fixed-dim": "#c8c6c4",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#474745",
+                    "surface-container-highest": "#e8e2d9",
+                    "on-secondary-fixed-variant": "#5b421c",
+                    "tertiary": "#0e0f0e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#1c2530",
+                    "secondary-container": "#fdd7a4",
+                    "inverse-surface": "#33302a",
+                    "primary-fixed": "#dae3f2",
+                    "on-primary-container": "#838c9a",
+                    "secondary-fixed-dim": "#e5c18f",
+                    "surface": "#fff8ef",
+                    "surface-tint": "#565f6c",
+                    "secondary": "#755a31",
+                    "on-primary-fixed-variant": "#3e4754",
+                    "surface-bright": "#fff8ef",
+                    "surface-variant": "#e8e2d9",
+                    "inverse-on-surface": "#f6f0e7",
+                    "surface-dim": "#dfd9d0",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#1b1c1a",
+                    "tertiary-fixed": "#e4e2df",
+                    "surface-container": "#f3ede4",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#8c8b89",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#44474b",
+                    "secondary-fixed": "#ffddb1",
+                    "background": "#fff8ef",
+                    "on-secondary-container": "#785c33",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#bec7d6",
+                    "surface-container-low": "#f9f3ea",
+                    "primary-fixed-dim": "#bec7d6",
+                    "diff-added": "#d1fae5",
+                    "diff-added-text": "#065f46",
+                    "diff-removed": "#fee2e2",
+                    "diff-removed-text": "#991b1b"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "32px",
+                    "stack-sm": "8px",
+                    "container-max-width": "1440px",
+                    "stack-md": "16px",
+                    "unit": "4px",
+                    "margin-page": "48px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Newsreader"],
+                    "label-sm": ["Inter"],
+                    "headline-lg": ["Newsreader"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-display": ["Newsreader"]
+            },
+            "fontSize": {
+                    "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #fff8ef;
+            color: #1d1b16;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .diff-added { background-color: #d1fae5; color: #065f46; border-radius: 2px; padding: 0 2px; }
+        .diff-removed { background-color: #fee2e2; color: #991b1b; text-decoration: line-through; border-radius: 2px; padding: 0 2px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c5c6cc; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9A7B4F; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- SideNavBar Anchor -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col h-full p-stack-md border-r border-outline-variant bg-surface-container-low z-20">
+<div class="mb-stack-lg px-2">
+<div class="flex items-center gap-3 mb-1">
+<div class="w-10 h-10 bg-primary-container flex items-center justify-center rounded">
+<span class="material-symbols-outlined text-surface" style="font-variation-settings: 'FILL' 1;">balance</span>
+</div>
+<div>
+<h2 class="font-headline-md text-label-md text-primary leading-tight">Chambers of S. Rao</h2>
+<p class="font-label-sm text-on-surface-variant opacity-70">Supreme Court of India</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg group cursor-pointer">
+<span class="material-symbols-outlined group-hover:text-primary">business_center</span>
+<span>Workspace</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 bg-surface-container-highest text-primary font-bold rounded-lg font-label-md text-label-md cursor-pointer">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">description</span>
+<span>Documents</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg group cursor-pointer">
+<span class="material-symbols-outlined group-hover:text-primary">saved_search</span>
+<span>Research</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg group cursor-pointer">
+<span class="material-symbols-outlined group-hover:text-primary">auto_awesome</span>
+<span>Viki AI</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg group cursor-pointer">
+<span class="material-symbols-outlined group-hover:text-primary">inventory_2</span>
+<span>Archives</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg group cursor-pointer">
+<span class="material-symbols-outlined group-hover:text-primary">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant pt-stack-md space-y-1">
+<button class="w-full text-left flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg">
+<span class="material-symbols-outlined">contact_support</span>
+<span>Support</span>
+</button>
+<button class="w-full text-left flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg">
+<span class="material-symbols-outlined">logout</span>
+<span>Sign Out</span>
+</button>
+</div>
+</aside>
+<!-- Main Viewport Container -->
+<main class="ml-64 flex-1 flex flex-col min-w-0 bg-surface">
+<!-- TopNavBar Anchor -->
+<header class="flex justify-between items-center w-full px-margin-page h-16 max-w-container-max-width border-b border-outline-variant bg-surface sticky top-0 z-10">
+<div class="flex items-center gap-6">
+<h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Docket</h1>
+<nav class="hidden md:flex gap-8 items-center h-full pt-1">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Dashboard</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Matters</a>
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary pb-1 cursor-pointer">Documents</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="font-label-md text-label-md bg-primary text-on-primary px-stack-md py-2 rounded-lg hover:opacity-90 transition-opacity">New Matter</button>
+<div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">help_outline</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a senior legal counsel in India, wearing a white lawyer band and dark blazer. The lighting is soft and corporate, set against a blurred background of a law library with mahogany shelves. High-end, editorial photography style with natural skin tones and a sense of authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDb7ARFui-LaRFR7wxJbUhtdWzpImKQfjqc8-5rF6TNbmIA0SbcPhxEdO0GikVeweKcCYkQuximMdEmIR1eiw_pWTXr3AmcOCbcIREuq51PrsqcR8FYUWSRIGHAn0GMGpkA5vJPvJsEXUTzLchhRSYsQkLuqmL2zdn2cvVfYw7uirR5TlnPYYLOFhkB7ICF4TvUqmuZry4Qm2CGSj1xyiR0R91lQjyDOFbj2vboSinDqBKxdRhpbgVnQ"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Document Content + Versions Panel -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Center Stage: Document Text -->
+<section class="flex-1 overflow-y-auto custom-scrollbar bg-surface relative">
+<div class="max-w-4xl mx-auto px-margin-page py-16">
+<!-- Document Header -->
+<div class="mb-12 border-b border-outline-variant pb-8">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-md text-label-md text-secondary tracking-widest uppercase">Draft No. 42-B</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lock</span> Privileged &amp; Confidential
+                            </span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-2 italic">Indenture of Lease — Terminal 3, Delhi Intl Airport</h2>
+<p class="font-body-md text-body-md text-on-surface-variant italic">Between GMR Infrastructure and Celebi Ground Handling India Pvt Ltd.</p>
+</div>
+<!-- Diff Body -->
+<article class="font-body-lg text-body-lg text-primary leading-relaxed space-y-8">
+<p>
+<span class="font-label-md text-label-md text-outline block mb-2">CLAUSE 1.1: DEFINITIONS</span>
+                            "Effective Date" shall mean the date of execution of this Indenture 
+                            <span class="diff-removed">unless otherwise specified in the Annexure</span>
+<span class="diff-added">or the 1st of April, 2024, whichever is earlier</span>. 
+                            The "Premises" refers to the 1,200 sq. meters situated within the eastern flank of the Airside Terminal.
+                        </p>
+<p>
+<span class="font-label-md text-label-md text-outline block mb-2">CLAUSE 4.2: RENT REVISION</span>
+                            The Annual Rent shall be subject to an escalation of 
+                            <span class="diff-removed">5.5% (Five and a Half Percent)</span>
+<span class="diff-added">7.0% (Seven Percent)</span> 
+                            compounded annually at the commencement of every financial year. 
+                            Failure to remit the differential within 
+                            <span class="diff-removed">30 days</span>
+<span class="diff-added">15 business days</span> 
+                            shall constitute a material breach of the covenant.
+                        </p>
+<p>
+<span class="font-label-md text-label-md text-outline block mb-2">CLAUSE 8.9: ARBITRATION</span>
+                            Any dispute arising under this Agreement shall be referred to a sole arbitrator appointed by the 
+                            <span class="diff-added">Delhi International Arbitration Centre (DIAC)</span>. 
+                            The seat of arbitration shall be New Delhi, and the proceedings shall be conducted in English 
+                            <span class="diff-removed">under the LCIA Rules</span>.
+                        </p>
+<div class="py-12 flex justify-center">
+<div class="w-16 h-[1px] bg-outline-variant"></div>
+</div>
+<p class="opacity-50 italic text-center">End of Comparison View</p>
+</article>
+</div>
+</section>
+<!-- Versions Sidebar -->
+<aside class="w-80 border-l border-outline-variant bg-surface-container-low flex flex-col shadow-sm">
+<div class="p-stack-md border-b border-outline-variant flex items-center justify-between">
+<h3 class="font-label-md text-label-md text-primary">VERSION HISTORY</h3>
+<button class="p-1 hover:bg-surface-container-high rounded transition-colors">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</button>
+</div>
+<!-- Timeline Container -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-stack-md">
+<div class="relative space-y-stack-lg">
+<!-- Vertical Line Decor -->
+<div class="absolute left-[13px] top-2 bottom-2 w-[1px] bg-outline-variant z-0"></div>
+<!-- Timeline Item 1 (Active/Selected) -->
+<div class="relative z-10 flex gap-4 group cursor-pointer">
+<div class="w-7 h-7 rounded-full bg-primary flex items-center justify-center border-4 border-surface-container-low">
+<span class="material-symbols-outlined text-white text-[14px]">history</span>
+</div>
+<div class="flex-1 -mt-1 bg-surface border border-primary p-3 rounded-lg shadow-sm">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-md text-[12px] text-primary">Current Version</span>
+<span class="font-label-sm text-[10px] bg-secondary-container text-on-secondary-container px-1.5 py-0.5 rounded">AUTO</span>
+</div>
+<h4 class="font-body-md font-semibold text-primary mb-1">Escalation Clause Adjusted</h4>
+<div class="flex items-center gap-2 mb-3">
+<div class="w-5 h-5 rounded-full bg-primary-fixed flex items-center justify-center">
+<span class="font-label-sm text-[9px] text-primary">SR</span>
+</div>
+<span class="font-label-sm text-on-surface-variant">S. Rao • Just now</span>
+</div>
+<button class="w-full py-1.5 border border-primary text-primary font-label-sm text-[11px] rounded hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+                                    Restore this version
+                                </button>
+</div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative z-10 flex gap-4 group cursor-pointer">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center border-4 border-surface-container-low group-hover:bg-outline transition-colors">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+</div>
+<div class="flex-1 -mt-1 opacity-70 group-hover:opacity-100 transition-opacity">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-md text-[12px] text-on-surface-variant">24 Oct 2023</span>
+<span class="font-label-sm text-[10px] bg-surface-container-highest text-on-surface-variant px-1.5 py-0.5 rounded">MANUAL</span>
+</div>
+<h4 class="font-body-md text-primary mb-1">Initial Draft - DIAC Rules</h4>
+<div class="flex items-center gap-2">
+<div class="w-5 h-5 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="font-label-sm text-[9px] text-on-surface-variant">PK</span>
+</div>
+<span class="font-label-sm text-on-surface-variant">P. Kapoor • 2:14 PM</span>
+</div>
+</div>
+</div>
+<!-- Timeline Item 3 -->
+<div class="relative z-10 flex gap-4 group cursor-pointer">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center border-4 border-surface-container-low group-hover:bg-outline transition-colors">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+</div>
+<div class="flex-1 -mt-1 opacity-70 group-hover:opacity-100 transition-opacity">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-md text-[12px] text-on-surface-variant">22 Oct 2023</span>
+<span class="font-label-sm text-[10px] bg-surface-container-highest text-on-surface-variant px-1.5 py-0.5 rounded">AUTO</span>
+</div>
+<h4 class="font-body-md text-primary mb-1">Section 8 Cleanup</h4>
+<div class="flex items-center gap-2">
+<div class="w-5 h-5 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="font-label-sm text-[9px] text-on-surface-variant">SR</span>
+</div>
+<span class="font-label-sm text-on-surface-variant">S. Rao • 10:05 AM</span>
+</div>
+</div>
+</div>
+<!-- Timeline Item 4 -->
+<div class="relative z-10 flex gap-4 group cursor-pointer">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center border-4 border-surface-container-low group-hover:bg-outline transition-colors">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+</div>
+<div class="flex-1 -mt-1 opacity-70 group-hover:opacity-100 transition-opacity">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-md text-[12px] text-on-surface-variant">15 Oct 2023</span>
+<span class="font-label-sm text-[10px] bg-secondary-container text-on-secondary-container px-1.5 py-0.5 rounded">MILESTONE</span>
+</div>
+<h4 class="font-body-md text-primary mb-1">Approved for Counsel Review</h4>
+<div class="flex items-center gap-2">
+<div class="w-5 h-5 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="font-label-sm text-[9px] text-on-surface-variant">V</span>
+</div>
+<span class="font-label-sm text-on-surface-variant">System • 09:00 AM</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="p-stack-md bg-surface-container border-t border-outline-variant">
+<button class="w-full flex items-center justify-center gap-2 py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:shadow-lg transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+                        Create Manual Snapshot
+                    </button>
+<p class="text-[10px] text-on-surface-variant text-center mt-3 uppercase tracking-widest opacity-60">All changes are digitally signed</p>
+</div>
+</aside>
+</div>
+</main>
+<!-- Visual Polish: Paper Texture Overlay -->
+<div class="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-multiply z-50 bg-[url('https://www.transparenttextures.com/patterns/bond-paper.png')]"></div>
+<script>
+        // Micro-interactions for buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // Simple active state toggle for timeline items
+        const timelineItems = document.querySelectorAll('.relative.z-10.flex.gap-4');
+        timelineItems.forEach(item => {
+            item.addEventListener('click', () => {
+                timelineItems.forEach(i => {
+                    const card = i.querySelector('.flex-1');
+                    if (card) {
+                        card.classList.remove('border-primary', 'bg-surface');
+                        card.classList.add('opacity-70');
+                        const btn = card.querySelector('button');
+                        if (btn) btn.classList.add('hidden');
+                    }
+                    const dot = i.querySelector('.w-7');
+                    if (dot) {
+                        dot.classList.remove('bg-primary');
+                        dot.classList.add('bg-surface-container-highest');
+                        const icon = dot.querySelector('span');
+                        if (icon) icon.classList.remove('text-white');
+                    }
+                });
+                
+                const card = item.querySelector('.flex-1');
+                card.classList.add('border-primary', 'bg-surface');
+                card.classList.remove('opacity-70');
+                const btn = card.querySelector('button');
+                if (btn) btn.classList.remove('hidden');
+
+                const dot = item.querySelector('.w-7');
+                dot.classList.add('bg-primary');
+                dot.classList.remove('bg-surface-container-highest');
+                const icon = dot.querySelector('span');
+                if (icon) icon.classList.add('text-white');
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            from, to { border-color: transparent; }
+            50% { border-color: #9A7B4F; }
+        }
+        .paper-texture {
+            background-image: radial-gradient(#E7E1D8 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #E8E2D9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #C5C6CC;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#c5c6cc",
+                        "outline": "#75777c",
+                        "tertiary-container": "#242423",
+                        "on-surface": "#1d1b16",
+                        "on-primary-fixed": "#131c27",
+                        "primary": "#07101a",
+                        "surface-container-high": "#ede7de",
+                        "on-secondary-fixed": "#291800",
+                        "on-background": "#1d1b16",
+                        "tertiary-fixed-dim": "#c8c6c4",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#474745",
+                        "surface-container-highest": "#e8e2d9",
+                        "on-secondary-fixed-variant": "#5b421c",
+                        "tertiary": "#0e0f0e",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#1c2530",
+                        "secondary-container": "#fdd7a4",
+                        "inverse-surface": "#33302a",
+                        "primary-fixed": "#dae3f2",
+                        "on-primary-container": "#838c9a",
+                        "secondary-fixed-dim": "#e5c18f",
+                        "surface": "#fff8ef",
+                        "surface-tint": "#565f6c",
+                        "secondary": "#755a31",
+                        "on-primary-fixed-variant": "#3e4754",
+                        "surface-bright": "#fff8ef",
+                        "surface-variant": "#e8e2d9",
+                        "inverse-on-surface": "#f6f0e7",
+                        "surface-dim": "#dfd9d0",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#1b1c1a",
+                        "tertiary-fixed": "#e4e2df",
+                        "surface-container": "#f3ede4",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#8c8b89",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#44474b",
+                        "secondary-fixed": "#ffddb1",
+                        "background": "#fff8ef",
+                        "on-secondary-container": "#785c33",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#bec7d6",
+                        "surface-container-low": "#f9f3ea",
+                        "primary-fixed-dim": "#bec7d6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "stack-sm": "8px",
+                        "container-max-width": "1440px",
+                        "stack-md": "16px",
+                        "unit": "4px",
+                        "margin-page": "48px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "headline-md": ["Newsreader"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Newsreader"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-display": ["Newsreader"]
+                    },
+                    "fontSize": {
+                        "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                        "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                        "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-background border-b border-outline-variant flex justify-between items-center h-16 px-margin-page w-full max-w-container-max-width mx-auto">
+<div class="flex items-center gap-stack-lg">
+<span class="text-headline-md font-headline-md font-medium italic text-primary">Docket</span>
+<nav class="hidden md:flex items-center gap-6 h-full">
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Dashboard</a>
+<a class="text-primary border-b-2 border-primary pb-2 text-label-md font-label-md" href="#">Matters</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Documents</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-gutter">
+<div class="flex -space-x-2 items-center">
+<div class="w-8 h-8 rounded-full border-2 border-background overflow-hidden relative group cursor-pointer" title="Arjun Mehta">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a senior legal counsel in a crisp white shirt, minimalist lighting, high-end editorial photography style, muted tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFk1KRz4xkEpZszDN58KOATXEDa6tybEeFQjeWCbCgkXXvurJwhsGCitodVJm07JmqYPD8oYsyuXzDjlHlXhJ52HayiiG1h9XuYOL0HoCA1yYnV4NsomjcYBl012Tev74ObkrSDyZ8uV-BEQ7czRQ8fEGQybh-ZnDMoGtbX6EQtqFwM0DHwKEZep4MAx73QIsznh5scsrbnRoEXUCLK1dhTh2-nB-tc6JTlgrILNbMPz-56whOssDCtg"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-background overflow-hidden relative cursor-pointer" title="Sanya Malhotra">
+<img class="w-full h-full object-cover" data-alt="A portrait of a young female lawyer with glasses, soft natural office lighting, professional and focused expression, editorial aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaDJ3It3yVy4UgkP0r90IGSNYWh-UCU_RcXqRCjMxOPhcgnazLUa-qwpGemyMQcCNHtF5Ex25SyFnzi2N4Bxz9PQamcw4Jzb0_ve9jzQy6EVtjosL0OP7sS5TMas3io3KjukHqzu2fEKDYRCKRQMf7PRAY4qSW07Z3N6rXHpsyyEjQSW6Vd8PHCjUyrroC25XzNCqy2w3UjBobRRZv9LuI3Oanx0dVViPb27ojpU-DmmzGHDbbZIDcCw"/>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border-2 border-background flex items-center justify-center text-[10px] font-bold text-primary">+3</div>
+</div>
+<button class="bg-primary text-on-primary px-stack-md py-2 text-label-md font-label-md rounded flex items-center gap-2 hover:opacity-90 transition-opacity">
+                Share
+            </button>
+<div class="flex items-center gap-stack-sm text-on-surface-variant">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary p-2">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary p-2">help</span>
+</div>
+</div>
+</header>
+<!-- Main Workspace Container -->
+<main class="flex-1 flex pt-16 h-full overflow-hidden">
+<!-- Left Rail: Document List & Outline -->
+<aside class="w-64 flex-shrink-0 bg-surface-container-low border-r border-outline-variant flex flex-col transition-all duration-300" id="left-rail">
+<div class="p-stack-md border-b border-outline-variant flex justify-between items-center">
+<span class="text-label-md font-label-md text-secondary uppercase tracking-wider">Matter Files</span>
+<span class="material-symbols-outlined text-[18px] cursor-pointer" onclick="toggleLeftRail()">menu_open</span>
+</div>
+<div class="flex-1 overflow-y-auto p-2 space-y-4">
+<div>
+<div class="flex items-center gap-2 p-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">folder_open</span>
+<span class="text-label-sm font-label-sm">CORE DOCUMENTS</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-2 p-2 bg-surface-container-high rounded text-primary font-medium cursor-pointer">
+<span class="material-symbols-outlined text-[18px]">description</span>
+<span class="text-body-md truncate">Shareholders_Agreement.v4</span>
+</div>
+<div class="flex items-center gap-2 p-2 hover:bg-surface-container rounded text-on-surface-variant cursor-pointer">
+<span class="material-symbols-outlined text-[18px]">description</span>
+<span class="text-body-md truncate">Term_Sheet_Final.pdf</span>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/30">
+<span class="p-2 block text-label-sm font-label-sm text-on-surface-variant uppercase">Outline</span>
+<nav class="space-y-1 mt-2">
+<a class="block p-2 text-body-md hover:text-primary border-l-2 border-transparent hover:border-secondary pl-4" href="#section-1">1. Definitions &amp; Interpretation</a>
+<a class="block p-2 text-body-md hover:text-primary border-l-2 border-transparent hover:border-secondary pl-4" href="#section-2">2. Effective Date</a>
+<a class="block p-2 text-body-md hover:text-primary border-l-2 border-transparent hover:border-secondary pl-4" href="#section-3">3. Governance Structure</a>
+<a class="block p-2 text-body-md hover:text-primary border-l-2 border-transparent hover:border-secondary pl-4" href="#section-4">4. Transfer of Shares</a>
+</nav>
+</div>
+</div>
+<div class="p-stack-md border-t border-outline-variant">
+<button class="w-full border border-secondary text-secondary py-2 rounded text-label-md font-label-md flex items-center justify-center gap-2 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    New Section
+                </button>
+</div>
+</aside>
+<!-- Center: Document Editor -->
+<section class="flex-1 bg-surface-container overflow-y-auto paper-texture flex justify-center py-stack-lg relative">
+<!-- Multiplayer Cursors (Simulated) -->
+<div class="absolute top-[320px] left-[30%] z-10 pointer-events-none flex flex-col items-start transition-all duration-700" style="transform: translateX(120px);">
+<div class="w-[2px] h-5 bg-[#9A7B4F] cursor-blink"></div>
+<div class="bg-[#9A7B4F] text-white text-[10px] px-1.5 py-0.5 rounded-sm font-label-md whitespace-nowrap">Arjun Mehta</div>
+</div>
+<!-- Page Canvas -->
+<article class="w-full max-w-[850px] bg-white shadow-[0_4px_24px_rgba(28,37,48,0.06)] min-h-[1200px] p-[80px] border border-outline-variant/20 mb-margin-page">
+<header class="mb-12 border-b border-outline-variant pb-8">
+<p class="text-label-sm font-label-sm text-secondary mb-4 uppercase tracking-[0.1em]">Privileged &amp; Confidential</p>
+<h1 class="font-headline-lg text-headline-lg text-primary leading-tight">Shareholders’ Agreement by and between Khaitan &amp; Co. and Global Tech Ventures</h1>
+<div class="mt-6 flex items-center gap-stack-lg text-on-surface-variant text-label-md font-label-md">
+<span>Draft v4.2.1</span>
+<span>Modified: 14 Oct 2023</span>
+<span>Status: <span class="text-secondary italic">Reviewing</span></span>
+</div>
+</header>
+<div class="space-y-stack-lg font-serif text-primary leading-relaxed text-[17px]">
+<section class="space-y-4" id="section-1">
+<h2 class="font-headline-md text-headline-md mb-6">1. DEFINITIONS AND INTERPRETATION</h2>
+<p>
+                            1.1 In this Agreement, unless the context otherwise requires, the following terms shall have the meanings assigned to them below:
+                        </p>
+<div class="pl-8 space-y-4 italic">
+<p>
+<strong class="not-italic font-bold tracking-tight">"Affiliate"</strong> means, in relation to any Person, any other Person that, directly or indirectly, Controls, is Controlled by, or is under common Control with, such Person;
+                            </p>
+<p>
+<strong class="not-italic font-bold tracking-tight">"Applicable Law"</strong> means any statute, law, regulation, ordinance, rule, judgment, order, decree, by-law, approval from any Government Authority, directive, guideline, or policy;
+                            </p>
+<p>
+<strong class="not-italic font-bold tracking-tight">"Board"</strong> means the board of directors of the Company as constituted from time to time in accordance with the provisions of this Agreement.
+                            </p>
+</div>
+</section>
+<section class="space-y-4 pt-8" id="section-2">
+<h2 class="font-headline-md text-headline-md mb-6">2. EFFECTIVE DATE</h2>
+<p>
+                            2.1 This Agreement shall come into force and effect on the date first written above (the <strong class="font-bold">"Effective Date"</strong>) and shall continue in force until terminated in accordance with Clause 12.
+                        </p>
+<p>
+                            2.2 Upon the occurrence of the Effective Date, the Parties shall perform all their respective obligations under the Transaction Documents to which they are party.
+                        </p>
+</section>
+<section class="space-y-4 pt-8" id="section-3">
+<h2 class="font-headline-md text-headline-md mb-6">3. GOVERNANCE AND MANAGEMENT</h2>
+<p>
+                            3.1 The Company shall be managed by the Board. Each Party shall exercise its voting rights and other powers of control available to it to ensure that the Board is constituted in accordance with this Clause 3.
+                        </p>
+<p>
+                            3.2 The number of directors shall not be less than three (3) and not more than seven (7). For as long as Khaitan &amp; Co. holds at least 15% of the Fully Diluted Share Capital, it shall have the right to nominate one (1) director to the Board.
+                        </p>
+<div class="bg-surface-container-low p-6 border-l-4 border-secondary/30 my-8">
+<p class="text-body-md text-on-surface-variant font-sans">
+<span class="font-bold text-secondary">NOTE:</span> Review the quorum requirements for Board Meetings. Current draft requires at least one Nominee Director from both Parties to be present.
+                            </p>
+</div>
+<p>
+                            3.3 Any director nominated pursuant to this Clause 3 may be removed or replaced at any time by the Party which nominated such director by giving written notice to the Company.
+                        </p>
+</section>
+</div>
+</article>
+</section>
+<!-- Right Rail: Tabbed Context Panel -->
+<aside class="w-80 flex-shrink-0 bg-surface-container-low border-l border-outline-variant flex flex-col">
+<!-- Tabs -->
+<div class="flex border-b border-outline-variant bg-surface-container-high/50">
+<button class="flex-1 py-3 text-label-sm font-label-sm text-primary border-b-2 border-primary">ACTIVITY</button>
+<button class="flex-1 py-3 text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span> VIKI AI
+                </button>
+<button class="flex-1 py-3 text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors">COMMENTS</button>
+</div>
+<div class="flex-1 overflow-y-auto p-stack-md">
+<!-- Activity Feed -->
+<div class="space-y-stack-lg">
+<div class="flex gap-stack-sm">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed text-secondary flex items-center justify-center text-xs font-bold shrink-0">AM</div>
+<div>
+<p class="text-body-md"><span class="font-bold">Arjun Mehta</span> updated Clause 3.2</p>
+<p class="text-label-sm text-on-surface-variant mt-1">2 hours ago</p>
+<div class="mt-2 text-label-sm bg-surface p-2 border border-outline-variant/30 rounded">
+                                Changed "two (2) directors" to "one (1) director" to match latest term sheet.
+                            </div>
+</div>
+</div>
+<div class="flex gap-stack-sm">
+<div class="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center text-xs font-bold shrink-0">SM</div>
+<div>
+<p class="text-body-md"><span class="font-bold">Sanya Malhotra</span> added a comment on "Affiliate"</p>
+<p class="text-label-sm text-on-surface-variant mt-1">5 hours ago</p>
+</div>
+</div>
+<div class="flex gap-stack-sm">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">history</span>
+</div>
+<div>
+<p class="text-body-md">System generated <span class="font-bold">Version 4.2.1</span></p>
+<p class="text-label-sm text-on-surface-variant mt-1">Yesterday at 6:45 PM</p>
+</div>
+</div>
+</div>
+<!-- Viki AI Suggestion (Preview) -->
+<div class="mt-stack-lg p-stack-md bg-primary-container text-on-primary-container rounded-lg border border-outline-variant/20">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-secondary-fixed">auto_awesome</span>
+<span class="text-label-md font-label-md text-white">Viki AI Suggestion</span>
+</div>
+<p class="text-label-sm leading-relaxed mb-4">
+                        Clause 1.1 "Affiliate" definition is broader than standard LMA templates. Consider adding "excluding individuals" to prevent unintended personal liability.
+                    </p>
+<button class="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded text-label-sm transition-colors border border-white/20">
+                        View Detailed Audit
+                    </button>
+</div>
+</div>
+<!-- Audit Footer -->
+<div class="p-stack-md border-t border-outline-variant bg-surface-container-low">
+<div class="flex justify-between items-center mb-4">
+<span class="text-label-sm text-on-surface-variant font-bold uppercase tracking-widest">Document Audit</span>
+<span class="material-symbols-outlined text-[18px] text-secondary">verified</span>
+</div>
+<div class="flex gap-4">
+<div class="flex-1">
+<p class="text-headline-md font-headline-md text-primary">94%</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Clarity Score</p>
+</div>
+<div class="flex-1">
+<p class="text-headline-md font-headline-md text-primary">0</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Conflicts</p>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<!-- Contextual FAB (Hidden on detail screens by protocol, but kept as a script reference for system consistency) -->
+<script>
+        function toggleLeftRail() {
+            const rail = document.getElementById('left-rail');
+            if (rail.classList.contains('w-64')) {
+                rail.classList.remove('w-64');
+                rail.classList.add('w-0', 'opacity-0', 'overflow-hidden');
+            } else {
+                rail.classList.remove('w-0', 'opacity-0', 'overflow-hidden');
+                rail.classList.add('w-64');
+            }
+        }
+
+        // Simple smooth scroll for outline links
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                document.querySelector(targetId).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body></html>

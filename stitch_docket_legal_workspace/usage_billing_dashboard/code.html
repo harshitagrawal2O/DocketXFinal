@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket | Usage &amp; Billing</title>
+<!-- Google Fonts: Newsreader for Serifs, Inter for Sans -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6-72,400;6-72,500;6-72,600;6-72,700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c5c6cc",
+                    "outline": "#75777c",
+                    "tertiary-container": "#242423",
+                    "on-surface": "#1d1b16",
+                    "on-primary-fixed": "#131c27",
+                    "primary": "#07101a",
+                    "surface-container-high": "#ede7de",
+                    "on-secondary-fixed": "#291800",
+                    "on-background": "#1d1b16",
+                    "tertiary-fixed-dim": "#c8c6c4",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#474745",
+                    "surface-container-highest": "#e8e2d9",
+                    "on-secondary-fixed-variant": "#5b421c",
+                    "tertiary": "#0e0f0e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#1c2530",
+                    "secondary-container": "#fdd7a4",
+                    "inverse-surface": "#33302a",
+                    "primary-fixed": "#dae3f2",
+                    "on-primary-container": "#838c9a",
+                    "secondary-fixed-dim": "#e5c18f",
+                    "surface": "#fff8ef",
+                    "surface-tint": "#565f6c",
+                    "secondary": "#755a31",
+                    "on-primary-fixed-variant": "#3e4754",
+                    "surface-bright": "#fff8ef",
+                    "surface-variant": "#e8e2d9",
+                    "inverse-on-surface": "#f6f0e7",
+                    "surface-dim": "#dfd9d0",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#1b1c1a",
+                    "tertiary-fixed": "#e4e2df",
+                    "surface-container": "#f3ede4",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#8c8b89",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#44474b",
+                    "secondary-fixed": "#ffddb1",
+                    "background": "#fff8ef",
+                    "on-secondary-container": "#785c33",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#bec7d6",
+                    "surface-container-low": "#f9f3ea",
+                    "primary-fixed-dim": "#bec7d6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "32px",
+                    "stack-sm": "8px",
+                    "container-max-width": "1440px",
+                    "stack-md": "16px",
+                    "unit": "4px",
+                    "margin-page": "48px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Newsreader"],
+                    "label-sm": ["Inter"],
+                    "headline-lg": ["Newsreader"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-display": ["Newsreader"]
+            },
+            "fontSize": {
+                    "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #fff8ef; /* surface */
+            color: #1d1b16; /* on-surface */
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .serif-text { font-family: 'Newsreader', serif; }
+        .hairline-border { border: 0.5px solid #c5c6cc; }
+        .ambient-shadow { box-shadow: 0 20px 40px -10px rgba(28, 37, 48, 0.06); }
+        .chart-bar { transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .zebra-row:nth-child(even) { background-color: #faf8f5; }
+    </style>
+</head>
+<body class="min-h-screen">
+<!-- Sidebar Navigation (SideNavBar) -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant flex flex-col p-stack-md z-20">
+<div class="mb-stack-lg">
+<div class="flex items-center gap-3 mb-stack-sm">
+<div class="w-10 h-10 bg-primary-container flex items-center justify-center rounded">
+<span class="material-symbols-outlined text-surface" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md leading-none text-primary">Chambers of S. Rao</h2>
+<p class="font-label-sm text-label-sm text-outline">Supreme Court of India</p>
+</div>
+</div>
+</div>
+<nav class="flex-grow space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg" href="#">
+<span class="material-symbols-outlined">business_center</span> Workspace
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg" href="#">
+<span class="material-symbols-outlined">saved_search</span> Research
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg" href="#">
+<span class="material-symbols-outlined">description</span> Templates
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg" href="#">
+<span class="material-symbols-outlined">inventory_2</span> Archives
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 bg-surface-container-highest text-primary font-bold rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span> Settings
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span> Viki AI
+            </a>
+</nav>
+<div class="mt-auto pt-stack-md border-t border-outline-variant space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg" href="#">
+<span class="material-symbols-outlined">contact_support</span> Support
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all font-label-md text-label-md rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span> Sign Out
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-margin-page h-16 border-b border-outline-variant bg-surface sticky top-0 z-10">
+<div class="flex items-center gap-stack-lg">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Settings</h1>
+<nav class="flex gap-stack-md">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Profile</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Firm Details</a>
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary pb-1" href="#">Usage &amp; Billing</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Integrations</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-outline hover:text-primary transition-colors">notifications</button>
+<button class="material-symbols-outlined text-outline hover:text-primary transition-colors">help_outline</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a senior legal counsel in a dark charcoal suit, set against a blurred background of a law library with leather-bound books. The lighting is soft and corporate, maintaining a high-contrast editorial look consistent with a premium legal digital platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBG58XkFXqW1H49TOnarUEZK41MS3KwPNby5tpSr6ztKorHbMua1sU_BdDHYjueWG7sVkGH91qgvQbclSVS_X_HkNYqp8qYH57z4_1nkQIg3ItGAwlgKd9OwcNx7Pb_Im7nDkVKnrGJQWnbCCX6wQLXSjtlvdmaQhCxeGdrDO8m5ygWR1r_2nV1RfR8B_LRoWyGKfMBAkYo89wCBgnvMCzLDrZWrIdVXGBw9YtV5r-tMPvRNtD9gFViJA"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="max-w-container-max-width mx-auto px-margin-page py-stack-lg">
+<!-- Hero Billing Summary -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-stack-lg">
+<!-- Current Spend Card -->
+<div class="md:col-span-2 bg-surface-container-low p-8 rounded-lg hairline-border ambient-shadow relative overflow-hidden">
+<div class="relative z-10">
+<p class="font-label-md text-label-md text-secondary uppercase mb-2">Current Month Spend</p>
+<div class="flex items-baseline gap-2 mb-6">
+<span class="font-headline-display text-headline-display text-primary">₹42,850</span>
+<span class="font-body-md text-body-md text-outline">/ month est.</span>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-2 bg-primary text-on-primary font-label-md text-label-md rounded shadow-sm hover:opacity-90 transition-opacity">
+                                Manage Subscription
+                            </button>
+<button class="px-6 py-2 border border-outline-variant text-primary font-label-md text-label-md rounded hover:bg-surface-container-high transition-colors">
+                                View Invoices
+                            </button>
+</div>
+</div>
+<!-- Decorative background curve -->
+<div class="absolute -right-12 -bottom-12 w-64 h-64 bg-surface-container-highest rounded-full opacity-50 blur-3xl"></div>
+</div>
+<!-- Plan Details Card -->
+<div class="bg-surface p-8 rounded-lg hairline-border flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-md text-label-md text-secondary uppercase">Active Plan</span>
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded uppercase tracking-wider">Premium Enterprise</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Chambers Suite</h3>
+<p class="font-body-md text-body-md text-outline">Next billing date: 12 Oct 2023</p>
+</div>
+<div class="pt-6 border-t border-outline-variant">
+<div class="flex justify-between font-label-md text-label-md mb-2">
+<span>User Seats</span>
+<span>12 / 20</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 60%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Analytics Grid (Bento Style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter mb-stack-lg">
+<!-- Document Generation Chart -->
+<div class="bg-surface p-stack-lg rounded-lg hairline-border">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h4 class="font-headline-md text-headline-md text-primary">Documents Drafted</h4>
+<p class="font-body-md text-body-md text-outline">Total 1,240 this month</p>
+</div>
+<div class="flex gap-1">
+<span class="material-symbols-outlined text-secondary text-sm">trending_up</span>
+<span class="font-label-sm text-label-sm text-secondary">+12% vs last month</span>
+</div>
+</div>
+<div class="h-48 flex items-end justify-between gap-2 px-2">
+<!-- Bar Chart Mock -->
+<div class="flex-1 bg-primary-container chart-bar rounded-t-sm" style="height: 40%;"></div>
+<div class="flex-1 bg-primary-container chart-bar rounded-t-sm" style="height: 65%;"></div>
+<div class="flex-1 bg-primary-container chart-bar rounded-t-sm" style="height: 55%;"></div>
+<div class="flex-1 bg-primary-container chart-bar rounded-t-sm" style="height: 85%;"></div>
+<div class="flex-1 bg-primary-container chart-bar rounded-t-sm" style="height: 45%;"></div>
+<div class="flex-1 bg-primary-container chart-bar rounded-t-sm" style="height: 95%;"></div>
+<div class="flex-1 bg-primary-container chart-bar rounded-t-sm" style="height: 70%;"></div>
+<div class="flex-1 bg-primary-container chart-bar rounded-t-sm" style="height: 60%;"></div>
+</div>
+<div class="flex justify-between mt-4 px-2 font-label-sm text-label-sm text-outline">
+<span>WK 1</span>
+<span>WK 2</span>
+<span>WK 3</span>
+<span>WK 4</span>
+</div>
+</div>
+<!-- AI Runs Chart -->
+<div class="bg-surface p-stack-lg rounded-lg hairline-border">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h4 class="font-headline-md text-headline-md text-primary">Viki AI Utilization</h4>
+<p class="font-body-md text-body-md text-outline">Research &amp; Analysis queries</p>
+</div>
+<select class="bg-transparent border-none font-label-md text-label-md text-primary focus:ring-0 cursor-pointer">
+<option>Last 30 Days</option>
+<option>Last 7 Days</option>
+</select>
+</div>
+<div class="h-48 relative overflow-hidden flex items-end">
+<!-- Line Chart Mock using SVG -->
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 400 100">
+<path d="M0,80 Q50,70 100,40 T200,60 T300,20 T400,30" fill="none" stroke="#9A7B4F" stroke-width="2"></path>
+<path d="M0,80 Q50,70 100,40 T200,60 T300,20 T400,30 V100 H0 Z" fill="url(#brassGradient)" opacity="0.1"></path>
+<defs>
+<lineargradient id="brassGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#9A7B4F"></stop>
+<stop offset="100%" stop-color="#9A7B4F" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+</svg>
+<!-- Chart Tooltip Simulation -->
+<div class="absolute left-1/2 top-4 -translate-x-1/2 bg-primary-container text-surface px-3 py-1 rounded text-[10px] font-bold">
+                            Peak: 242 Runs (Sept 18)
+                        </div>
+</div>
+<div class="flex justify-between mt-4 px-2 font-label-sm text-label-sm text-outline">
+<span>Sept 01</span>
+<span>Sept 15</span>
+<span>Sept 30</span>
+</div>
+</div>
+</div>
+<!-- Breakdown Table -->
+<div class="bg-surface rounded-lg hairline-border overflow-hidden">
+<div class="px-8 py-6 border-b border-outline-variant flex justify-between items-center">
+<h4 class="font-headline-md text-headline-md text-primary">User Activity Breakdown</h4>
+<div class="flex gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="pl-9 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded font-label-md text-label-md focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Search associate..." type="text"/>
+</div>
+<button class="flex items-center gap-2 px-3 py-1.5 border border-outline-variant rounded font-label-md text-label-md hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span> Filter
+                        </button>
+</div>
+</div>
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-8 py-4 font-label-md text-label-md text-secondary uppercase tracking-wider">User / Advocate</th>
+<th class="px-8 py-4 font-label-md text-label-md text-secondary uppercase tracking-wider">Role</th>
+<th class="px-8 py-4 font-label-md text-label-md text-secondary uppercase tracking-wider text-right">Docs Drafted</th>
+<th class="px-8 py-4 font-label-md text-label-md text-secondary uppercase tracking-wider text-right">AI Queries</th>
+<th class="px-8 py-4 font-label-md text-label-md text-secondary uppercase tracking-wider text-right">Cost Contrib.</th>
+<th class="px-8 py-4"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="zebra-row hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-primary text-[10px] border border-outline-variant">SR</div>
+<span class="font-body-md text-body-md text-primary font-medium">Siddharth Rao</span>
+</div>
+</td>
+<td class="px-8 py-5 font-body-md text-body-md text-outline">Senior Partner</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right">142</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right">845</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right font-semibold">₹14,200</td>
+<td class="px-8 py-5 text-right">
+<button class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">more_vert</button>
+</td>
+</tr>
+<tr class="zebra-row hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-primary text-[10px] border border-outline-variant">AM</div>
+<span class="font-body-md text-body-md text-primary font-medium">Ananya Mishra</span>
+</div>
+</td>
+<td class="px-8 py-5 font-body-md text-body-md text-outline">Associate</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right">385</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right">1,120</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right font-semibold">₹9,800</td>
+<td class="px-8 py-5 text-right">
+<button class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">more_vert</button>
+</td>
+</tr>
+<tr class="zebra-row hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-primary text-[10px] border border-outline-variant">PK</div>
+<span class="font-body-md text-body-md text-primary font-medium">Pohan Khanna</span>
+</div>
+</td>
+<td class="px-8 py-5 font-body-md text-body-md text-outline">Junior Advocate</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right">512</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right">410</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right font-semibold">₹7,450</td>
+<td class="px-8 py-5 text-right">
+<button class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">more_vert</button>
+</td>
+</tr>
+<tr class="zebra-row hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-primary text-[10px] border border-outline-variant">VS</div>
+<span class="font-body-md text-body-md text-primary font-medium">Vikram Singh</span>
+</div>
+</td>
+<td class="px-8 py-5 font-body-md text-body-md text-outline">Legal Intern</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right">201</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right">3,420</td>
+<td class="px-8 py-5 font-body-md text-body-md text-primary text-right font-semibold">₹11,400</td>
+<td class="px-8 py-5 text-right">
+<button class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="px-8 py-4 bg-surface-container-low border-t border-outline-variant flex justify-between items-center">
+<p class="font-label-sm text-label-sm text-outline">Showing 4 of 12 firm members</p>
+<div class="flex gap-2">
+<button class="p-1 border border-outline-variant rounded text-outline hover:text-primary disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="p-1 border border-outline-variant rounded text-outline hover:text-primary">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Micro-interaction script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animate chart bars on load
+            const bars = document.querySelectorAll('.chart-bar');
+            bars.forEach((bar, index) => {
+                const finalHeight = bar.style.height;
+                bar.style.height = '0%';
+                setTimeout(() => {
+                    bar.style.height = finalHeight;
+                }, index * 50);
+            });
+        });
+    </script>
+</body></html>

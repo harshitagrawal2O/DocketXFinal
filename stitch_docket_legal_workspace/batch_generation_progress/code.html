@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket | Document Generation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c5c6cc",
+                    "outline": "#75777c",
+                    "tertiary-container": "#242423",
+                    "on-surface": "#1d1b16",
+                    "on-primary-fixed": "#131c27",
+                    "primary": "#07101a",
+                    "surface-container-high": "#ede7de",
+                    "on-secondary-fixed": "#291800",
+                    "on-background": "#1d1b16",
+                    "tertiary-fixed-dim": "#c8c6c4",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#474745",
+                    "surface-container-highest": "#e8e2d9",
+                    "on-secondary-fixed-variant": "#5b421c",
+                    "tertiary": "#0e0f0e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#1c2530",
+                    "secondary-container": "#fdd7a4",
+                    "inverse-surface": "#33302a",
+                    "primary-fixed": "#dae3f2",
+                    "on-primary-container": "#838c9a",
+                    "secondary-fixed-dim": "#e5c18f",
+                    "surface": "#fff8ef",
+                    "surface-tint": "#565f6c",
+                    "secondary": "#755a31",
+                    "on-primary-fixed-variant": "#3e4754",
+                    "surface-bright": "#fff8ef",
+                    "surface-variant": "#e8e2d9",
+                    "inverse-on-surface": "#f6f0e7",
+                    "surface-dim": "#dfd9d0",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#1b1c1a",
+                    "tertiary-fixed": "#e4e2df",
+                    "surface-container": "#f3ede4",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#8c8b89",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#44474b",
+                    "secondary-fixed": "#ffddb1",
+                    "background": "#fff8ef",
+                    "on-secondary-container": "#785c33",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#bec7d6",
+                    "surface-container-low": "#f9f3ea",
+                    "primary-fixed-dim": "#bec7d6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "32px",
+                    "stack-sm": "8px",
+                    "container-max-width": "1440px",
+                    "stack-md": "16px",
+                    "unit": "4px",
+                    "margin-page": "48px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Newsreader"],
+                    "label-sm": ["Inter"],
+                    "headline-lg": ["Newsreader"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-display": ["Newsreader"]
+            },
+            "fontSize": {
+                    "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #fff8ef;
+            color: #1d1b16;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .progress-bar-fill {
+            transition: width 1.5s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        .glass-panel {
+            background: rgba(255, 248, 239, 0.8);
+            backdrop-filter: blur(12px);
+        }
+        @keyframes subtle-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .animate-pulse-slow {
+            animation: subtle-pulse 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen overflow-x-hidden font-body-md text-body-md">
+<!-- Top Navigation Bar -->
+<header class="bg-surface border-b border-outline-variant fixed top-0 left-0 right-0 z-50">
+<nav class="flex justify-between items-center w-full px-margin-page h-16 max-w-container-max-width mx-auto">
+<div class="flex items-center gap-stack-lg">
+<span class="font-headline-md text-headline-md font-bold text-primary">Docket</span>
+<div class="hidden md:flex items-center gap-gutter">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary pb-1" href="#">Matters</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Documents</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Reports</a>
+</div>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:text-primary transition-colors">notifications</button>
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:text-primary transition-colors">help_outline</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a senior legal partner in a high-end corporate setting. The lighting is dramatic yet soft, emphasizing character and authority. The background shows a blurred, expensive mahogany library with law books, following a sophisticated editorial minimalist aesthetic with warm, archival tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJuQeB3NzecXjrozS6DCJTz5mtM3TIsR5QFEs3yeIvK-Pb7U_1PE7eHs-etpN1QXG8oFz5rZU-1TYSMrnbQ3TNHJ6q1oTdsLngKPga0OPN0p0dB77wRX0miw-OB3PkkgZPCoVB91jpeobTId5lhhaDE8gcht_BA44iZ98VMIHJlIeSZH_arW47eS8KzRfBqV8T-1JobQmkxCEf6vaLXxY71_q0Mp07E6zDyU8WKo8O4ZbR3GBukCAmPA"/>
+</div>
+</div>
+</nav>
+</header>
+<!-- Side Navigation (Mobile Hidden) -->
+<aside class="hidden lg:flex flex-col h-screen w-64 fixed left-0 top-16 bg-surface-container-low border-r border-outline-variant p-stack-md">
+<div class="mb-stack-lg px-2">
+<h3 class="font-headline-md text-headline-md text-primary">Chambers of S. Rao</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Supreme Court of India</p>
+</div>
+<div class="flex flex-col gap-unit flex-grow">
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">business_center</span>
+<span class="font-label-md text-label-md">Workspace</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">saved_search</span>
+<span class="font-label-md text-label-md">Research</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 bg-surface-container-highest text-primary font-bold rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">description</span>
+<span class="font-label-md text-label-md">Templates</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="font-label-md text-label-md">Archives</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<div class="mt-4 pt-4 border-t border-outline-variant">
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px] text-secondary">auto_awesome</span>
+<span class="font-label-md text-label-md">Viki AI</span>
+</a>
+</div>
+</div>
+<div class="mt-auto flex flex-col gap-unit">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">contact_support</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-error transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="lg:ml-64 pt-24 pb-12 px-margin-page">
+<div class="max-w-container-max-width mx-auto">
+<!-- Header Section -->
+<div class="mb-stack-lg flex flex-col md:flex-row md:items-end justify-between gap-stack-md">
+<div>
+<nav class="flex items-center gap-2 mb-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Matters</span>
+<span class="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
+<span class="font-label-sm text-label-sm text-secondary">Batch Generation</span>
+</nav>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">Generating 20 documents...</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 max-w-2xl">Docket is compiling high-precision legal drafts based on your selected templates and matter data. You can safely close this window; the process will continue in the background.</p>
+</div>
+<div class="flex items-center gap-stack-sm">
+<span class="font-label-md text-label-md text-on-surface-variant">Estimated: 4 mins remaining</span>
+</div>
+</div>
+<!-- Progress Bento Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Main Progress Card -->
+<div class="lg:col-span-8 bg-surface-container-low border border-outline-variant p-stack-lg rounded-xl relative overflow-hidden">
+<!-- Subtle background texture/shader placeholder -->
+<div class="absolute top-0 right-0 w-64 h-64 -mr-20 -mt-20 opacity-10 pointer-events-none">
+
+</div>
+<div class="flex justify-between items-center mb-stack-md">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-primary">60% Complete</span>
+<span class="animate-pulse-slow font-label-sm text-label-sm px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded-full">ACTIVE DRAFTING</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">12 of 20 finalized</span>
+</div>
+<!-- Main Progress Bar -->
+<div class="w-full h-3 bg-surface-container-highest rounded-full overflow-hidden mb-stack-lg">
+<div class="progress-bar-fill h-full bg-primary" style="width: 60%;"></div>
+</div>
+<!-- Batch List Table -->
+<div class="mt-8">
+<div class="grid grid-cols-12 border-b border-outline-variant pb-stack-sm px-2">
+<div class="col-span-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Matter Name &amp; Reference</div>
+<div class="col-span-3 font-label-sm text-label-sm text-outline uppercase tracking-wider">Status</div>
+<div class="col-span-3 text-right font-label-sm text-label-sm text-outline uppercase tracking-wider">Action</div>
+</div>
+<!-- Rows -->
+<div class="divide-y divide-outline-variant/30">
+<!-- Completed Row -->
+<div class="grid grid-cols-12 items-center py-4 px-2 hover:bg-surface-container-high transition-colors group">
+<div class="col-span-6">
+<p class="font-label-md text-label-md text-primary">Writ Petition - Sharma v. State of Maharashtra</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">WP/4402/2023 • Final Draft</p>
+</div>
+<div class="col-span-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm text-on-surface">Ready</span>
+</div>
+</div>
+<div class="col-span-3 text-right">
+<a class="font-label-md text-label-md text-secondary hover:underline flex items-center justify-end gap-1" href="#">
+                                        Open Draft <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</a>
+</div>
+</div>
+<!-- Drafting Row -->
+<div class="grid grid-cols-12 items-center py-4 px-2 bg-white/40">
+<div class="col-span-6">
+<p class="font-label-md text-label-md text-primary">Arbitration Agreement - Global FinTech Corp</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">AG/2024/012 • Clause Analysis</p>
+</div>
+<div class="col-span-3">
+<div class="flex items-center gap-2">
+<div class="w-4 h-4 border-2 border-outline-variant border-t-primary rounded-full animate-spin"></div>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">Drafting</span>
+</div>
+</div>
+<div class="col-span-3 text-right">
+<span class="font-label-md text-label-md text-outline cursor-not-allowed">Processing...</span>
+</div>
+</div>
+<!-- Queued Row -->
+<div class="grid grid-cols-12 items-center py-4 px-2 opacity-60">
+<div class="col-span-6">
+<p class="font-label-md text-label-md text-primary">Vakalatanama - Estate of J. Kapoor</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">VK/991/2024 • Waiting</p>
+</div>
+<div class="col-span-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-outline">schedule</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Queued</span>
+</div>
+</div>
+<div class="col-span-3 text-right">
+<span class="font-label-md text-label-md text-outline">Waiting</span>
+</div>
+</div>
+<!-- Another Completed Row -->
+<div class="grid grid-cols-12 items-center py-4 px-2 hover:bg-surface-container-high transition-colors group">
+<div class="col-span-6">
+<p class="font-label-md text-label-md text-primary">Interim Application - Reliance Infra</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">IA/560/2024 • Verified</p>
+</div>
+<div class="col-span-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm text-on-surface">Ready</span>
+</div>
+</div>
+<div class="col-span-3 text-right">
+<a class="font-label-md text-label-md text-secondary hover:underline flex items-center justify-end gap-1" href="#">
+                                        Open Draft <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</a>
+</div>
+</div>
+</div>
+<div class="mt-stack-lg pt-stack-md border-t border-outline-variant flex justify-center">
+<button class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+                                View all 20 documents <span class="material-symbols-outlined">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Info/Sidebar Section -->
+<div class="lg:col-span-4 flex flex-col gap-gutter">
+<!-- Reassurance Card -->
+<div class="bg-primary-container text-on-primary-container p-stack-lg rounded-xl flex flex-col gap-stack-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">security</span>
+<h4 class="font-headline-md text-headline-md leading-tight">Digital Stationery Standards</h4>
+</div>
+<p class="font-body-md text-body-md opacity-80">All documents are being generated using our 'High-Grade Archival' protocol. This ensures hairline precision, proper citation formatting for the Supreme Court, and internal cross-reference integrity.</p>
+<div class="mt-2 p-3 bg-white/5 rounded-lg border border-white/10">
+<p class="font-label-sm text-label-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">info</span>
+                                Automatic notification on completion.
+                            </p>
+</div>
+</div>
+<!-- AI Insights Card -->
+<div class="bg-surface-container border border-outline-variant p-stack-lg rounded-xl">
+<div class="flex items-center justify-between mb-4">
+<h4 class="font-label-md text-label-md uppercase tracking-wider text-outline">Generation Log</h4>
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+</div>
+<div class="space-y-4">
+<div class="flex gap-3">
+<div class="w-px bg-outline-variant relative">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-secondary"></div>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">14:02:11</p>
+<p class="font-body-md text-body-md text-on-surface">Compliance check passed for 20/20 docs.</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="w-px bg-outline-variant relative">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-outline"></div>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">14:02:45</p>
+<p class="font-body-md text-body-md text-on-surface">Compiling Case Law citations for Writ Petition.</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="w-px bg-outline-variant relative">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-outline"></div>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">14:03:12</p>
+<p class="font-body-md text-body-md text-on-surface">Formatting document structure for Global FinTech.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="flex flex-col gap-stack-sm">
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-label-md text-label-md transition-all active:scale-95">Go to Dashboard</button>
+<button class="w-full border border-outline text-on-surface py-3 rounded-lg font-label-md text-label-md hover:bg-surface-container transition-all">Cancel Remainder</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Background Run Note -->
+<div class="fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant glass-panel py-3 px-margin-page z-40">
+<div class="max-w-container-max-width mx-auto flex items-center justify-between">
+<div class="flex items-center gap-stack-md text-on-surface-variant">
+<span class="material-symbols-outlined animate-spin-slow">sync</span>
+<span class="font-label-md text-label-md italic">Running in background: Batch #4992-G</span>
+</div>
+<div class="flex items-center gap-stack-lg">
+<span class="font-label-sm text-label-sm text-outline">Network Status: <span class="text-secondary">Secured (SSL)</span></span>
+</div>
+</div>
+</div>
+<!-- Floating Action Button Suppression - Not rendered on this task-focused screen -->
+<script>
+        // Micro-interaction for progress bar simulation (purely visual for demo)
+        document.addEventListener('DOMContentLoaded', () => {
+            const bar = document.querySelector('.progress-bar-fill');
+            // Starting at 60% as defined in HTML, we can animate it slightly to feel alive
+            setTimeout(() => {
+                bar.style.width = '62%';
+            }, 5000);
+        });
+
+        // Add slow spin for the background sync icon
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin-slow {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            .animate-spin-slow {
+                animation: spin-slow 8s linear infinite;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body></html>

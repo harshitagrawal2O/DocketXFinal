@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket | AI Proposal Review</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Newsreader:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .diff-removed {
+            text-decoration: line-through;
+            color: #7f1d1d; /* Muted Oxblood */
+            background-color: #fef2f2;
+            padding: 0 2px;
+        }
+        .diff-added {
+            color: #065f46; /* Emerald */
+            background-color: #ecfdf5;
+            padding: 0 2px;
+            font-weight: 500;
+        }
+        .paper-shadow {
+            box-shadow: 0 10px 30px -10px rgba(28, 37, 48, 0.08);
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .custom-dashed {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23C5C6CC' stroke-width='1' stroke-dasharray='4%2c 4' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#c5c6cc",
+                        "outline": "#75777c",
+                        "tertiary-container": "#242423",
+                        "on-surface": "#1d1b16",
+                        "on-primary-fixed": "#131c27",
+                        "primary": "#07101a",
+                        "surface-container-high": "#ede7de",
+                        "on-secondary-fixed": "#291800",
+                        "on-background": "#1d1b16",
+                        "tertiary-fixed-dim": "#c8c6c4",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#474745",
+                        "surface-container-highest": "#e8e2d9",
+                        "on-secondary-fixed-variant": "#5b421c",
+                        "tertiary": "#0e0f0e",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#1c2530",
+                        "secondary-container": "#fdd7a4",
+                        "inverse-surface": "#33302a",
+                        "primary-fixed": "#dae3f2",
+                        "on-primary-container": "#838c9a",
+                        "secondary-fixed-dim": "#e5c18f",
+                        "surface": "#fff8ef",
+                        "surface-tint": "#565f6c",
+                        "secondary": "#755a31",
+                        "on-primary-fixed-variant": "#3e4754",
+                        "surface-bright": "#fff8ef",
+                        "surface-variant": "#e8e2d9",
+                        "inverse-on-surface": "#f6f0e7",
+                        "surface-dim": "#dfd9d0",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#1b1c1a",
+                        "tertiary-fixed": "#e4e2df",
+                        "surface-container": "#f3ede4",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#8c8b89",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#44474b",
+                        "secondary-fixed": "#ffddb1",
+                        "background": "#fff8ef",
+                        "on-secondary-container": "#785c33",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#bec7d6",
+                        "surface-container-low": "#f9f3ea",
+                        "primary-fixed-dim": "#bec7d6",
+                        "brass": "#9A7B4F"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "4px",
+                        "lg": "8px",
+                        "xl": "12px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "stack-sm": "8px",
+                        "container-max-width": "1440px",
+                        "stack-md": "16px",
+                        "unit": "4px",
+                        "margin-page": "48px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "headline-md": ["Newsreader"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Newsreader"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-display": ["Newsreader"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 w-full z-50 bg-background border-b border-outline-variant flex justify-between items-center h-16 px-margin-page w-full max-w-container-max-width mx-auto">
+<div class="flex items-center gap-stack-lg">
+<span class="text-headline-md font-headline-md font-medium italic text-primary">Docket</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Dashboard</a>
+<a class="text-primary border-b-2 border-primary pb-2 text-label-md font-label-md" href="#">Matters</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Documents</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-stack-md">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low border border-outline-variant rounded">
+<span class="material-symbols-outlined text-sm text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-label-md w-48" placeholder="Search Master File..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-outline cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-outline cursor-pointer">help</span>
+<div class="w-8 h-8 rounded-full bg-surface-variant border border-outline-variant flex items-center justify-center overflow-hidden">
+<img class="object-cover w-full h-full" data-alt="A professional headshot of a senior legal partner in a charcoal grey suit, set against a blurred background of a prestigious law library with mahogany shelves and leather-bound books. The lighting is soft and directional, emphasizing authority and experience. The color palette is muted, featuring deep browns, navy, and whites, maintaining the editorial minimalism of the brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtFUBicOgeWC8dVCR-xfcPBMr0TM5cMQvTXCXyv8Df8Eo6CLPW2WFSiW7zoPPrIdIiXsC-q2F-IEFCxqi--vsCKEUy7oJIDP0kIe30IRx9a7KXDLJpHGuf00-y1cQ9Y2e3GfNEvrNcA76B5c2kmGgNVIYpRYAgF9qlT0t-weh28KtIww3jke80TnYo_A6I7rDUhHNXO_BTW_GCkFjOyBuR1RYbsSboapWR8LwxugAJpcRUZ_2luibIFg"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex h-screen pt-16">
+<!-- Sidebar Navigation -->
+<aside class="h-full w-64 border-r border-outline-variant bg-surface-container-low flex flex-col py-stack-md gap-stack-sm">
+<div class="px-6 mb-stack-md">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-on-primary font-bold">K</div>
+<div>
+<p class="text-label-md font-label-md font-bold text-secondary">Khaitan & Co.</p>
+<p class="text-[10px] text-outline uppercase tracking-wider">Arbitration Dept.</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-1 px-3">
+<div class="flex items-center gap-3 px-3 py-2 bg-surface-container-high text-primary font-semibold border-r-4 border-secondary cursor-pointer transition-all">
+<span class="material-symbols-outlined text-[20px]">folder_open</span>
+<span class="text-label-md font-label-md">Workspace</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container cursor-pointer transition-all">
+<span class="material-symbols-outlined text-[20px]">travel_explore</span>
+<span class="text-label-md font-label-md">Research</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container cursor-pointer transition-all">
+<span class="material-symbols-outlined text-[20px]">description</span>
+<span class="text-label-md font-label-md">Templates</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container cursor-pointer transition-all">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="text-label-md font-label-md">Archives</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container cursor-pointer transition-all">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</div>
+</div>
+<div class="mt-auto px-4">
+<button class="w-full py-2 bg-primary text-on-primary text-label-md font-label-md rounded hover:opacity-90 transition-opacity">
+                    New Matter
+                </button>
+<div class="mt-4 pt-4 border-t border-outline-variant flex flex-col gap-2">
+<div class="flex items-center gap-3 px-3 py-1 text-on-surface-variant hover:text-primary cursor-pointer text-label-sm">
+<span class="material-symbols-outlined text-[18px]">support_agent</span>
+<span>Support</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-1 text-on-surface-variant hover:text-primary cursor-pointer text-label-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary">auto_awesome</span>
+<span class="font-semibold text-secondary">Viki AI</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Document Canvas -->
+<section class="flex-1 overflow-y-auto bg-surface p-12 scrollbar-hide">
+<div class="max-w-[800px] mx-auto bg-white p-16 paper-shadow border border-outline-variant min-h-[1100px]">
+<div class="flex justify-between items-start mb-12">
+<div class="text-outline text-label-sm uppercase tracking-[0.2em]">Privileged & Confidential</div>
+<div class="text-outline text-label-sm uppercase tracking-[0.2em]">Ref: ARB/2023/104</div>
+</div>
+<h1 class="font-headline-lg text-headline-lg mb-8">Draft Settlement Agreement: Reliance vs. Amazon</h1>
+<div class="space-y-6 text-body-lg text-on-surface">
+<p><span class="font-bold">7. DAMAGES AND LIABILITY</span></p>
+<p>7.1 In the event of a breach of any provision of this Agreement, the Defaulting Party shall indemnify the Non-Defaulting Party for all losses sustained.</p>
+<p>7.2 <span class="bg-surface-container px-1 border-b border-secondary">The quantum of liquidated damages shall be calculated based on the net present value of the anticipated revenue stream.</span></p>
+<p>7.3 Any dispute arising out of or in connection with this clause, including any question regarding its existence, validity or termination, shall be referred to and finally resolved by arbitration in Mumbai.</p>
+</div>
+</div>
+</section>
+<!-- Right Rail: Viki's Activity Panel -->
+<aside class="w-[400px] border-l border-outline-variant bg-surface-container-lowest flex flex-col h-full">
+<div class="p-6 border-b border-outline-variant flex justify-between items-center bg-white">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h2 class="text-label-md font-label-md uppercase tracking-wider">Viki AI Proposals</h2>
+</div>
+<div class="flex gap-2">
+<button class="p-1 hover:bg-surface-container rounded transition-colors">
+<span class="material-symbols-outlined text-outline text-sm">filter_list</span>
+</button>
+<button class="p-1 hover:bg-surface-container rounded transition-colors">
+<span class="material-symbols-outlined text-outline text-sm">more_vert</span>
+</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide bg-surface-container-low">
+<!-- Group Title -->
+<div class="flex items-center gap-3 mb-2">
+<div class="h-px flex-1 bg-outline-variant"></div>
+<span class="text-[10px] text-outline font-bold uppercase tracking-widest">Active Proposals (3)</span>
+<div class="h-px flex-1 bg-outline-variant"></div>
+</div>
+<!-- Card 1: Verified Citation -->
+<div class="bg-white border border-outline-variant rounded p-4 space-y-3 paper-shadow transition-all hover:border-secondary">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-2 text-secondary">
+<span class="material-symbols-outlined text-xs">lightbulb</span>
+<span class="text-label-sm font-label-md">Clause 7.1 Realignment</span>
+</div>
+<span class="text-[10px] text-outline">2m ago</span>
+</div>
+<p class="text-body-md text-on-surface italic">"Aligning indemnification language with statutory limits on consequential damages."</p>
+<div class="bg-surface-container-low p-3 border-l-2 border-outline-variant font-mono text-[13px] leading-relaxed">
+                        The Defaulting Party shall indemnify <span class="diff-removed">all losses sustained</span> <span class="diff-added">only direct losses foreseeable at the time of contract</span>.
+                    </div>
+<div class="flex items-center gap-2 py-1 px-2 bg-surface rounded w-fit border border-outline-variant/30">
+<span class="material-symbols-outlined text-[14px] text-secondary" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="text-[11px] font-label-md text-secondary">Indian Contract Act, 1872, s. 73</span>
+</div>
+<div class="flex gap-2 pt-2">
+<button class="flex-1 py-1.5 bg-primary text-on-primary text-label-sm font-label-md rounded hover:opacity-90">Accept</button>
+<button class="flex-1 py-1.5 border border-outline text-on-surface-variant text-label-sm font-label-md rounded hover:bg-surface-container">Reject</button>
+<button class="p-1.5 border border-outline text-outline rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</div>
+</div>
+<!-- Card 2: Citation Blocked Warning -->
+<div class="bg-white border border-error/30 rounded p-4 space-y-3 opacity-95">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-2 text-error">
+<span class="material-symbols-outlined text-xs">warning</span>
+<span class="text-label-sm font-label-md">Clause 7.2 - Compliance Check</span>
+</div>
+<span class="text-[10px] text-outline">15m ago</span>
+</div>
+<p class="text-body-md text-on-surface">"Adjusting liquidated damages calculation to avoid 'penalty' classification."</p>
+<div class="bg-error-container/10 p-3 border-l-2 border-error/50 font-mono text-[13px]">
+                        The <span class="diff-removed">net present value</span> <span class="diff-added">genuine pre-estimate of loss</span>.
+                    </div>
+<div class="flex items-center gap-2 py-1 px-2 bg-error-container/20 rounded w-full">
+<span class="material-symbols-outlined text-[14px] text-error">block</span>
+<span class="text-[11px] font-label-md text-error">Citation blocked: Confidential Precedent X-04</span>
+</div>
+<div class="flex gap-2 pt-1">
+<button class="flex-1 py-1.5 border border-secondary text-secondary text-label-sm font-label-md rounded hover:bg-secondary/5">Accept & Log</button>
+<button class="flex-1 py-1.5 border border-outline text-on-surface-variant text-label-sm font-label-md rounded">Ignore</button>
+</div>
+</div>
+<!-- Card 3: Outdated State (Stale Hunk) -->
+<div class="relative bg-surface-dim/40 border border-outline-variant/50 rounded p-4 space-y-3 grayscale-[0.5] select-none">
+<div class="absolute inset-0 flex items-center justify-center z-10">
+<div class="bg-white/90 px-3 py-1 border border-outline-variant rounded shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-outline">history</span>
+<span class="text-[10px] font-bold uppercase text-outline tracking-tighter">Outdated: Content Modified</span>
+</div>
+</div>
+<div class="opacity-40">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-xs">auto_awesome</span>
+<span class="text-label-sm font-label-md">Clause 7.3 Venue Update</span>
+</div>
+</div>
+<p class="text-body-md italic mt-2">"Standardizing arbitration seat to Singapore International Arbitration Centre."</p>
+<div class="bg-surface-container p-3 border-l-2 border-outline-variant font-mono text-[12px] mt-2">
+                            ...resolved by arbitration in <span class="diff-removed">Mumbai</span> <span class="diff-added">Singapore</span>.
+                        </div>
+</div>
+</div>
+<!-- Group: Proposed Citations -->
+<div class="pt-4 space-y-3">
+<div class="flex items-center gap-2 px-2">
+<span class="text-label-sm font-bold text-outline">SUPPORTING AUTHORITIES</span>
+</div>
+<div class="bg-white border-2 border-dashed border-outline-variant rounded p-3 flex items-center justify-between group cursor-pointer hover:border-secondary transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-outline text-lg">gavel</span>
+</div>
+<div>
+<p class="text-label-md font-bold leading-tight">ONGC vs Saw Pipes Ltd.</p>
+<p class="text-[10px] text-outline">Liquidated Damages Precedent</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-secondary">add_circle</span>
+</div>
+</div>
+</div>
+<!-- Footer: Global Actions -->
+<div class="p-4 border-t border-outline-variant bg-white">
+<div class="flex gap-3">
+<button class="flex-1 flex items-center justify-center gap-2 py-2 bg-secondary text-on-primary text-label-md font-bold rounded shadow-sm active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">done_all</span>
+                        Apply All Proposed
+                    </button>
+<button class="px-3 py-2 border border-outline-variant text-outline rounded hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">refresh</span>
+</button>
+</div>
+<p class="text-center text-[10px] text-outline-variant mt-3 uppercase tracking-widest">Powered by Viki Legal LLM v4.2</p>
+</div>
+</aside>
+</main>
+<!-- FAB for quick action -->
+<button class="fixed bottom-8 right-[430px] w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-xl flex items-center justify-center hover:scale-110 transition-transform active:opacity-80">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+</button>
+<script>
+        // Micro-interactions for accepting proposals
+        document.querySelectorAll('button').forEach(btn => {
+            if(btn.innerText === 'Accept') {
+                btn.addEventListener('click', function() {
+                    const card = this.closest('.paper-shadow');
+                    card.style.transform = 'translateX(20px)';
+                    card.style.opacity = '0';
+                    setTimeout(() => card.remove(), 300);
+                });
+            }
+        });
+
+        // Hover effects for diffs
+        document.querySelectorAll('.diff-added').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                el.classList.add('bg-emerald-200');
+            });
+            el.addEventListener('mouseleave', () => {
+                el.classList.remove('bg-emerald-200');
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket | Authoritative Document View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c5c6cc",
+                    "outline": "#75777c",
+                    "tertiary-container": "#242423",
+                    "on-surface": "#1d1b16",
+                    "on-primary-fixed": "#131c27",
+                    "primary": "#07101a",
+                    "surface-container-high": "#ede7de",
+                    "on-secondary-fixed": "#291800",
+                    "on-background": "#1d1b16",
+                    "tertiary-fixed-dim": "#c8c6c4",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#474745",
+                    "surface-container-highest": "#e8e2d9",
+                    "on-secondary-fixed-variant": "#5b421c",
+                    "tertiary": "#0e0f0e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#1c2530",
+                    "secondary-container": "#fdd7a4",
+                    "inverse-surface": "#33302a",
+                    "primary-fixed": "#dae3f2",
+                    "on-primary-container": "#838c9a",
+                    "secondary-fixed-dim": "#e5c18f",
+                    "surface": "#fff8ef",
+                    "surface-tint": "#565f6c",
+                    "secondary": "#755a31",
+                    "on-primary-fixed-variant": "#3e4754",
+                    "surface-bright": "#fff8ef",
+                    "surface-variant": "#e8e2d9",
+                    "inverse-on-surface": "#f6f0e7",
+                    "surface-dim": "#dfd9d0",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#1b1c1a",
+                    "tertiary-fixed": "#e4e2df",
+                    "surface-container": "#f3ede4",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#8c8b89",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#44474b",
+                    "secondary-fixed": "#ffddb1",
+                    "background": "#fff8ef",
+                    "on-secondary-container": "#785c33",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#bec7d6",
+                    "surface-container-low": "#f9f3ea",
+                    "primary-fixed-dim": "#bec7d6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "32px",
+                    "stack-sm": "8px",
+                    "container-max-width": "1440px",
+                    "stack-md": "16px",
+                    "unit": "4px",
+                    "margin-page": "48px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Newsreader"],
+                    "label-sm": ["Inter"],
+                    "headline-lg": ["Newsreader"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-display": ["Newsreader"]
+            },
+            "fontSize": {
+                    "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .a4-page {
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                width: 100% !important;
+            }
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 25mm;
+            background: white;
+            box-shadow: 0 10px 25px -5px rgba(28, 37, 48, 0.1);
+            margin: 40px auto;
+            position: relative;
+        }
+        .clause-number {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            color: #07101a;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body class="bg-surface-container-low font-body-md text-on-surface">
+<!-- Top Navigation (Shared Component) -->
+<header class="no-print fixed top-0 left-0 right-0 z-50 bg-surface border-b border-outline-variant flex justify-between items-center w-full px-margin-page h-16 max-w-container-max-width mx-auto">
+<div class="flex items-center gap-gutter">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Docket</h1>
+<nav class="hidden md:flex gap-stack-lg h-full">
+<a class="flex items-center h-full text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Dashboard</a>
+<a class="flex items-center h-full text-primary border-b-2 border-primary pb-0.5 font-label-md text-label-md" href="#">Documents</a>
+<a class="flex items-center h-full text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Matters</a>
+<a class="flex items-center h-full text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a senior legal counsel in a dark suit, captured with high-end editorial lighting against a minimalist, warm-toned interior. The style is clean, authoritative, and aligns with a luxury professional service aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhDKdHFcXAO9zqWmJ3-qDHGYV9aQKvthH9EwfQoLbYE3j73Hw_y6_a6BjbyJ9zdaGvGx8sfHANAD_rg_lBBU_sI_zo163xnf5FF-aoB4B_phxF1_VdTrp2my5Cd38zBeNvpXWPdIIMU8hkGjlOAgySvDshYD2JfRChYjzVbyto-rPI_88zng_4GOlGdsS4Nwu13QbNwAcX92dchfAVxYm_KQpGVtEyFm2AZ3vGefQCsAC3JpBx5Xx0BA"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-24 pb-20 px-margin-page">
+<div class="max-w-[210mm] mx-auto">
+<!-- Breadcrumbs / Action Bar -->
+<div class="no-print flex justify-between items-center mb-stack-lg">
+<div class="flex items-center text-on-surface-variant gap-unit">
+<span class="font-label-md text-label-md uppercase tracking-wider">MATTER: CP/102/2023</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-label-md text-label-md text-primary">MASTER SERVICE AGREEMENT</span>
+</div>
+<div class="flex gap-stack-sm">
+<button class="flex items-center gap-unit px-stack-md py-2 bg-surface border border-outline-variant rounded-lg hover:bg-surface-container-high transition-all text-label-md font-label-md">
+<span class="material-symbols-outlined text-sm">edit</span> EDIT DRAFT
+                    </button>
+</div>
+</div>
+<!-- The Document Page -->
+<article class="a4-page mx-auto">
+<!-- Firm Letterhead -->
+<div class="flex justify-between items-start border-b-2 border-primary-container pb-stack-md mb-stack-lg">
+<div class="space-y-1">
+<div class="font-headline-md text-headline-md text-primary flex items-center gap-unit">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">balance</span>
+                            CHAMBERS OF S. RAO
+                        </div>
+<p class="font-label-sm text-label-sm uppercase tracking-[0.1em] text-on-surface-variant">Advocates &amp; Solicitors | Supreme Court of India</p>
+</div>
+<div class="text-right text-on-surface-variant font-label-sm text-label-sm">
+<p>12/A Shanti Niketan, New Delhi - 110021</p>
+<p>contact@chambers-rao.law | +91 11 2338 0000</p>
+</div>
+</div>
+<!-- Document Header -->
+<div class="text-center mb-stack-lg">
+<h2 class="font-headline-lg text-headline-lg text-primary underline underline-offset-8 decoration-1 mb-unit">MASTER SERVICE AGREEMENT</h2>
+<p class="font-label-sm text-label-sm italic text-on-surface-variant">Date: 24th October 2023</p>
+</div>
+<!-- Legal Body Content -->
+<div class="space-y-stack-md text-on-surface leading-relaxed text-justify">
+<p class="font-body-md text-body-md">
+                        This <span class="font-bold">MASTER SERVICE AGREEMENT</span> (the “Agreement”) is entered into as of the date first above written, by and between <span class="font-bold">VORTEX TECHNOLOGIES PVT LTD</span>, a company incorporated under the Companies Act, 2013, having its registered office at Bengaluru (hereinafter referred to as the "Client") and <span class="font-bold">LUMINA CONSULTING GROUP</span> (hereinafter referred to as the "Service Provider").
+                    </p>
+<div class="pt-stack-md">
+<h3 class="font-label-md text-label-md text-primary border-b border-outline-variant inline-block mb-stack-sm">ARTICLE 1: DEFINITIONS AND INTERPRETATION</h3>
+<div class="pl-stack-md space-y-stack-sm">
+<div class="flex items-start">
+<span class="clause-number">1.1</span>
+<p class="font-body-md text-body-md">“Services” shall mean the strategic consulting and technological integration services provided by the Service Provider as specifically described in Annexure A attached hereto.</p>
+</div>
+<div class="flex items-start">
+<span class="clause-number">1.2</span>
+<p class="font-body-md text-body-md">“Intellectual Property” shall mean all patents, copyrights, trade secrets, trademarks, and other proprietary rights of any kind.</p>
+</div>
+</div>
+</div>
+<div class="pt-stack-md">
+<h3 class="font-label-md text-label-md text-primary border-b border-outline-variant inline-block mb-stack-sm">ARTICLE 2: SCOPE OF SERVICES</h3>
+<div class="pl-stack-md space-y-stack-sm">
+<div class="flex items-start">
+<span class="clause-number">2.1</span>
+<p class="font-body-md text-body-md">The Service Provider shall perform the Services in a professional and workmanlike manner, in accordance with the prevailing standards of the industry and the specific timelines set forth in each Statement of Work.</p>
+</div>
+<div class="flex items-start">
+<span class="clause-number">2.2</span>
+<p class="font-body-md text-body-md">Any modification to the Scope of Services must be mutually agreed upon in writing by authorized representatives of both Parties through a formal Change Request Document.</p>
+</div>
+</div>
+</div>
+<div class="pt-stack-md">
+<h3 class="font-label-md text-label-md text-primary border-b border-outline-variant inline-block mb-stack-sm">ARTICLE 3: CONFIDENTIALITY</h3>
+<div class="pl-stack-md">
+<p class="font-body-md text-body-md">Each Party acknowledges that in the course of performance of this Agreement, it may obtain "Confidential Information" from the other Party. The receiving Party shall use at least the same degree of care as it uses for its own information of like importance, but no less than reasonable care, to prevent disclosure of the same.</p>
+</div>
+</div>
+<!-- Signature Blocks -->
+<div class="pt-24 grid grid-cols-2 gap-stack-lg">
+<div class="space-y-stack-lg">
+<p class="font-label-md text-label-md uppercase">FOR THE CLIENT</p>
+<div class="border-t border-primary pt-stack-sm w-48">
+<p class="font-label-sm text-label-sm">Authorized Signatory</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Name: ________________</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Title: Managing Director</p>
+</div>
+</div>
+<div class="space-y-stack-lg">
+<p class="font-label-md text-label-md uppercase">FOR THE SERVICE PROVIDER</p>
+<div class="border-t border-primary pt-stack-sm w-48">
+<p class="font-label-sm text-label-sm">Authorized Signatory</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Name: ________________</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Title: Partner</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer stamp -->
+<div class="absolute bottom-8 right-8">
+<div class="w-24 h-24 border-2 border-primary/20 rounded-full flex items-center justify-center rotate-12 opacity-40">
+<div class="text-[10px] text-center font-label-md leading-none">
+<p>OFFICIALLY FILED</p>
+<p class="my-1">DOCKET SYSTEM</p>
+<p>ID: 992-88-A</p>
+</div>
+</div>
+</div>
+</article>
+</div>
+</main>
+<!-- Floating Toolbar -->
+<div class="no-print fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+<div class="bg-primary text-on-primary rounded-full px-stack-md py-3 shadow-2xl flex items-center gap-stack-md backdrop-blur-md bg-opacity-95">
+<button class="flex items-center gap-unit px-4 py-2 hover:bg-on-primary/10 rounded-full transition-all group" onclick="window.print()">
+<span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">print</span>
+<span class="font-label-md text-label-md">PRINT</span>
+</button>
+<div class="w-[1px] h-6 bg-on-primary/20"></div>
+<button class="flex items-center gap-unit px-4 py-2 hover:bg-on-primary/10 rounded-full transition-all group">
+<span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">picture_as_pdf</span>
+<span class="font-label-md text-label-md">PDF</span>
+</button>
+<button class="flex items-center gap-unit px-4 py-2 hover:bg-on-primary/10 rounded-full transition-all group">
+<span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">description</span>
+<span class="font-label-md text-label-md">DOCX</span>
+</button>
+<div class="w-[1px] h-6 bg-on-primary/20"></div>
+<button class="p-2 hover:bg-on-primary/10 rounded-full transition-all">
+<span class="material-symbols-outlined">share</span>
+</button>
+</div>
+</div>
+<!-- Side Feedback Interaction (Subtle) -->
+<div class="no-print fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-unit">
+<button class="w-12 h-12 bg-surface border border-outline-variant shadow-sm rounded-lg flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary transition-all bg-white" title="View Annotations">
+<span class="material-symbols-outlined">history_edu</span>
+</button>
+<button class="w-12 h-12 bg-surface border border-outline-variant shadow-sm rounded-lg flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary transition-all bg-white" title="Clause Library">
+<span class="material-symbols-outlined">library_books</span>
+</button>
+<button class="w-12 h-12 bg-surface border border-outline-variant shadow-sm rounded-lg flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary transition-all bg-white" title="Compare Versions">
+<span class="material-symbols-outlined">difference</span>
+</button>
+</div>
+<script>
+        // Micro-interactions for the document
+        document.querySelectorAll('.clause-number').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                item.parentElement.classList.add('bg-secondary-container/20');
+                item.parentElement.classList.add('transition-all');
+                item.parentElement.classList.add('duration-300');
+            });
+            item.addEventListener('mouseleave', () => {
+                item.parentElement.classList.remove('bg-secondary-container/20');
+            });
+        });
+
+        // Sticky header transition
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-md');
+                header.classList.remove('border-b-transparent');
+            } else {
+                header.classList.remove('shadow-md');
+            }
+        });
+    </script>
+</body></html>

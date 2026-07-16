@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket | Documents</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Newsreader for Serif, Inter for Sans -->
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed": "#131c27",
+                    "primary-fixed-dim": "#bec7d6",
+                    "surface-tint": "#565f6c",
+                    "on-surface-variant": "#44474b",
+                    "secondary-container": "#fdd7a4",
+                    "surface-container-high": "#ede7de",
+                    "surface-container-highest": "#e8e2d9",
+                    "on-tertiary-fixed": "#1b1c1a",
+                    "on-secondary-fixed": "#291800",
+                    "on-secondary-container": "#785c33",
+                    "background": "#fff8ef",
+                    "tertiary-fixed-dim": "#c8c6c4",
+                    "secondary-fixed-dim": "#e5c18f",
+                    "primary": "#07101a",
+                    "primary-container": "#1c2530",
+                    "on-surface": "#1d1b16",
+                    "surface-variant": "#e8e2d9",
+                    "surface-container-low": "#f9f3ea",
+                    "on-background": "#1d1b16",
+                    "error-container": "#ffdad6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed": "#ffddb1",
+                    "secondary": "#755a31",
+                    "outline": "#75777c",
+                    "inverse-on-surface": "#f6f0e7",
+                    "on-tertiary-fixed-variant": "#474745",
+                    "tertiary": "#0e0f0e",
+                    "on-primary-container": "#838c9a",
+                    "outline-variant": "#c5c6cc",
+                    "surface": "#fff8ef",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed-variant": "#5b421c",
+                    "on-primary-fixed-variant": "#3e4754",
+                    "on-tertiary": "#ffffff",
+                    "surface-container": "#f3ede4",
+                    "surface-dim": "#dfd9d0",
+                    "tertiary-container": "#242423",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "surface-bright": "#fff8ef",
+                    "inverse-surface": "#33302a",
+                    "on-tertiary-container": "#8c8b89",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#e4e2df",
+                    "inverse-primary": "#bec7d6",
+                    "primary-fixed": "#dae3f2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "32px",
+                    "unit": "4px",
+                    "margin-page": "48px",
+                    "gutter": "24px",
+                    "stack-sm": "8px",
+                    "container-max-width": "1440px",
+                    "stack-md": "16px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Newsreader"],
+                    "label-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-display": ["Newsreader"],
+                    "body-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "headline-md": ["Newsreader"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .ink-shadow {
+            box-shadow: 0 20px 40px -10px rgba(28, 37, 48, 0.06);
+        }
+        .paper-texture {
+            background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-secondary-container selection:text-on-secondary-container paper-texture min-h-screen">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-background border-b border-outline-variant/30 backdrop-blur-md">
+<div class="flex justify-between items-center h-16 px-margin-page w-full max-w-container-max-width mx-auto">
+<div class="flex items-center gap-stack-lg">
+<span class="text-headline-md font-headline-md font-medium italic text-primary">Docket</span>
+<div class="hidden md:flex items-center gap-1 px-3 py-1.5 rounded bg-surface-container-low border border-outline-variant/50 cursor-pointer hover:bg-surface-container transition-colors">
+<span class="text-label-sm uppercase text-on-surface-variant">Firm Workspace</span>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">unfold_more</span>
+</div>
+<div class="hidden lg:flex items-center gap-stack-md ml-4">
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Dashboard</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Matters</a>
+<a class="text-primary border-b-2 border-primary pb-1 text-label-md font-label-md" href="#">Documents</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Reports</a>
+</div>
+</div>
+<div class="flex items-center gap-stack-md">
+<div class="relative hidden sm:block">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">search</span>
+<input class="pl-10 pr-4 py-2 w-64 bg-surface-container-lowest border-none focus:ring-1 focus:ring-primary text-body-md rounded-lg shadow-sm" placeholder="Search across chambers..." type="text"/>
+</div>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant cursor-pointer ml-2">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a senior legal partner in a charcoal suit, set against a softly lit minimalist background. The aesthetic is clean, professional, and authoritative, matching a high-end light-mode legal software interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATFd_blMr7gRVrmxVf8s_EeZBLTGvshBu_Ev1i8E9T11_WoJiOzWE7XjyNV3ohRUHNcwf2EZw_FAc-O6rgUD3yZMomTARXguHj7OWRvX-dbFnyoOcJ4IEQ18gKWXUIetTxB44mrFx2mINpb0UYb_OcdfDvl-bmZACuMiDlRjH76UvYOXv7ejhTWFGoMk1qBU7eUcgEUbEvTUt8Xwp8zkiVDNq8j_u89yV6qf75jtns9LqF8Bs72FuXuQ"/>
+</div>
+</div>
+</div>
+</nav>
+<main class="pt-24 pb-20 px-margin-page max-w-container-max-width mx-auto">
+<!-- Page Header -->
+<header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-stack-md mb-stack-lg">
+<div>
+<h1 class="font-headline-display text-headline-display text-primary">Documents</h1>
+<p class="text-on-surface-variant mt-1 max-w-2xl font-body-md">Manage firm-wide artifacts, precedents, and active drafting cycles.</p>
+</div>
+<div class="flex items-center gap-1 bg-primary rounded-lg overflow-hidden group">
+<button class="bg-primary text-on-primary px-6 py-3 flex items-center gap-2 hover:bg-primary/90 transition-colors border-r border-on-primary/10">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">New document</span>
+</button>
+<div class="relative">
+<button class="bg-primary text-on-primary px-3 py-3 hover:bg-primary/90 transition-colors" id="dropdown-toggle">
+<span class="material-symbols-outlined">keyboard_arrow_down</span>
+</button>
+<!-- Simple Dropdown Mock -->
+<div class="hidden absolute right-0 top-full mt-2 w-48 bg-surface-container-lowest border border-outline-variant/30 rounded-lg ink-shadow z-10 py-2" id="dropdown-menu">
+<a class="flex items-center gap-3 px-4 py-2 hover:bg-surface-container-low transition-colors text-label-md" href="#">
+<span class="material-symbols-outlined text-outline">description</span> Blank
+                        </a>
+<a class="flex items-center gap-3 px-4 py-2 hover:bg-surface-container-low transition-colors text-label-md" href="#">
+<span class="material-symbols-outlined text-outline">layers</span> From template
+                        </a>
+<div class="mx-2 my-1 border-t border-outline-variant/10"></div>
+<a class="flex items-center gap-3 px-4 py-2 hover:bg-surface-container-low transition-colors text-label-md text-secondary" href="#">
+<span class="material-symbols-outlined">auto_awesome</span> Draft with Viki
+                        </a>
+</div>
+</div>
+</div>
+</header>
+<!-- Filters & Controls -->
+<div class="flex flex-col md:flex-row justify-between items-center gap-stack-md border-b border-outline-variant/30 pb-stack-md mb-stack-lg">
+<div class="flex items-center gap-stack-sm overflow-x-auto no-scrollbar w-full md:w-auto">
+<button class="px-4 py-1.5 rounded-full bg-primary text-on-primary text-label-sm font-semibold whitespace-nowrap">All</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface-variant text-label-sm font-semibold whitespace-nowrap">Contracts</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface-variant text-label-sm font-semibold whitespace-nowrap">Opinions</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface-variant text-label-sm font-semibold whitespace-nowrap">Filings</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface-variant text-label-sm font-semibold whitespace-nowrap">Memos</button>
+</div>
+<div class="flex items-center gap-stack-md w-full md:w-auto justify-end">
+<div class="flex items-center gap-2 cursor-pointer group">
+<span class="text-label-sm font-label-md uppercase text-on-surface-variant group-hover:text-primary transition-colors">Sort by</span>
+<span class="text-label-sm font-bold text-primary">Last Edited</span>
+<span class="material-symbols-outlined text-outline text-[18px]">sort</span>
+</div>
+<div class="flex items-center bg-surface-container-low p-1 rounded-lg border border-outline-variant/30">
+<button class="p-1.5 bg-surface-container-lowest shadow-sm rounded-md text-primary">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-[20px]">view_list</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Document Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
+<!-- Card 1 -->
+<div class="group bg-surface-container-lowest border border-outline-variant/40 rounded-lg p-stack-md flex flex-col justify-between hover:border-secondary transition-all ink-shadow cursor-pointer">
+<div>
+<div class="flex justify-between items-start mb-stack-sm">
+<span class="text-label-sm font-label-md px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant border border-secondary/20">Lease Agreement</span>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2 leading-tight group-hover:text-secondary transition-colors">Master Commercial Lease - Nariman Point Premises</h3>
+<p class="text-body-md text-on-surface-variant line-clamp-2">Standard commercial lease for Reliance Tower 4, Units 12-15 including maintenance schedules...</p>
+</div>
+<div class="mt-stack-lg">
+<div class="flex items-center justify-between mb-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close-up headshot of a female associate with professional attire, soft natural window lighting, clean white background, high-resolution aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuADMW3WpMHhduNlRA9dlBlY_6MCBmlqiuEBP8VMzE3w4xHe9OfxSAepeRSPpXuSZ8yekrenQhmyOvnvqEKmI1Tmd9e2VDfdLmYfGGBHJwkZNC8Vkqq4aKua8iTEn_p6E3eTm-iwIx1Ekw7jBW3k3ancQxmuVLOkYWMUJ8t-WR3QnarZWuRobPqXc4YH5krO7Xb1EtKRZ47P8gUWLz9MOnrcul4Bo5AY9Mr5wVRmjUKFnzkimR9zhR6cOg"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of an experienced male lawyer wearing glasses, warm interior lighting with hints of a library in the background, professional and intellectual tone." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDg9jZ4k5fUkhG3kePXXKY6YmAUZndM_kSTbk9pziT8pBvhKAWqw7Ut3cy_CZNYSA5U8LnH7HRNPg5JlNBw8h2acCytUtksvhSVCsYyn8p7YEF_-zb-DX0noBwIzAXDzDjrn4GxuTdcsDZ-7zH1DF2DkWSv88nhIsFar8cREZJConWNMuc7pBtweYojLeOpfaPiuFtzUybKyNkb9dnQnOupLRYKo3qceQFcy8IFl6nttrVFJ0j8i2zFFg"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-on-surface-variant">+2</div>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-amber-400"></span> Draft
+                        </span>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-outline-variant/10">
+<span class="text-label-sm text-outline">Edited 2 days ago</span>
+<span class="material-symbols-outlined text-[18px] text-outline opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-surface-container-lowest border border-outline-variant/40 rounded-lg p-stack-md flex flex-col justify-between hover:border-secondary transition-all ink-shadow cursor-pointer">
+<div>
+<div class="flex justify-between items-start mb-stack-sm">
+<span class="text-label-sm font-label-md px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-outline-variant/30">Legal Opinion</span>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2 leading-tight group-hover:text-secondary transition-colors">Tax Applicability on Cross-Border IP Transfer</h3>
+<p class="text-body-md text-on-surface-variant line-clamp-2">Exhaustive review of GST implications for digital asset licensing between India and Singapore...</p>
+</div>
+<div class="mt-stack-lg">
+<div class="flex items-center justify-between mb-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Professional avatar of a young female lawyer with a minimalist modern background, soft lighting, sharp focus, clean corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdbBMDkivlo1nZpMpGsZDccOIEPQOaYkZxtsDImDm1lyP0jgzuKVWwTRxzhl39MlSqaaA1S7ql7PZEFxvpL0oMraoDE6VFz2-cR7XS1vFCrzcLWEooSI6BKeBFSdCXSqPuNdckXWJmo29sUhicThU-Czzbs_2xSWHY-Y7Ow5QUrPptMpqXf9NBfrM0k_TusywUzFX9zo8_j_ir1dDKPK7e4QrdZFnISOT6To2lBFzs7szeAxhilBiI3g"/>
+</div>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-blue-500"></span> In Review
+                        </span>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-outline-variant/10">
+<span class="text-label-sm text-outline">Edited 5 hours ago</span>
+<span class="material-symbols-outlined text-[18px] text-outline opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group bg-surface-container-lowest border border-outline-variant/40 rounded-lg p-stack-md flex flex-col justify-between hover:border-secondary transition-all ink-shadow cursor-pointer">
+<div>
+<div class="flex justify-between items-start mb-stack-sm">
+<span class="text-label-sm font-label-md px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-outline-variant/30">Affidavit</span>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2 leading-tight group-hover:text-secondary transition-colors">Writ Petition No. 442/2023 - State of Maharashtra</h3>
+<p class="text-body-md text-on-surface-variant line-clamp-2">Counter-affidavit addressing environmental clearances for the coastal road extension project...</p>
+</div>
+<div class="mt-stack-lg">
+<div class="flex items-center justify-between mb-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Distinguished senior advocate with graying hair, wearing a white legal collar and black coat, soft cinematic lighting, warm office ambiance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBml9DH8DZr6hHr5vrv1hWPbdKoQq0bEbyZCimfl-Y4k1_il-Kzdqa8ikfXrNyvt3YX0lHb4aVHK2fAzls2rRaeKT2TY9FkCuIkOzqY0I0j87m1mpLdZiUy0WwaN_omdmlrYL-uZdpLunzfc2WzJHwvZ57dFvGnLh9_OHjEJYR9iZW2_auucpC06ABqTNgJ5Kai6TXwu_5WnsWUgqkeuRTh46WCUhR2QGplJY5wbjSqqNaQ2Lq3rUXw6g"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Mid-shot of a professional woman in a formal business suit, high-key lighting, bright minimalist setting, sophisticated and clean look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmXDDEO3YIO8eNffqYf7CbgToPk2mTIoV3aVBd7eXEkO5e7pSSyPBGy8iyjFHDVLU6vawe5Vy07RMK86IRFIMTQy2GTF22s5VajBHPjEgvFoQIEiYpKMMIti_mTKzSyQTMS0wiQ4Aj6z5hIc9ykWBZXx6t26PlLzOn-yMy_wFZuwok_C-aT9VcnvRjtGtdrvt9vvYOQ0A8238AMYmcK5kkvy-H9EzYoLmtEUQDc69LCaR9yoeqRLzHvg"/>
+</div>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Final
+                        </span>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-outline-variant/10">
+<span class="text-label-sm text-outline">Edited 1 week ago</span>
+<span class="material-symbols-outlined text-[18px] text-outline opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Card 4 (Drafting with AI) -->
+<div class="group bg-surface-container-lowest border border-secondary/20 rounded-lg p-stack-md flex flex-col justify-between hover:border-secondary transition-all ink-shadow cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2">
+<span class="material-symbols-outlined text-secondary text-[20px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div>
+<div class="flex justify-between items-start mb-stack-sm">
+<span class="text-label-sm font-label-md px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed-variant border border-outline-variant/30">Service Agreement</span>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2 leading-tight group-hover:text-secondary transition-colors">Vendor MSA - Tech Solutions Pvt Ltd</h3>
+<p class="text-body-md text-on-surface-variant line-clamp-2">Currently being generated using Clause Library V3. Analyzing indemnity clauses...</p>
+</div>
+<div class="mt-stack-lg">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<div class="w-24 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-2/3 animate-pulse"></div>
+</div>
+<span class="text-[10px] text-secondary font-bold">Drafting...</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-outline-variant/10">
+<span class="text-label-sm text-outline italic">Viki AI is working</span>
+<span class="material-symbols-outlined text-[18px] text-outline opacity-0 group-hover:opacity-100 transition-opacity">stop_circle</span>
+</div>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="group bg-surface-container-lowest border border-outline-variant/40 rounded-lg p-stack-md flex flex-col justify-between hover:border-secondary transition-all ink-shadow cursor-pointer">
+<div>
+<div class="flex justify-between items-start mb-stack-sm">
+<span class="text-label-sm font-label-md px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-outline-variant/30">Partnership Deed</span>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2 leading-tight group-hover:text-secondary transition-colors">Venture Capital Fund - Limited Partnership</h3>
+<p class="text-body-md text-on-surface-variant line-clamp-2">Drafting contribution schedules and distribution waterfalls for Series B close...</p>
+</div>
+<div class="mt-stack-lg">
+<div class="flex items-center justify-between mb-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Headshot of a confident professional man in a beige linen suit, soft lighting reflecting a warm professional environment, modern and clean style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxRdFodnQpYWmNVf9Mpm_H8HyFMTQ2kdLYLBQH5uzgFBiMLudr8OIgwxcu01zot9s2iNU0ODJpHx5DrstUEgkVavoROcn4KTQLAJuEI88lm5MM-7XcntYdGyvJHMzFB3cjNID04yDqblHO0SkDKKxTy9Sc9lUIsleKtGhC2I2dt3PRQeMrPfEQjpWn-sMp5He4GWEqq_MLgEd3BOF9M2gciVjvg6J0VGP_BWxg2yw7nvITa1tBA-PFog"/>
+</div>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-amber-400"></span> Draft
+                        </span>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-outline-variant/10">
+<span class="text-label-sm text-outline">Edited yesterday</span>
+<span class="material-symbols-outlined text-[18px] text-outline opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="group bg-surface-container-lowest border border-outline-variant/40 rounded-lg p-stack-md flex flex-col justify-between hover:border-secondary transition-all ink-shadow cursor-pointer">
+<div>
+<div class="flex justify-between items-start mb-stack-sm">
+<span class="text-label-sm font-label-md px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-outline-variant/30">MOU</span>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2 leading-tight group-hover:text-secondary transition-colors">MoU - Joint Venture with Apex Logistics</h3>
+<p class="text-body-md text-on-surface-variant line-clamp-2">Preliminary memorandum of understanding for warehouse development in Pune cluster...</p>
+</div>
+<div class="mt-stack-lg">
+<div class="flex items-center justify-between mb-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up of a female partner with a professional ponytail, wearing a tailored navy blazer, soft bokeh office background, bright and elegant lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-OSkk5gl3CTp1FlAZ6i7iRsFhZtTYBWczzIR-7r56_b5iEj1PYLXJI5APiQSZnSis9ISx1umknhoauTHwv_DuvIRoleoWHEu9r50mwpJwuI1A23aRXH4KI4FkkqqRYTTmTWqkrd4KJAggTjfTFRth6fQ6zvyztcc2RiYEn-3rorZRXlTsCVrWGeXcapTU7GMiVZn96XtRj3Q2VBvxllYyJaZcOBNMEUVsUj7TLr0axnfwDxjw8yNYrw"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a young male attorney in a white shirt, professional profile, high-key bright lighting, minimalist and modern." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvpj2vF11iARwJere__3Gl-e_F2YU-kqVS5CN2eHOiq_V1uzv8krRpxdc1Cy1d1ufvIPUXUPH664z7B_JlFIon7XdEYDBfeAi_UIrDxfpRwYlLESP_H5RTqZTZ-HdKMxrj8g-THtR57soZzC6dGm3nQoyNrQ0P1gc-5arXxqz96uyuNcu5qyeL5QgFOGKx-VTKnCT0aF8-jo9pcywmL7zg4-drfBtvLQS_2A9fyaA3AYg2UzSMHZX0kw"/>
+</div>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-blue-500"></span> In Review
+                        </span>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-outline-variant/10">
+<span class="text-label-sm text-outline">Edited 3 days ago</span>
+<span class="material-symbols-outlined text-[18px] text-outline opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Side Navigation Trigger (Floating for accessibility if needed) -->
+<div class="fixed bottom-8 left-8 z-50">
+<button class="w-12 h-12 bg-primary text-on-primary rounded-full ink-shadow flex items-center justify-center hover:scale-105 transition-transform active:scale-95">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        const toggle = document.getElementById('dropdown-toggle');
+        const menu = document.getElementById('dropdown-menu');
+
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', () => {
+            menu.classList.add('hidden');
+        });
+
+        // Hover lift effect logic for cards
+        const cards = document.querySelectorAll('.group');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body></html>

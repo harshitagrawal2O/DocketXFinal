@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket | Create Document</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c5c6cc",
+                    "outline": "#75777c",
+                    "tertiary-container": "#242423",
+                    "on-surface": "#1d1b16",
+                    "on-primary-fixed": "#131c27",
+                    "primary": "#07101a",
+                    "surface-container-high": "#ede7de",
+                    "on-secondary-fixed": "#291800",
+                    "on-background": "#1d1b16",
+                    "tertiary-fixed-dim": "#c8c6c4",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#474745",
+                    "surface-container-highest": "#e8e2d9",
+                    "on-secondary-fixed-variant": "#5b421c",
+                    "tertiary": "#0e0f0e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#1c2530",
+                    "secondary-container": "#fdd7a4",
+                    "inverse-surface": "#33302a",
+                    "primary-fixed": "#dae3f2",
+                    "on-primary-container": "#838c9a",
+                    "secondary-fixed-dim": "#e5c18f",
+                    "surface": "#fff8ef",
+                    "surface-tint": "#565f6c",
+                    "secondary": "#9A7B4F", /* Adjusted to Brass from prompt/identity */
+                    "on-primary-fixed-variant": "#3e4754",
+                    "surface-bright": "#fff8ef",
+                    "surface-variant": "#e8e2d9",
+                    "inverse-on-surface": "#f6f0e7",
+                    "surface-dim": "#dfd9d0",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#1b1c1a",
+                    "tertiary-fixed": "#e4e2df",
+                    "surface-container": "#f3ede4",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#8c8b89",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#44474b",
+                    "secondary-fixed": "#ffddb1",
+                    "background": "#fff8ef",
+                    "on-secondary-container": "#785c33",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#bec7d6",
+                    "surface-container-low": "#f9f3ea",
+                    "primary-fixed-dim": "#bec7d6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "32px",
+                    "stack-sm": "8px",
+                    "container-max-width": "1440px",
+                    "stack-md": "16px",
+                    "unit": "4px",
+                    "margin-page": "48px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Newsreader"],
+                    "label-sm": ["Inter"],
+                    "headline-lg": ["Newsreader"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-display": ["Newsreader"]
+            },
+            "fontSize": {
+                    "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .active-tab {
+            border-bottom: 2px solid #9A7B4F;
+            color: #07101a;
+        }
+        .document-preview-container {
+            box-shadow: 0 10px 30px -10px rgba(28, 37, 48, 0.08);
+            background: #ffffff;
+            min-height: 800px;
+        }
+        .brass-highlight {
+            background-color: rgba(154, 123, 79, 0.1);
+            border-bottom: 1px dashed #9A7B4F;
+            padding: 0 2px;
+        }
+        /* Custom scrollbar for archival feel */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f9f3ea; }
+        ::-webkit-scrollbar-thumb { background: #c5c6cc; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9A7B4F; }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased overflow-hidden">
+<!-- Top Navigation Bar -->
+<nav class="bg-surface docked full-width top-0 border-b border-outline-variant flex justify-between items-center w-full px-margin-page h-16 max-w-container-max-width mx-auto sticky z-50">
+<div class="flex items-center gap-stack-lg">
+<span class="font-headline-md text-headline-md font-bold text-primary">Docket</span>
+<div class="hidden md:flex gap-gutter">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Dashboard</a>
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary pb-1 cursor-pointer" href="#">Documents</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Matters</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Reports</a>
+</div>
+</div>
+<div class="flex items-center gap-stack-md">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">help_outline</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a senior advocate in a dark grey suit, shot with soft editorial lighting against a minimalist warm beige background. The mood is authoritative and calm, reflecting high-stakes legal practice." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUqe7eALIIYCZp1hl0cciKBQqSAaRN_rgUYUJTazbauPkhatrcMdtnIVnmrpr-zkvWdodk9s36daMehJO_NH_pSsm3MnAG8eV9FYHfXMVYMsYXRUCZQ3dS-_pGypKWgxlMpOsB9kH_fY3A_lgrkgkJwUNLBtRk7jfFvjjT9pTznCTZGK8JEkIb0Z5Gvmes8a06G5w3mk3jMMJw5VqSHVWbcO5qErzUlYZnuZvQapZUrYuKDLn4tt9Kqw"/>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex h-[calc(100vh-64px)] overflow-hidden">
+<!-- Navigation Sidebar (Suppressed for focused task, replaced with contextual header) -->
+<div class="flex flex-col w-full">
+<!-- Contextual Header -->
+<header class="bg-surface-container-low px-margin-page py-stack-md border-b border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-stack-md">
+<button class="flex items-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined mr-unit">arrow_back</span>
+<span class="font-label-md text-label-md uppercase">Back to Library</span>
+</button>
+<div class="h-4 w-px bg-outline-variant"></div>
+<div>
+<h1 class="font-headline-md text-headline-md">Master Service Agreement</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Template ID: MSA-2024-IN</p>
+</div>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="px-gutter py-stack-sm border border-outline-variant rounded hover:bg-surface-container-high transition-all font-label-md text-label-md">Save Draft</button>
+<button class="px-gutter py-stack-sm bg-primary text-on-primary rounded hover:opacity-90 transition-all font-label-md text-label-md flex items-center shadow-sm">
+<span class="material-symbols-outlined mr-unit text-[18px]">auto_awesome</span>
+                        Generate Document
+                    </button>
+</div>
+</header>
+<!-- Workspace -->
+<div class="flex flex-1 overflow-hidden">
+<!-- Interaction Column (Left) -->
+<div class="w-1/3 min-w-[400px] bg-surface-container-low border-r border-outline-variant flex flex-col">
+<!-- Tabs -->
+<div class="flex border-b border-outline-variant bg-surface px-8 pt-4">
+<button class="px-4 py-2 font-label-md text-label-md active-tab transition-all" id="tab-form" onclick="switchTab('form')">Form Fill</button>
+<button class="px-4 py-2 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-all" id="tab-brief" onclick="switchTab('brief')">From Brief</button>
+<button class="px-4 py-2 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-all" id="tab-batch" onclick="switchTab('batch')">Batch</button>
+</div>
+<!-- Tab Contents -->
+<div class="flex-1 overflow-y-auto p-8 space-y-stack-lg" id="content-form">
+<div class="space-y-stack-md">
+<label class="block font-label-md text-label-md uppercase text-on-surface-variant">Effective Date</label>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-secondary p-0 pb-2 font-body-md transition-colors" type="date" value="2024-10-27"/>
+</div>
+<div class="space-y-stack-md">
+<label class="block font-label-md text-label-md uppercase text-on-surface-variant">Client Name (Entity)</label>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-secondary p-0 pb-2 font-body-md transition-colors" placeholder="e.g., TechCorp Solutions Pvt Ltd" type="text"/>
+</div>
+<div class="space-y-stack-md">
+<label class="block font-label-md text-label-md uppercase text-on-surface-variant">Jurisdiction</label>
+<select class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-secondary p-0 pb-2 font-body-md transition-colors">
+<option>Mumbai, India</option>
+<option>Delhi, India</option>
+<option>Bangalore, India</option>
+</select>
+</div>
+<div class="space-y-stack-md">
+<label class="block font-label-md text-label-md uppercase text-on-surface-variant">Liability Cap</label>
+<div class="flex items-center">
+<span class="pr-2 font-body-md text-on-surface-variant">INR</span>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-secondary p-0 pb-2 font-body-md transition-colors" placeholder="5,00,000" type="number"/>
+</div>
+</div>
+<div class="space-y-stack-md">
+<label class="block font-label-md text-label-md uppercase text-on-surface-variant">Governing Law</label>
+<textarea class="w-full bg-transparent border border-outline-variant focus:ring-0 focus:border-secondary p-2 font-body-md transition-colors rounded-sm" placeholder="Describe specific arbitration clauses or statutory references..." rows="3"></textarea>
+</div>
+</div>
+<div class="flex-1 hidden p-8" id="content-brief">
+<div class="h-full flex flex-col space-y-stack-md">
+<div class="flex items-center gap-stack-sm text-secondary">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-label-md text-label-md uppercase">Viki AI Assistant</span>
+</div>
+<h2 class="font-headline-md text-headline-md">Describe your case brief</h2>
+<p class="text-on-surface-variant font-body-md">Paste the instruction set or case summary below. Viki will automatically extract variables and draft the document following the Chambers' standard archival style.</p>
+<textarea class="flex-1 w-full bg-surface border border-outline-variant p-4 font-body-md focus:ring-1 focus:ring-secondary outline-none resize-none leading-relaxed" placeholder="e.g., 'The client is a logistics firm based in Chennai. They are engaging an IT vendor for a 3-year SaaS implementation. Liability should be capped at 1.5x the annual fee...'"></textarea>
+<button class="w-full py-stack-md bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-widest hover:bg-primary transition-all">Process Brief</button>
+</div>
+</div>
+<div class="flex-1 hidden overflow-hidden flex flex-col" id="content-batch">
+<div class="p-8 border-b border-outline-variant">
+<h2 class="font-headline-md text-headline-md">Batch Generation</h2>
+<p class="text-on-surface-variant font-label-sm uppercase">Upload CSV or Enter Manually</p>
+</div>
+<div class="flex-1 overflow-auto bg-surface-container-highest/20">
+<table class="w-full text-left font-label-sm">
+<thead class="bg-surface-container sticky top-0">
+<tr class="border-b border-outline-variant">
+<th class="p-4 uppercase tracking-tighter">Row</th>
+<th class="p-4 uppercase tracking-tighter">Client Name</th>
+<th class="p-4 uppercase tracking-tighter">Date</th>
+<th class="p-4 uppercase tracking-tighter">Valuation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-outline-variant/50 hover:bg-secondary/5">
+<td class="p-4 text-on-surface-variant">1</td>
+<td class="p-4">Arjun Malik &amp; Sons</td>
+<td class="p-4">2024-11-01</td>
+<td class="p-4">₹4,50,000</td>
+</tr>
+<tr class="border-b border-outline-variant/50 hover:bg-secondary/5">
+<td class="p-4 text-on-surface-variant">2</td>
+<td class="p-4">Zeba Exports Ltd.</td>
+<td class="p-4">2024-11-05</td>
+<td class="p-4">₹12,00,000</td>
+</tr>
+<tr class="border-b border-outline-variant/50 hover:bg-secondary/5 bg-secondary/5">
+<td class="p-4 text-on-surface-variant">3</td>
+<td class="p-4"><input class="bg-transparent border-0 p-0 w-full focus:ring-0" type="text" value="Rising Sun Tech"/></td>
+<td class="p-4">2024-11-10</td>
+<td class="p-4">₹3,00,000</td>
+</tr>
+<!-- Empty Row for visual effect -->
+<tr class="border-b border-outline-variant/50 opacity-40">
+<td class="p-4">4</td>
+<td class="p-4">...</td>
+<td class="p-4">...</td>
+<td class="p-4">...</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Document Preview (Right) -->
+<div class="flex-1 bg-surface-dim overflow-y-auto p-12 flex flex-col items-center">
+<!-- Controls -->
+<div class="w-[800px] mb-8 flex justify-between items-center text-on-surface-variant font-label-sm">
+<div class="flex gap-stack-md">
+<button class="flex items-center hover:text-primary"><span class="material-symbols-outlined text-[18px] mr-1">zoom_in</span> 100%</button>
+<button class="flex items-center hover:text-primary"><span class="material-symbols-outlined text-[18px] mr-1">print</span> Print</button>
+</div>
+<span class="uppercase tracking-widest">Page 1 of 12</span>
+</div>
+<!-- Paper -->
+<div class="document-preview-container w-[800px] p-24 font-serif relative">
+<!-- Watermark / Texture effect -->
+<div class="absolute inset-0 opacity-[0.03] pointer-events-none select-none overflow-hidden">
+<div class="w-full h-full bg-[radial-gradient(#1c2530_1px,transparent_1px)] [background-size:16px_16px]"></div>
+</div>
+<!-- Legal Header -->
+<div class="text-center mb-16 space-y-2">
+<h2 class="text-headline-lg font-headline-lg italic">Master Service Agreement</h2>
+<p class="font-label-md tracking-[0.2em] uppercase text-outline">Digital Archival Copy</p>
+</div>
+<!-- Legal Body -->
+<div class="space-y-8 font-headline-md leading-relaxed text-justify">
+<p>
+                                This MASTER SERVICE AGREEMENT (this "Agreement") is entered into as of 
+                                <span class="brass-highlight">October 27, 2024</span>, by and between 
+                                <span class="brass-highlight text-secondary font-bold">TechCorp Solutions Pvt Ltd</span>, 
+                                a company incorporated under the laws of India, having its registered office at Mumbai ("Provider"), and the undersigned client ("Client").
+                            </p>
+<p>
+<strong>1. SERVICES.</strong> Provider shall perform the services described in the Statement of Work(s) attached hereto. Each SOW shall be governed by the terms of this Agreement. In the event of a conflict between the terms of this Agreement and any SOW, the terms of this Agreement shall prevail unless the SOW explicitly states otherwise.
+                            </p>
+<p>
+<strong>2. LIMITATION OF LIABILITY.</strong> Notwithstanding any other provision, the total aggregate liability of the Provider under this Agreement shall not exceed 
+                                <span class="brass-highlight">INR 5,00,000</span>. This limitation shall apply regardless of the form of action, whether in contract, tort, or otherwise.
+                            </p>
+<p>
+<strong>3. GOVERNING LAW &amp; JURISDICTION.</strong> This Agreement shall be governed by and construed in accordance with the laws of 
+                                <span class="brass-highlight">India</span>. The courts of 
+                                <span class="brass-highlight">Mumbai</span> shall have exclusive jurisdiction over any disputes arising out of or in connection with this Agreement.
+                            </p>
+<div class="pt-16 grid grid-cols-2 gap-16">
+<div class="border-t border-outline pt-4">
+<p class="font-label-sm uppercase text-outline-variant mb-8">Authorized Signatory (Provider)</p>
+<p class="font-headline-md italic opacity-20">Digital Signature Required</p>
+</div>
+<div class="border-t border-outline pt-4">
+<p class="font-label-sm uppercase text-outline-variant mb-8">Authorized Signatory (Client)</p>
+<p class="font-headline-md italic opacity-20">Digital Signature Required</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Micro-interactions Script -->
+<script>
+        function switchTab(tab) {
+            // Hide all contents
+            document.getElementById('content-form').classList.add('hidden');
+            document.getElementById('content-brief').classList.add('hidden');
+            document.getElementById('content-batch').classList.add('hidden');
+            
+            // Reset tab styles
+            const tabs = ['form', 'brief', 'batch'];
+            tabs.forEach(t => {
+                const el = document.getElementById('tab-' + t);
+                el.classList.remove('active-tab');
+                el.classList.add('text-on-surface-variant');
+            });
+
+            // Show active
+            document.getElementById('content-' + tab).classList.remove('hidden');
+            if(tab === 'batch') document.getElementById('content-' + tab).classList.add('flex');
+            
+            const activeEl = document.getElementById('tab-' + tab);
+            activeEl.classList.add('active-tab');
+            activeEl.classList.remove('text-on-surface-variant');
+        }
+
+        // Live Preview Hover Effect Simulation
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => {
+                // In a real app, this would scroll the preview to the relevant section
+                console.log('Focusing related document section...');
+            });
+        });
+    </script>
+</body></html>

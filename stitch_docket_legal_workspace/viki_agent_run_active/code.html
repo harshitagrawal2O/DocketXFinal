@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket | Viki AI Workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c5c6cc",
+                    "outline": "#75777c",
+                    "tertiary-container": "#242423",
+                    "on-surface": "#1d1b16",
+                    "on-primary-fixed": "#131c27",
+                    "primary": "#07101a",
+                    "surface-container-high": "#ede7de",
+                    "on-secondary-fixed": "#291800",
+                    "on-background": "#1d1b16",
+                    "tertiary-fixed-dim": "#c8c6c4",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#474745",
+                    "surface-container-highest": "#e8e2d9",
+                    "on-secondary-fixed-variant": "#5b421c",
+                    "tertiary": "#0e0f0e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#1c2530",
+                    "secondary-container": "#fdd7a4",
+                    "inverse-surface": "#33302a",
+                    "primary-fixed": "#dae3f2",
+                    "on-primary-container": "#838c9a",
+                    "secondary-fixed-dim": "#e5c18f",
+                    "surface": "#fff8ef",
+                    "surface-tint": "#565f6c",
+                    "secondary": "#755a31",
+                    "on-primary-fixed-variant": "#3e4754",
+                    "surface-bright": "#fff8ef",
+                    "surface-variant": "#e8e2d9",
+                    "inverse-on-surface": "#f6f0e7",
+                    "surface-dim": "#dfd9d0",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#1b1c1a",
+                    "tertiary-fixed": "#e4e2df",
+                    "surface-container": "#f3ede4",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#8c8b89",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#44474b",
+                    "secondary-fixed": "#ffddb1",
+                    "background": "#fff8ef",
+                    "on-secondary-container": "#785c33",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#bec7d6",
+                    "surface-container-low": "#f9f3ea",
+                    "primary-fixed-dim": "#bec7d6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "32px",
+                    "stack-sm": "8px",
+                    "container-max-width": "1440px",
+                    "stack-md": "16px",
+                    "unit": "4px",
+                    "margin-page": "48px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Newsreader"],
+                    "label-sm": ["Inter"],
+                    "headline-lg": ["Newsreader"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-display": ["Newsreader"]
+            },
+            "fontSize": {
+                    "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            vertical-align: middle;
+        }
+        
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .state-cycle-thinking::after { content: 'Thinking'; }
+        .state-cycle-drafting::after { content: 'Drafting'; }
+        .state-cycle-checking::after { content: 'Self-checking'; }
+
+        .brass-glow {
+            box-shadow: 0 0 15px rgba(154, 123, 79, 0.15);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e8e2d9; border-radius: 10px; }
+
+        .line-clamp-custom {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-secondary-container">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 border-b border-outline-variant bg-background/80 backdrop-blur-md">
+<div class="flex justify-between items-center h-16 px-margin-page w-full max-w-container-max-width mx-auto">
+<div class="flex items-center gap-stack-lg">
+<span class="text-headline-md font-headline-md font-medium italic text-primary">Docket</span>
+<nav class="hidden md:flex gap-gutter">
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Dashboard</a>
+<a class="text-primary border-b-2 border-primary pb-2 text-label-md font-label-md" href="#">Matters</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Documents</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-stack-md">
+<span class="hidden md:block text-label-sm font-label-sm px-3 py-1 bg-surface-container rounded-full text-secondary">Firm Workspace</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">help</span>
+<div class="w-8 h-8 rounded-full bg-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a senior legal partner in a high-end Indian law firm setting. The lighting is soft and cinematic, highlighting a sophisticated, minimalist interior with warm brass accents and dark wood furniture. The overall aesthetic is editorial, clean, and authoritative, reflecting a prestigious legal practice." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0A0R92YZ4gb2j_pDOz8O905wJfKZ3Lg7vF8PXuSAHn5nIforOLNmPmrN184boZU2jGAfm8Nyv15Uf2AQrbT6u-nHsdWGt3VlXBkdlBTvUQ-ExQ2LKZHSNevrKZPaXFCEq9Y1tKuoFNF4YeZ4ZNz52IGFEfUdWTglbJNcxGo2c0lqXpPfEwuKjIleumCtMhymLbWnLUC2sHn1DX9VgqwKCBlkJmVeNHbpWfs7znMzYkXKXJWpM1DXobg"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant bg-surface-container-low pt-20 hidden md:flex flex-col py-stack-md gap-stack-sm">
+<div class="px-6 mb-stack-lg">
+<div class="flex items-center gap-stack-sm mb-2">
+<div class="w-6 h-6 bg-secondary rounded flex items-center justify-center text-on-primary text-[10px] font-bold">K</div>
+<span class="text-label-md font-label-md font-bold text-secondary">Khaitan &amp; Co.</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant opacity-70">Arbitration Dept.</span>
+</div>
+<button class="mx-4 mb-stack-md flex items-center justify-center gap-2 bg-primary text-on-primary py-2.5 rounded-lg text-label-md font-label-md hover:opacity-90 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-sm">add</span>
+            New Matter
+        </button>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-all group" href="#">
+<span class="material-symbols-outlined text-[20px]">folder_open</span>
+<span class="text-label-md font-label-md">Workspace</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-surface-container-high text-primary font-semibold border-r-4 border-secondary rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">travel_explore</span>
+<span class="text-label-md font-label-md">Research</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">description</span>
+<span class="text-label-md font-label-md">Templates</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="text-label-md font-label-md">Archives</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+</nav>
+<div class="px-3 pt-stack-md border-t border-outline-variant/30 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">support_agent</span>
+<span class="text-label-md font-label-md">Support</span>
+</a>
+<div class="flex items-center gap-3 px-3 py-2 text-primary font-bold bg-secondary-container/30 rounded-lg transition-all border border-secondary/20">
+<span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+<span class="text-label-md font-label-md">Viki AI</span>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="ml-0 md:ml-64 pt-16 min-h-screen flex flex-col md:flex-row">
+<!-- Document Editor (Left) -->
+<section class="flex-1 bg-surface-container-lowest p-margin-page overflow-y-auto">
+<div class="max-w-[800px] mx-auto bg-white shadow-sm border border-outline-variant p-16 min-h-[1000px] font-body-md text-on-surface leading-relaxed">
+<div class="mb-12 border-b-2 border-primary pb-4">
+<h1 class="font-headline-lg text-headline-lg text-primary uppercase tracking-wider">Master Service Agreement</h1>
+<div class="flex justify-between mt-2 text-label-sm font-label-sm text-outline">
+<span>CONFIDENTIAL - PROJECT AURUM</span>
+<span>DOCUMENT ID: K&amp;CO-MSA-2023-452</span>
+</div>
+</div>
+<p class="mb-6 font-bold">11. INDEMNIFICATION AND LIABILITY</p>
+<div class="p-4 bg-secondary-container/10 border-l-4 border-secondary mb-8 transition-all relative overflow-hidden group">
+<div class="absolute inset-0 shimmer opacity-10"></div>
+<p class="italic text-secondary mb-2 text-label-sm font-label-sm">Active AI Revision in Progress...</p>
+<p class="text-body-md">
+                        11.1 The Service Provider shall indemnify, defend, and hold harmless the Client, its officers, directors, and employees from and against any and all claims, losses, liabilities, damages, and expenses (including reasonable legal fees) arising out of or relating to any third-party claim that the Services or Deliverables infringe any intellectual property rights.
+                    </p>
+<!-- Streaming ghost text placeholder -->
+<p class="mt-4 text-primary font-medium opacity-40 italic">
+                        The Service Provider's aggregate liability under this Section 11 shall be capped at [Streaming Value...]
+                    </p>
+</div>
+<p class="mb-4">12. TERM AND TERMINATION</p>
+<p class="text-outline-variant select-none">This Agreement shall commence on the Effective Date and continue for an initial term of three (3) years unless terminated earlier in accordance with the provisions of this Section 12...</p>
+</div>
+</section>
+<!-- Viki AI Rail (Right) -->
+<aside class="w-full md:w-[400px] bg-surface-dim border-l border-outline-variant flex flex-col h-[calc(100vh-64px)] overflow-hidden sticky top-16">
+<!-- Rail Header -->
+<div class="p-6 border-b border-outline-variant bg-surface-container-high/50 backdrop-blur-sm">
+<div class="flex items-center justify-between mb-stack-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-label-md font-label-md uppercase tracking-widest text-primary">Viki AI Active Run</span>
+</div>
+<button class="group flex items-center gap-2 px-3 py-1.5 bg-error-container text-on-error-container border border-error/20 rounded hover:bg-error hover:text-on-error transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[16px]">stop_circle</span>
+<span class="text-label-sm font-label-sm font-bold uppercase">Stop</span>
+</button>
+</div>
+<div class="bg-primary-container text-on-primary-container p-4 rounded-lg border border-outline/20">
+<p class="text-label-sm font-label-sm opacity-60 mb-1 uppercase">Instruction</p>
+<p class="text-body-md text-white font-medium">"Tighten the indemnity clause for the client, ensuring a full carve-out for gross negligence and willful misconduct, and add a mutual cap on liability."</p>
+</div>
+<div class="mt-4 flex items-center gap-3">
+<div class="px-3 py-1 bg-secondary text-on-secondary rounded-full text-label-sm font-label-sm flex items-center gap-2 brass-glow" id="viki-state-chip">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+</span>
+<span id="viki-state-text">Thinking</span>
+</div>
+<span class="text-label-sm font-label-sm text-outline italic" id="intent-line">Tightening the indemnity clause...</span>
+</div>
+</div>
+<!-- Task Checklist -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-stack-lg">
+<div>
+<h4 class="text-label-sm font-label-sm uppercase text-outline mb-stack-md tracking-tighter">Sub-tasks status</h4>
+<div class="space-y-3">
+<div class="flex items-center gap-3 group">
+<div class="w-5 h-5 flex items-center justify-center rounded border border-secondary bg-secondary/10">
+<span class="material-symbols-outlined text-[14px] text-secondary">check</span>
+</div>
+<span class="text-body-md text-on-surface">Analyzing Clause 11.1 context</span>
+</div>
+<div class="flex items-center gap-3 group">
+<div class="w-5 h-5 flex items-center justify-center rounded border border-secondary bg-secondary/10">
+<span class="material-symbols-outlined text-[14px] text-secondary">check</span>
+</div>
+<span class="text-body-md text-on-surface">Cross-referencing statutory norms (India)</span>
+</div>
+<div class="flex items-center gap-3 group">
+<div class="w-5 h-5 flex items-center justify-center rounded border border-secondary bg-secondary-container/20 animate-pulse">
+<div class="w-1.5 h-1.5 bg-secondary rounded-full"></div>
+</div>
+<span class="text-body-md text-primary font-semibold">Drafting revision proposals</span>
+</div>
+<div class="flex items-center gap-3 group opacity-40">
+<div class="w-5 h-5 flex items-center justify-center rounded border border-outline"></div>
+<span class="text-body-md">Conducting self-checking &amp; consistency audit</span>
+</div>
+</div>
+</div>
+<!-- Streaming Proposals -->
+<div>
+<h4 class="text-label-sm font-label-sm uppercase text-outline mb-stack-md tracking-tighter">Live Proposals</h4>
+<div class="space-y-4">
+<!-- Card 1 (Drafting) -->
+<div class="bg-white border-t-2 border-secondary p-5 shadow-sm relative overflow-hidden group">
+<div class="absolute inset-0 shimmer opacity-5 pointer-events-none"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm font-label-sm bg-secondary-container px-2 py-0.5 rounded text-secondary">Draft 01</span>
+<span class="material-symbols-outlined text-outline text-[18px]">history</span>
+</div>
+<p class="text-body-md text-primary leading-snug line-clamp-custom font-medium mb-4">
+                                "The liability cap shall not apply to claims resulting from the indemnifying party's gross negligence, willful misconduct, or fraud. Total aggregate liability under this agreement..."
+                            </p>
+<div class="flex gap-2">
+<div class="h-2 flex-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[85%] animate-pulse"></div>
+</div>
+<span class="text-[10px] font-bold text-outline">85%</span>
+</div>
+</div>
+<!-- Card 2 (Queued) -->
+<div class="bg-surface-container/50 border border-outline-variant/30 p-5 rounded opacity-60">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-sm font-label-sm bg-outline-variant/20 px-2 py-0.5 rounded text-outline">Draft 02</span>
+</div>
+<div class="space-y-2">
+<div class="h-4 w-full bg-outline-variant/20 rounded animate-pulse"></div>
+<div class="h-4 w-3/4 bg-outline-variant/20 rounded animate-pulse"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Rail Footer Actions -->
+<div class="p-6 bg-surface-container-highest/80 backdrop-blur-md border-t border-outline-variant">
+<div class="flex gap-stack-sm">
+<button class="flex-1 bg-outline-variant/20 text-on-surface-variant py-3 rounded text-label-md font-label-md border border-outline-variant/40 hover:bg-outline-variant/30 transition-all">
+                        Edit Prompt
+                    </button>
+<button class="flex-1 bg-primary text-on-primary py-3 rounded text-label-md font-label-md hover:bg-primary-container transition-all flex items-center justify-center gap-2 disabled:opacity-50" disabled="">
+                        Apply Changes
+                        <span class="material-symbols-outlined text-[16px]">done_all</span>
+</button>
+</div>
+<p class="text-center text-[10px] text-outline mt-3 uppercase tracking-widest font-bold">Model: Viki-Legal-L5 (Arbitration Optimized)</p>
+</div>
+</aside>
+</main>
+<!-- Contextual FAB (Suppressed as per rules for detailed workspace, but shown for specific task if requested - ignoring for focus) -->
+<script>
+        // State Cycling Logic
+        const states = [
+            { text: 'Thinking', class: 'state-cycle-thinking', intent: 'Analyzing Clause 11.1 context...' },
+            { text: 'Drafting', class: 'state-cycle-drafting', intent: 'Tightening the indemnity clause...' },
+            { text: 'Self-checking', class: 'state-cycle-checking', intent: 'Verifying with Section 14 (Liability)...' }
+        ];
+        
+        let currentStateIndex = 0;
+        const stateText = document.getElementById('viki-state-text');
+        const stateChip = document.getElementById('viki-state-chip');
+        const intentLine = document.getElementById('intent-line');
+
+        setInterval(() => {
+            currentStateIndex = (currentStateIndex + 1) % states.length;
+            const state = states[currentStateIndex];
+            
+            // Subtle transition
+            stateText.style.opacity = '0';
+            intentLine.style.opacity = '0';
+            
+            setTimeout(() => {
+                stateText.innerText = state.text;
+                intentLine.innerText = state.intent;
+                stateText.style.opacity = '1';
+                intentLine.style.opacity = '1';
+            }, 300);
+        }, 4000);
+
+        // Streaming text micro-interaction for the drafting card
+        const proposalText = document.querySelector('.line-clamp-custom');
+        const originalText = proposalText.innerText;
+        proposalText.innerText = "";
+        let i = 0;
+        function typeWriter() {
+            if (i < originalText.length) {
+                proposalText.innerHTML += originalText.charAt(i);
+                i++;
+                setTimeout(typeWriter, 15);
+            }
+        }
+        setTimeout(typeWriter, 1000);
+    </script>
+</body></html>

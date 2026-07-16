@@ -66,6 +66,7 @@ On `document_ready`, open `documentId` in the workspace (it entered the review p
 
 ## Usage metering
 Every LLM call records a `UsageEvent` (kind, model, input/output tokens, userId) — never prompt/doc content. Foundation for cost + billing.
+- `GET /api/usage/summary?days=30` → `UsageSummary` (totals, byDay, byKind, byUser, documentsCreated, agentRuns). Scoped to the CALLER's own usage — no firm/org model yet, so this is not firm-wide.
 
 ## Export / print
 - `POST /api/documents/:id/export/docx` `{ html, title }` → `.docx` binary (attachment). Client serializes the live Tiptap doc to HTML and downloads the blob.

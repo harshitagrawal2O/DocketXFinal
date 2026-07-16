@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket | Compliance Audit Trail</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c5c6cc",
+                    "outline": "#75777c",
+                    "tertiary-container": "#242423",
+                    "on-surface": "#1d1b16",
+                    "on-primary-fixed": "#131c27",
+                    "primary": "#07101a",
+                    "surface-container-high": "#ede7de",
+                    "on-secondary-fixed": "#291800",
+                    "on-background": "#1d1b16",
+                    "tertiary-fixed-dim": "#c8c6c4",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#474745",
+                    "surface-container-highest": "#e8e2d9",
+                    "on-secondary-fixed-variant": "#5b421c",
+                    "tertiary": "#0e0f0e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#1c2530",
+                    "secondary-container": "#fdd7a4",
+                    "inverse-surface": "#33302a",
+                    "primary-fixed": "#dae3f2",
+                    "on-primary-container": "#838c9a",
+                    "secondary-container": "#fdd7a4",
+                    "on-secondary-container": "#785c33",
+                    "surface": "#fff8ef",
+                    "background": "#fff8ef",
+                    "surface-container-low": "#f9f3ea",
+                    "surface-container-lowest": "#ffffff"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Newsreader"],
+                    "body-md": ["Inter"],
+                    "mono": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            },
+            "spacing": {
+                    "stack-lg": "32px",
+                    "stack-md": "16px",
+                    "margin-page": "48px",
+                    "container-max-width": "1440px"
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .hairline-border { border: 0.5px solid #c5c6cc; }
+        .ambient-shadow { box-shadow: 0 20px 40px -10px rgba(28, 37, 48, 0.06); }
+        tr:nth-child(even) { background-color: #FAF8F5; }
+        tr:hover { background-color: #f3ede4; transition: background 0.2s ease; }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen font-body-md selection:bg-secondary-container">
+<!-- TopNavBar -->
+<header class="bg-surface docked full-width top-0 border-b border-outline-variant z-50 sticky">
+<div class="flex justify-between items-center w-full px-margin-page h-16 max-w-container-max-width mx-auto">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold text-primary">Docket</span>
+<nav class="hidden md:flex gap-6">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Dashboard</a>
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary pb-1 cursor-pointer" href="#">Matters</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Documents</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container border-none rounded-full text-label-md focus:ring-1 focus:ring-primary w-64" placeholder="Search audit trail..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant cursor-pointer active:opacity-80">notifications</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a senior legal counsel in a crisp white shirt against a neutral, high-key studio background. The lighting is soft and editorial, reflecting a clean light-mode aesthetic with deep black hair and subtle brass-toned glasses, conveying authority and meticulous attention to detail." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpOf3KuuiOkEwowGM5NOxEbw45nDrJOuuXKQKPiwL_Hu8s4mIP-cS54L3bwHEYmohGXxnpzT0OaaOErIR-yrbx6sS-JOdjUwSFG0ASa7_Opnj7FcTmjTO6eLn1_XEF2K2WlnWm2xMjZ8gnxumTN8bhezcYdaHuJmiK3z12vo9ht_QzxUD4Yyf0Wi1wLs_a_mevlJos_omXsnv_yIzoBQVe16TFSqFvWLEISj-4BXsvo8VNx1S5ZPiirg"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex max-w-container-max-width mx-auto">
+<!-- SideNavBar -->
+<aside class="hidden lg:flex flex-col w-64 h-[calc(100vh-64px)] p-stack-md border-r border-outline-variant bg-surface-container-low sticky top-16">
+<div class="mb-8">
+<div class="flex items-center gap-3 mb-1">
+<div class="w-10 h-10 bg-primary-container rounded flex items-center justify-center text-white">
+<span class="material-symbols-outlined">account_balance</span>
+</div>
+<div>
+<h3 class="font-label-md text-primary leading-tight">Chambers of S. Rao</h3>
+<p class="text-[11px] text-on-surface-variant uppercase tracking-wider">Supreme Court of India</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">business_center</span>
+<span class="font-label-md">Workspace</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-surface-container-highest text-primary font-bold rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-label-md">Audit Trail</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-md">Templates</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-label-md">Viki AI</span>
+</a>
+</nav>
+<div class="pt-4 border-t border-outline-variant mt-auto space-y-1">
+<button class="w-full text-left flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="font-label-md">Support</span>
+</button>
+<button class="w-full text-left flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md">Sign Out</span>
+</button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 px-margin-page py-stack-lg">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+<div>
+<nav class="flex items-center gap-2 text-on-surface-variant font-label-md mb-2">
+<span>Matters</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span>Case #2024-SC-0892</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-primary">Audit Log</span>
+</nav>
+<h1 class="font-headline-lg text-headline-lg text-primary">Compliance Audit Trail</h1>
+<p class="text-on-surface-variant max-w-2xl mt-2 font-body-md">
+                        Permanent archival record of all modifications, validations, and agent-driven workflows for the <span class="italic font-headline-md text-primary">Master Service Agreement v4.2</span>.
+                    </p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-sm font-label-md text-primary hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                        Export CSV
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary-container text-white rounded-sm font-label-md hover:bg-primary transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+                        Export JSON
+                    </button>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="bg-surface-container-low border border-outline-variant p-4 flex flex-wrap gap-4 items-center mb-6">
+<div class="flex items-center gap-2">
+<span class="font-label-md text-on-surface-variant uppercase text-[11px]">Filter By:</span>
+<select class="bg-white border border-outline-variant px-3 py-1.5 font-label-md text-primary rounded-sm focus:ring-0 focus:border-primary">
+<option>All Event Types</option>
+<option>Agent Run</option>
+<option>Accepted</option>
+<option>Rollback</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<select class="bg-white border border-outline-variant px-3 py-1.5 font-label-md text-primary rounded-sm focus:ring-0 focus:border-primary">
+<option>All Actors</option>
+<option>Advocate S. Rao</option>
+<option>Viki AI Agent</option>
+<option>Systems Admin</option>
+</select>
+</div>
+<div class="ml-auto flex items-center gap-2 text-on-surface-variant font-label-md">
+<span class="material-symbols-outlined text-[18px]">info</span>
+<span>128 total entries recorded</span>
+</div>
+</div>
+<!-- Audit Table -->
+<div class="bg-white border border-outline-variant overflow-hidden ambient-shadow">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant bg-surface-container">
+<th class="p-4 font-label-md uppercase text-[11px] text-on-surface-variant w-48">Timestamp (IST)</th>
+<th class="p-4 font-label-md uppercase text-[11px] text-on-surface-variant w-48">Actor</th>
+<th class="p-4 font-label-md uppercase text-[11px] text-on-surface-variant w-40">Event Type</th>
+<th class="p-4 font-label-md uppercase text-[11px] text-on-surface-variant">Transaction Details</th>
+<th class="p-4 font-label-md uppercase text-[11px] text-on-surface-variant text-right">Hash</th>
+</tr>
+</thead>
+<tbody>
+<!-- Row 1 -->
+<tr class="border-b border-outline-variant">
+<td class="p-4 mono-font text-[13px] text-primary">2023-11-24 14:22:08</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-white">smart_toy</span>
+</div>
+<span class="font-label-md text-primary">Viki AI Agent</span>
+</div>
+</td>
+<td class="p-4">
+<span class="px-2 py-0.5 bg-[#E8F1F8] text-[#1E4D7B] rounded-sm text-[11px] font-bold uppercase tracking-tight">Agent Run</span>
+</td>
+<td class="p-4 text-body-md text-on-surface">Automated cross-reference check of Clause 12.4 against Indian Arbitration Act, 1996. Found 2 inconsistencies.</td>
+<td class="p-4 text-right mono-font text-[12px] text-outline">f7a2...91b0</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b border-outline-variant">
+<td class="p-4 mono-font text-[13px] text-primary">2023-11-24 14:35:12</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A close-up portrait of a professional Indian advocate in formal black legal attire. The image is captured in a minimalist style with dramatic, cinematic side lighting against a deep ink-colored background. High contrast, sharp focus on the person's intense expression, symbolizing legal authority and precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWFa2dZkRPbfI-hqPT9m7hlN2HlHTdIFfGjvfnwNiEKiMHLULSLlgmsid_hgcVsvs5iANlFsltG5sM5JwkyrD6J6yyETqkdPNoTMRi_FtH61QhX95jViRuZ7Zk05h8VYdWNX6gI-r5Bj_YTpH2kjfXzQlQ2Wn8W4IgDvr1Epfprrs3LJax--GuyFOtXbHQyHiNLUsnowFUKvFxL1lDYBuhkJgIZog96cI_wLRU8bQ2BO3NFPCxP_heZg"/>
+</div>
+<span class="font-label-md text-primary">Siddharth Rao</span>
+</div>
+</td>
+<td class="p-4">
+<span class="px-2 py-0.5 bg-[#E7F3E8] text-[#2E5B31] rounded-sm text-[11px] font-bold uppercase tracking-tight">Accepted</span>
+</td>
+<td class="p-4 text-body-md text-on-surface">Counsel approved agent suggested redraft of Indemnity Clause to align with recent High Court precedents.</td>
+<td class="p-4 text-right mono-font text-[12px] text-outline">8d1e...c442</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-outline-variant">
+<td class="p-4 mono-font text-[13px] text-primary">2023-11-24 15:02:44</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A minimalist professional avatar of a female associate lawyer in a professional cream-colored suit. Soft window lighting creates a bright, archival paper aesthetic. The background is a blurred library of legal volumes, emphasizing a scholarly and meticulous professional environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTDiYSDf6NlS_qXC03JGRjoPOq6vhqQwvGo9Om21gAvxuF3z7USAYk_Nu46QuqCfZKFr73dttQxG4F1O35jP6_9DqrI13SJa0KMVlb0Gnew1IGC4VZG3L4k7g56No99zZj9hhpp1Wv0PNiKST4gob4gWYD1qje_XC6GgilviqlYd7JRYQ7ZKsXlcIfqNThBo84RMajtmnDzQkjeCF7fzcPO5ww4Ht-krv1OptD3mBfWcN0pYnPLAsNBA"/>
+</div>
+<span class="font-label-md text-primary">Ananya Iyer</span>
+</div>
+</td>
+<td class="p-4">
+<span class="px-2 py-0.5 bg-[#FDE8E8] text-[#9B2C2C] rounded-sm text-[11px] font-bold uppercase tracking-tight">Rollback</span>
+</td>
+<td class="p-4 text-body-md text-on-surface">Reverted changes to Force Majeure clause due to conflict with client's master risk framework (rev v3.1).</td>
+<td class="p-4 text-right mono-font text-[12px] text-outline">e3b9...771a</td>
+</tr>
+<!-- Row 4 -->
+<tr class="border-b border-outline-variant">
+<td class="p-4 mono-font text-[13px] text-primary">2023-11-24 16:10:00</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-on-secondary-fixed">shield_person</span>
+</div>
+<span class="font-label-md text-primary">System Admin</span>
+</div>
+</td>
+<td class="p-4">
+<span class="px-2 py-0.5 bg-surface-container-highest text-on-surface-variant rounded-sm text-[11px] font-bold uppercase tracking-tight">Access Log</span>
+</td>
+<td class="p-4 text-body-md text-on-surface">Encrypted document snapshot generated and transferred to Secure Archive Vault (Vault-IN-DL).</td>
+<td class="p-4 text-right mono-font text-[12px] text-outline">a042...cc18</td>
+</tr>
+<!-- Row 5 -->
+<tr class="border-b border-outline-variant">
+<td class="p-4 mono-font text-[13px] text-primary">2023-11-25 09:00:15</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-white">smart_toy</span>
+</div>
+<span class="font-label-md text-primary">Viki AI Agent</span>
+</div>
+</td>
+<td class="p-4">
+<span class="px-2 py-0.5 bg-[#E8F1F8] text-[#1E4D7B] rounded-sm text-[11px] font-bold uppercase tracking-tight">Agent Run</span>
+</td>
+<td class="p-4 text-body-md text-on-surface">Final integrity scan completed. Signature blocks validated against registered signatory list.</td>
+<td class="p-4 text-right mono-font text-[12px] text-outline">c551...bb90</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="mt-8 flex items-center justify-between">
+<span class="text-label-md text-on-surface-variant">Showing 1 to 5 of 128 entries</span>
+<div class="flex gap-2">
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded-sm text-on-surface-variant hover:bg-white transition-all">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center bg-primary-container text-white rounded-sm text-label-md">1</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded-sm text-on-surface-variant hover:bg-white transition-all text-label-md">2</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded-sm text-on-surface-variant hover:bg-white transition-all text-label-md">3</button>
+<span class="px-2 py-1 text-on-surface-variant">...</span>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded-sm text-on-surface-variant hover:bg-white transition-all">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+<!-- Micro-interaction Scripts -->
+<script>
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.querySelector('.text-outline')?.classList.replace('text-outline', 'text-primary');
+            });
+            row.addEventListener('mouseleave', () => {
+                row.querySelector('.text-primary')?.classList.replace('text-primary', 'text-outline');
+            });
+        });
+    </script>
+</body></html>

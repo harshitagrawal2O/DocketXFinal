@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket - Settings</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c5c6cc",
+                    "outline": "#75777c",
+                    "tertiary-container": "#242423",
+                    "on-surface": "#1d1b16",
+                    "on-primary-fixed": "#131c27",
+                    "primary": "#07101a",
+                    "surface-container-high": "#ede7de",
+                    "on-secondary-fixed": "#291800",
+                    "on-background": "#1d1b16",
+                    "tertiary-fixed-dim": "#c8c6c4",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#474745",
+                    "surface-container-highest": "#e8e2d9",
+                    "on-secondary-fixed-variant": "#5b421c",
+                    "tertiary": "#0e0f0e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#1c2530",
+                    "secondary-container": "#fdd7a4",
+                    "inverse-surface": "#33302a",
+                    "primary-fixed": "#dae3f2",
+                    "on-primary-container": "#838c9a",
+                    "secondary-fixed-dim": "#e5c18f",
+                    "surface": "#fff8ef",
+                    "surface-tint": "#565f6c",
+                    "secondary": "#755a31",
+                    "on-primary-fixed-variant": "#3e4754",
+                    "surface-bright": "#fff8ef",
+                    "surface-variant": "#e8e2d9",
+                    "inverse-on-surface": "#f6f0e7",
+                    "surface-dim": "#dfd9d0",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#1b1c1a",
+                    "tertiary-fixed": "#e4e2df",
+                    "surface-container": "#f3ede4",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#8c8b89",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#44474b",
+                    "secondary-fixed": "#ffddb1",
+                    "background": "#fff8ef",
+                    "on-secondary-container": "#785c33",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#bec7d6",
+                    "surface-container-low": "#f9f3ea",
+                    "primary-fixed-dim": "#bec7d6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "32px",
+                    "stack-sm": "8px",
+                    "container-max-width": "1440px",
+                    "stack-md": "16px",
+                    "unit": "4px",
+                    "margin-page": "48px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Newsreader"],
+                    "label-sm": ["Inter"],
+                    "headline-lg": ["Newsreader"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-display": ["Newsreader"]
+            },
+            "fontSize": {
+                    "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .paper-shadow {
+            box-shadow: 0 4px 20px -2px rgba(28, 37, 48, 0.06);
+        }
+        .ink-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #c5c6cc, transparent);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c5c6cc;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen selection:bg-secondary-fixed selection:text-on-secondary-fixed">
+<!-- TopNavBar Shell -->
+<header class="bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline sticky top-0 z-50">
+<div class="flex justify-between items-center w-full px-margin-page h-16 max-w-container-max-width mx-auto">
+<div class="flex items-center gap-gutter">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Docket</span>
+<nav class="hidden md:flex items-center gap-stack-lg ml-stack-lg">
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-tertiary-container hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer active:opacity-80" href="#">Dashboard</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-tertiary-container hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer active:opacity-80" href="#">Matters</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-tertiary-container hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer active:opacity-80" href="#">Documents</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-tertiary-container hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer active:opacity-80" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors p-unit">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors p-unit">help_outline</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-stack-sm">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of a senior legal counsel in a crisp white shirt against a soft, neutral studio background, high-end editorial lighting, light-mode corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8FFP5pDrQhMYmmjeIt66cnwiG-Lv-4v-i0pPdUyTk5Ys6OJrDq1ChUQpxr9xPhHptjs45cQSh91sZS5_B-Fslg5cSKvEmJAinN3fc3WP-NIdJbrCXwiXmtWX6tq7f9cdNTIMomr5IeGpL7YScyjI_JKLUDwiS_35euTwVkcdYng6cyrnaYIO_LMaNvVEFmQY840NjMeIzfsaZTcqsvhB5ADLmtsFdC6LKAtVK5zbQ_60E9uFkDjs-TQ"/>
+</div>
+</div>
+</div>
+</header>
+<div class="max-w-container-max-width mx-auto flex min-h-[calc(100vh-64px)]">
+<!-- SideNavBar Shell (Settings Context) -->
+<aside class="w-64 bg-surface-container-low dark:bg-tertiary-container flex flex-col h-[calc(100vh-64px)] p-stack-md border-r border-outline-variant dark:border-outline sticky top-16">
+<div class="mb-stack-lg px-unit">
+<div class="flex items-center gap-stack-sm mb-unit">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[18px]">account_balance</span>
+</div>
+<span class="font-label-md text-label-md text-primary dark:text-primary-fixed truncate">Chambers of S. Rao</span>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-70 px-unit">Supreme Court of India</p>
+</div>
+<nav class="flex-1 flex flex-col gap-unit">
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-md bg-surface-container-highest dark:bg-primary-container text-primary dark:text-on-primary-container font-bold rounded-lg transition-all scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="business_center">business_center</span>
+<span class="font-label-md text-label-md">Workspace</span>
+</a>
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-md text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-primary-container/50 transition-all scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-label-md text-label-md">Members</span>
+</a>
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-md text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-primary-container/50 transition-all scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label-md text-label-md">Billing</span>
+</a>
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-md text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-primary-container/50 transition-all scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-md text-label-md">Viki AI Settings</span>
+</a>
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-md text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-high dark:hover:bg-primary-container/50 transition-all scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+<span class="font-label-md text-label-md">Security</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant/30 pt-stack-md flex flex-col gap-unit">
+<button class="flex items-center gap-stack-sm px-stack-md py-stack-md text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="font-label-md text-label-md">Support</span>
+</button>
+<button class="flex items-center gap-stack-sm px-stack-md py-stack-md text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</button>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 bg-surface-container-low min-w-0">
+<div class="max-w-4xl mx-auto py-stack-lg px-margin-page">
+<!-- Section Header -->
+<div class="mb-stack-lg">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-unit">Firm Profile</h1>
+<p class="font-body-md text-on-surface-variant">Configure your professional identity and stationery assets for formal correspondence.</p>
+</div>
+<!-- Form & Preview Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-stack-lg items-start">
+<!-- Form Column -->
+<section class="space-y-stack-lg">
+<!-- Firm Identity -->
+<div class="space-y-stack-md bg-surface p-stack-lg rounded border border-outline-variant/50">
+<h2 class="font-label-md text-label-md uppercase tracking-widest text-secondary">General Identity</h2>
+<div class="space-y-stack-sm">
+<label class="font-label-md text-label-md text-on-surface-variant">FIRM NAME</label>
+<input class="w-full bg-transparent border-b border-outline-variant focus:border-primary focus:ring-0 transition-colors py-stack-sm font-body-md" type="text" value="Chambers of S. Rao"/>
+</div>
+<div class="space-y-stack-sm">
+<label class="font-label-md text-label-md text-on-surface-variant">PRACTICE JURISDICTION</label>
+<input class="w-full bg-transparent border-b border-outline-variant focus:border-primary focus:ring-0 transition-colors py-stack-sm font-body-md" placeholder="e.g., Supreme Court of India" type="text"/>
+</div>
+<div class="space-y-stack-sm">
+<label class="font-label-md text-label-md text-on-surface-variant">TAX IDENTIFICATION (GSTIN)</label>
+<input class="w-full bg-transparent border-b border-outline-variant focus:border-primary focus:ring-0 transition-colors py-stack-sm font-body-md" placeholder="Enter GSTIN Number" type="text"/>
+</div>
+</div>
+<!-- Brand Assets -->
+<div class="space-y-stack-md bg-surface p-stack-lg rounded border border-outline-variant/50">
+<h2 class="font-label-md text-label-md uppercase tracking-widest text-secondary">Visual Assets</h2>
+<div class="flex items-center justify-between gap-stack-md border-b border-outline-variant/30 pb-stack-md">
+<div>
+<h3 class="font-label-md text-label-md">Firm Logo</h3>
+<p class="text-label-sm text-on-surface-variant">Vector SVG or high-res PNG (min 400x400px)</p>
+</div>
+<button class="px-stack-md py-unit border border-primary font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-all rounded">UPLOAD</button>
+</div>
+<div class="flex items-center justify-between gap-stack-md border-b border-outline-variant/30 pb-stack-md pt-unit">
+<div>
+<h3 class="font-label-md text-label-md">Digital Seal</h3>
+<p class="text-label-sm text-on-surface-variant">Transparent background for document verification</p>
+</div>
+<button class="px-stack-md py-unit border border-primary font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-all rounded">UPLOAD</button>
+</div>
+<div class="flex items-center justify-between gap-stack-md pt-unit">
+<div>
+<h3 class="font-label-md text-label-md">Letterhead Header</h3>
+<p class="text-label-sm text-on-surface-variant">Primary contact block for document headers</p>
+</div>
+<button class="px-stack-md py-unit border border-primary font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-all rounded">CONFIGURE</button>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center justify-end gap-stack-md">
+<button class="px-stack-lg py-stack-sm font-label-md text-label-md text-secondary border border-outline-variant hover:bg-surface-variant transition-all rounded">Discard Changes</button>
+<button class="px-stack-lg py-stack-sm font-label-md text-label-md bg-primary text-on-primary hover:opacity-90 transition-all rounded">Save Profile</button>
+</div>
+</section>
+<!-- Preview Column -->
+<aside class="sticky top-[112px]">
+<h2 class="font-label-md text-label-md uppercase tracking-widest text-secondary mb-stack-md ml-unit">Stationery Preview</h2>
+<div class="bg-white paper-shadow aspect-[1/1.414] w-full max-w-sm mx-auto p-margin-page relative border border-outline-variant/20 flex flex-col overflow-hidden">
+<!-- Letterhead Top Decoration -->
+<div class="absolute top-0 left-0 right-0 h-1 bg-primary"></div>
+<!-- Letterhead Header -->
+<div class="flex justify-between items-start mb-stack-lg">
+<div class="w-12 h-12 bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[24px]">account_balance</span>
+</div>
+<div class="text-right">
+<p class="font-headline-md text-[18px] text-primary leading-tight">Chambers of S. Rao</p>
+<p class="font-label-sm text-[9px] text-on-surface-variant mt-unit">C-412, Lawyers Chambers, Bhagwan Dass Rd.<br/>Supreme Court Complex, New Delhi - 110001</p>
+</div>
+</div>
+<div class="ink-divider mb-stack-lg opacity-30"></div>
+<!-- Document Skeleton Content -->
+<div class="flex-1 space-y-stack-md">
+<div class="h-4 w-1/4 bg-surface-container-high rounded-sm opacity-60"></div>
+<div class="space-y-stack-sm pt-stack-md">
+<div class="h-2 w-full bg-surface-container-high rounded-sm opacity-40"></div>
+<div class="h-2 w-full bg-surface-container-high rounded-sm opacity-40"></div>
+<div class="h-2 w-3/4 bg-surface-container-high rounded-sm opacity-40"></div>
+</div>
+<div class="h-8 w-2/3 bg-surface-container-high rounded-sm opacity-20 mx-auto mt-stack-lg"></div>
+<div class="space-y-stack-sm pt-stack-lg">
+<div class="h-2 w-full bg-surface-container-high rounded-sm opacity-40"></div>
+<div class="h-2 w-full bg-surface-container-high rounded-sm opacity-40"></div>
+<div class="h-2 w-full bg-surface-container-high rounded-sm opacity-40"></div>
+<div class="h-2 w-full bg-surface-container-high rounded-sm opacity-40"></div>
+<div class="h-2 w-4/5 bg-surface-container-high rounded-sm opacity-40"></div>
+</div>
+</div>
+<!-- Letterhead Footer -->
+<div class="mt-auto pt-stack-lg border-t border-outline-variant/30 text-[8px] text-on-surface-variant italic font-serif flex justify-between items-end">
+<span>Ref No: PREV-7729-2024</span>
+<div class="text-right">
+<p>Phone: +91 11 2338 XXXX</p>
+<p>Email: s.rao@chambers.legal</p>
+</div>
+</div>
+<!-- Watermark Overlay -->
+<div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none rotate-[-30deg]">
+<span class="text-headline-display font-bold text-primary select-none">CHAMBERS OF S. RAO</span>
+</div>
+</div>
+<p class="text-center font-label-sm text-label-sm text-on-surface-variant mt-stack-md italic">Standard A4 Letterhead Projection</p>
+</aside>
+</div>
+</div>
+</main>
+</div>
+<!-- Mobile Bottom Navigation (Suppressed per task context as this is a focused settings screen, but included as per Shared Component rule for main destinations if needed. Here we keep it hidden for focus) -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant px-stack-md h-16 flex items-center justify-around z-50">
+<button class="flex flex-col items-center gap-unit text-on-surface-variant">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-label-sm">Home</span>
+</button>
+<button class="flex flex-col items-center gap-unit text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="text-[10px] font-label-sm">Settings</span>
+</button>
+</div>
+<script>
+        // Micro-interaction for input focus effects
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.querySelector('label').classList.replace('text-on-surface-variant', 'text-primary');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.querySelector('label').classList.replace('text-primary', 'text-on-surface-variant');
+            });
+        });
+
+        // Theme Toggle Logic (Simple Placeholder)
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
+    </script>
+</body></html>

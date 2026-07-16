@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Draft with Viki | Docket</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c5c6cc",
+                    "outline": "#75777c",
+                    "tertiary-container": "#242423",
+                    "on-surface": "#1d1b16",
+                    "on-primary-fixed": "#131c27",
+                    "primary": "#07101a",
+                    "surface-container-high": "#ede7de",
+                    "on-secondary-fixed": "#291800",
+                    "on-background": "#1d1b16",
+                    "tertiary-fixed-dim": "#c8c6c4",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#474745",
+                    "surface-container-highest": "#e8e2d9",
+                    "on-secondary-fixed-variant": "#5b421c",
+                    "tertiary": "#0e0f0e",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#1c2530",
+                    "secondary-container": "#fdd7a4",
+                    "inverse-surface": "#33302a",
+                    "primary-fixed": "#dae3f2",
+                    "on-primary-container": "#838c9a",
+                    "secondary-fixed-dim": "#e5c18f",
+                    "surface": "#fff8ef",
+                    "surface-tint": "#565f6c",
+                    "secondary": "#755a31",
+                    "on-primary-fixed-variant": "#3e4754",
+                    "surface-bright": "#fff8ef",
+                    "surface-variant": "#e8e2d9",
+                    "inverse-on-surface": "#f6f0e7",
+                    "surface-dim": "#dfd9d0",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#1b1c1a",
+                    "tertiary-fixed": "#e4e2df",
+                    "surface-container": "#f3ede4",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#8c8b89",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#44474b",
+                    "secondary-fixed": "#ffddb1",
+                    "background": "#fff8ef",
+                    "on-secondary-container": "#785c33",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#bec7d6",
+                    "surface-container-low": "#f9f3ea",
+                    "primary-fixed-dim": "#bec7d6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "32px",
+                    "stack-sm": "8px",
+                    "container-max-width": "1440px",
+                    "stack-md": "16px",
+                    "unit": "4px",
+                    "margin-page": "48px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Newsreader"],
+                    "label-sm": ["Inter"],
+                    "headline-lg": ["Newsreader"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-display": ["Newsreader"]
+            },
+            "fontSize": {
+                    "label-md": ["13px", { "lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600" }],
+                    "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "500" }],
+                    "label-sm": ["11px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                    "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "500" }],
+                    "body-md": ["15px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                    "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                    "headline-display": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+        }
+        .viki-gradient {
+            background: linear-gradient(135deg, #9A7B4F 0%, #755a31 100%);
+        }
+        .chat-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: #e8e2d9;
+            border-radius: 10px;
+        }
+        .ink-shadow {
+            box-shadow: 0 10px 30px -10px rgba(28, 37, 48, 0.08);
+        }
+        .typing-dot {
+            animation: blink 1.4s infinite both;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- Sidebar (Shell Component) -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant flex flex-col h-full py-stack-md gap-stack-sm z-40 hidden md:flex">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-sm bg-primary flex items-center justify-center">
+<span class="text-on-primary font-bold text-xs">K&amp;C</span>
+</div>
+<div>
+<h2 class="text-label-md font-label-md font-bold text-secondary">Khaitan &amp; Co.</h2>
+<p class="text-xs text-outline">Arbitration Dept.</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container transition-all cursor-pointer rounded-sm">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="text-label-md">Workspace</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container transition-all cursor-pointer rounded-sm">
+<span class="material-symbols-outlined">travel_explore</span>
+<span class="text-label-md">Research</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container transition-all cursor-pointer rounded-sm">
+<span class="material-symbols-outlined">description</span>
+<span class="text-label-md">Templates</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container transition-all cursor-pointer rounded-sm">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-label-md">Archives</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 bg-surface-container-high text-primary font-semibold border-r-4 border-secondary transition-all cursor-pointer">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-label-md">Viki AI</span>
+</div>
+</nav>
+<div class="px-3 mt-auto space-y-1">
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container transition-all cursor-pointer rounded-sm">
+<span class="material-symbols-outlined">support_agent</span>
+<span class="text-label-md">Support</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container transition-all cursor-pointer rounded-sm">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-md">Settings</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 flex flex-col h-screen bg-surface">
+<!-- Header (Shell Component) -->
+<header class="fixed top-0 right-0 left-0 md:left-64 h-16 bg-background border-b border-outline-variant flex justify-between items-center px-margin-page z-30">
+<div class="flex items-center gap-8">
+<h1 class="text-headline-md font-headline-md font-medium italic text-primary">Docket</h1>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Dashboard</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Matters</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Documents</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden sm:flex px-4 py-1.5 border border-outline text-label-sm rounded-sm hover:bg-surface-container-low transition-colors">
+                    Firm Workspace
+                </button>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary">help</span>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional portrait of a senior legal counsel in a high-end corporate setting. The lighting is soft and editorial, casting a warm glow across a minimalist office background with mahogany accents. The aesthetic is clean and authoritative, reflecting the prestige of a top-tier Indian law firm like Khaitan and Co." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALh5NQK7OJXn9_HGKFfOFRv1RgmrCuZ8QdEBd5giy2c4_7ZyDEUT1RxoKTJBf3zdGa0ZNlqmEC53sLcjM4OktGqRWcyF9GVfwrbk-hAAcQGoieLq2TJlbB_jlhvW8EPCZ7ogv0qJnztXXzin5u-b7dJWNaQIfAfl8GqH_wrDjgHzuhMakSd4kQomYIWqdx07qScBjT8iaKGOwMr6tmRVl5sBBJnK4qQL64KP8aTtnMmdVwTX-UgAIWow"/>
+</div>
+</div>
+</header>
+<!-- Chat Container -->
+<div class="flex-1 pt-20 pb-4 px-4 md:px-margin-page flex flex-col max-w-container-max-width mx-auto w-full relative overflow-hidden">
+<!-- Chat Title -->
+<div class="mb-stack-lg border-b border-outline-variant/30 pb-4 flex items-center justify-between">
+<div>
+<h2 class="text-headline-md font-headline-md italic">Draft with Viki</h2>
+<p class="text-label-sm text-outline uppercase tracking-wider mt-1">Smart Drafting Assistant</p>
+</div>
+<div class="flex gap-2">
+<span class="flex items-center gap-1 px-2 py-1 bg-secondary-container text-on-secondary-container rounded text-[10px] font-bold uppercase tracking-tighter">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">bolt</span> High Priority
+                    </span>
+</div>
+</div>
+<!-- Messages Area -->
+<div class="flex-1 overflow-y-auto chat-scroll pr-2 space-y-stack-lg">
+<!-- Viki Message 1 -->
+<div class="flex gap-4 max-w-2xl">
+<div class="w-8 h-8 rounded-sm viki-gradient flex-shrink-0 flex items-center justify-center text-white font-headline-md italic text-lg shadow-sm">V</div>
+<div class="space-y-3">
+<div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/50 ink-shadow">
+<p class="text-body-md leading-relaxed">Good morning. I'm ready to assist with your drafting today. I see you're looking into the <span class="font-semibold text-primary">Phoenix Tech Acquisitions</span> file.</p>
+<p class="text-body-md mt-2">Which document type shall we begin with? I can pull from our departmental gold-standard templates.</p>
+</div>
+<div class="flex flex-wrap gap-2">
+<button class="px-3 py-1.5 bg-white border border-outline-variant text-label-md rounded-sm hover:border-secondary hover:text-secondary transition-all">Mutual NDA Template</button>
+<button class="px-3 py-1.5 bg-white border border-outline-variant text-label-md rounded-sm hover:border-secondary hover:text-secondary transition-all">Term Sheet - Series B</button>
+<button class="px-3 py-1.5 bg-white border border-outline-variant text-label-md rounded-sm hover:border-secondary hover:text-secondary transition-all">Employment Agreement</button>
+</div>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex gap-4 max-w-2xl ml-auto flex-row-reverse">
+<div class="w-8 h-8 rounded-sm bg-primary-container flex-shrink-0 flex items-center justify-center text-white font-label-md text-xs">JD</div>
+<div class="bg-primary text-on-primary p-4 rounded-lg ink-shadow">
+<p class="text-body-md">Let's go with the Mutual NDA. We need to include specific exclusions for the intellectual property related to their proprietary algorithm 'Aether'.</p>
+</div>
+</div>
+<!-- Viki Message 2 (Clarifying) -->
+<div class="flex gap-4 max-w-2xl">
+<div class="w-8 h-8 rounded-sm viki-gradient flex-shrink-0 flex items-center justify-center text-white font-headline-md italic text-lg shadow-sm">V</div>
+<div class="space-y-4">
+<div class="bg-surface-container-low p-4 rounded-lg border border-outline-variant/50 ink-shadow">
+<p class="text-body-md leading-relaxed">Understood. I've noted the 'Aether' algorithm exclusions.</p>
+<p class="text-body-md mt-2">To ensure the drafting is bulletproof, should I apply the <span class="italic">Restrictive Covenants</span> clause usually required by the Mumbai Arbitration Center, or shall we stick to the standard International Chamber of Commerce (ICC) language?</p>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="p-3 bg-white border border-outline-variant rounded-sm cursor-pointer hover:bg-surface-container-high transition-colors">
+<h4 class="text-label-md font-bold text-primary">Mumbai Arbitration</h4>
+<p class="text-[11px] text-outline mt-1 leading-tight">Optimized for domestic enforcement under Section 11.</p>
+</div>
+<div class="p-3 bg-white border border-outline-variant rounded-sm cursor-pointer hover:bg-surface-container-high transition-colors">
+<h4 class="text-label-md font-bold text-primary">Standard ICC</h4>
+<p class="text-[11px] text-outline mt-1 leading-tight">Broad international applicability for cross-border IP.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Success State / Document Ready Card -->
+<div class="flex gap-4 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+<div class="w-8 h-8 rounded-sm viki-gradient flex-shrink-0 flex items-center justify-center text-white font-headline-md italic text-lg shadow-sm">V</div>
+<div class="flex-1">
+<div class="bg-white border-2 border-secondary rounded-lg overflow-hidden ink-shadow">
+<div class="bg-secondary p-3 flex items-center justify-between">
+<div class="flex items-center gap-2 text-on-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-label-md uppercase tracking-wider">Document Ready</span>
+</div>
+<span class="text-[10px] text-on-primary/80">Draft v1.4.2</span>
+</div>
+<div class="p-5 space-y-4">
+<h3 class="text-headline-md font-headline-md text-primary">Mutual NDA - Phoenix Tech</h3>
+<div class="space-y-2">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-0.5">verified_user</span>
+<p class="text-body-md text-on-surface-variant"><span class="font-semibold text-primary">Tailored Exclusion:</span> Incorporated Section 4.2 specific to the 'Aether' algorithm IP hierarchy.</p>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-0.5">verified_user</span>
+<p class="text-body-md text-on-surface-variant"><span class="font-semibold text-primary">Jurisdiction:</span> Set to Mumbai Court of International Arbitration (MCIA).</p>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-0.5">verified_user</span>
+<p class="text-body-md text-on-surface-variant"><span class="font-semibold text-primary">Duration:</span> 3-year survival period on trade secrets.</p>
+</div>
+</div>
+<button class="w-full mt-4 flex items-center justify-center gap-2 py-3 bg-secondary text-on-primary text-label-md font-bold uppercase tracking-widest hover:bg-secondary/90 transition-all active:scale-[0.98]">
+                                    Open document <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Spacer for scroll -->
+<div class="h-12"></div>
+</div>
+<!-- Input Bar -->
+<div class="mt-4 bg-white border border-outline-variant p-2 rounded-lg flex items-center gap-3 ink-shadow">
+<button class="p-2 text-outline hover:text-secondary transition-colors">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-body-md placeholder:text-outline-variant" placeholder="Type a message or instruction for Viki..." type="text"/>
+<button class="px-4 py-2 bg-primary text-on-primary text-label-md font-bold rounded-sm flex items-center gap-2 hover:bg-primary-container transition-all">
+                    Send <span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+<p class="text-center text-[10px] text-outline-variant mt-2 uppercase tracking-tighter">Drafting suggestions based on Firm Guidelines 2024</p>
+</div>
+<!-- Decorative Elements -->
+<div class="fixed bottom-0 right-0 p-8 pointer-events-none opacity-20">
+<span class="font-headline-md italic text-7xl text-outline-variant/30 select-none">Archival Quality</span>
+</div>
+</main>
+<!-- FAB Suppression - Following instructions, FAB not present on focused chat task -->
+<script>
+        // Simple micro-interaction for the suggestion chips
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+
+        // Auto-scroll chat to bottom
+        const chatArea = document.querySelector('.chat-scroll');
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+        // Simulate a minor "thinking" state when user interacts
+        function simulateThinking() {
+            console.log("Viki is analyzing...");
+        }
+    </script>
+</body></html>

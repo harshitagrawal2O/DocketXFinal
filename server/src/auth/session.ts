@@ -94,7 +94,16 @@ export interface AuthedRequest extends Request {
 }
 
 export async function attachUser(req: AuthedRequest, _res: Response, next: NextFunction): Promise<void> {
-  req.user = (await resolveUser(req)) ?? undefined;
+  // This runs on EVERY request. A transient DB error (e.g. a serverless
+  // Postgres cold start) must not crash the whole server for every connected
+  // user — treat it as "unauthenticated for this request" and move on;
+  // downstream requireAuth/requireCap will 401/403 as appropriate.
+  try {
+    req.user = (await resolveUser(req)) ?? undefined;
+  } catch (err) {
+    console.error("[auth] attachUser failed:", (err as Error).message);
+    req.user = undefined;
+  }
   next();
 }
 

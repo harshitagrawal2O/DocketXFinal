@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Docket | System States</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Newsreader:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#c5c6cc",
+                        "outline": "#75777c",
+                        "tertiary-container": "#242423",
+                        "on-surface": "#1d1b16",
+                        "on-primary-fixed": "#131c27",
+                        "primary": "#07101a",
+                        "surface-container-high": "#ede7de",
+                        "on-secondary-fixed": "#291800",
+                        "on-background": "#1d1b16",
+                        "tertiary-fixed-dim": "#c8c6c4",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#474745",
+                        "surface-container-highest": "#e8e2d9",
+                        "on-secondary-fixed-variant": "#5b421c",
+                        "tertiary": "#0e0f0e",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#1c2530",
+                        "secondary-container": "#fdd7a4",
+                        "inverse-surface": "#33302a",
+                        "primary-fixed": "#dae3f2",
+                        "on-primary-container": "#838c9a",
+                        "secondary-fixed-dim": "#e5c18f",
+                        "surface": "#fff8ef",
+                        "surface-tint": "#565f6c",
+                        "secondary": "#755a31",
+                        "on-primary-fixed-variant": "#3e4754",
+                        "surface-bright": "#fff8ef",
+                        "surface-variant": "#e8e2d9",
+                        "inverse-on-surface": "#f6f0e7",
+                        "surface-dim": "#dfd9d0",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#1b1c1a",
+                        "tertiary-fixed": "#e4e2df",
+                        "surface-container": "#f3ede4",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#8c8b89",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#44474b",
+                        "secondary-fixed": "#ffddb1",
+                        "background": "#fff8ef",
+                        "on-secondary-container": "#785c33",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#bec7d6",
+                        "surface-container-low": "#f9f3ea",
+                        "primary-fixed-dim": "#bec7d6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "stack-sm": "8px",
+                        "container-max-width": "1440px",
+                        "stack-md": "16px",
+                        "unit": "4px",
+                        "margin-page": "48px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "headline-md": ["Newsreader"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Newsreader"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-display": ["Newsreader"]
+                    },
+                    "fontSize": {
+                        "label-md": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.04em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                        "label-sm": ["11px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                        "body-md": ["15px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .loading-line {
+            width: 0%;
+            animation: lineExpand 2.5s ease-in-out infinite;
+        }
+        @keyframes lineExpand {
+            0% { width: 0%; left: 0; }
+            50% { width: 100%; left: 0; }
+            100% { width: 0%; left: 100%; }
+        }
+        .brass-accent { color: #9A7B4F; }
+        .ink-accent { color: #1C2530; }
+        .glass-card {
+            background: rgba(255, 248, 239, 0.7);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-surface border-b border-outline-variant fixed top-0 w-full z-50">
+<div class="flex justify-between items-center w-full px-margin-page h-16 max-w-container-max-width mx-auto">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold text-primary">Docket</span>
+<nav class="hidden md:flex gap-6">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary pb-1" href="#">Matters</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Documents</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary">help_outline</button>
+<button class="bg-primary-container text-on-primary-fixed py-2 px-4 rounded font-label-md text-label-md hover:opacity-90 transition-opacity">New Matter</button>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant p-stack-md pt-20">
+<div class="mb-8 px-2">
+<div class="flex items-center gap-3 mb-1">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-sm" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-primary">Chambers of S. Rao</div>
+<div class="text-[10px] uppercase tracking-wider text-outline">Supreme Court of India</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">business_center</span> Workspace
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">saved_search</span> Research
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">description</span> Templates
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span> Archives
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 bg-surface-container-highest text-primary font-bold rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span> Settings
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">auto_awesome</span> Viki AI
+            </a>
+</nav>
+<div class="mt-auto pt-4 border-t border-outline-variant space-y-1">
+<button class="w-full mb-4 py-2 border border-secondary text-secondary font-label-md text-label-md rounded hover:bg-secondary/5 transition-colors">Invite Counsel</button>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">contact_support</span> Support
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">logout</span> Sign Out
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-64 pt-24 pb-12 px-margin-page max-w-container-max-width mx-auto">
+<!-- Showcase Header -->
+<div class="mb-12 border-b border-outline-variant pb-6">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-2">System States Showcase</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+                A collection of global application states designed with editorial minimalism, prioritizing legibility and a sense of architectural permanence within the Docket platform.
+            </p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-stack-lg">
+<!-- 1. EMPTY STATE -->
+<section class="flex flex-col bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="p-4 border-b border-outline-variant bg-surface-container-low flex items-center justify-between">
+<span class="font-label-md text-label-md text-outline uppercase tracking-widest">Case Files / Archives</span>
+<div class="flex gap-1">
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+<div class="w-2 h-2 rounded-full bg-outline-variant"></div>
+</div>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center p-20 text-center min-h-[400px]">
+<!-- Line Art Legal Motif -->
+<div class="relative mb-8 group">
+<div class="absolute -inset-4 bg-surface-container rounded-full scale-0 group-hover:scale-100 transition-transform duration-500 opacity-50"></div>
+<span class="material-symbols-outlined text-[80px] text-outline-variant transition-colors duration-300 group-hover:text-secondary-fixed-dim" style="font-variation-settings: 'wght' 100;">
+                            account_balance_wallet
+                        </span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-3">No Active Matter Files</h3>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xs mb-8">
+                        Your archival repository is currently empty. Start by initializing a new case record or importing existing documents.
+                    </p>
+<button class="inline-flex items-center gap-2 text-secondary font-label-md text-label-md hover:gap-3 transition-all">
+<span class="material-symbols-outlined text-sm">add</span>
+<span class="border-b border-secondary/30 pb-0.5">INITIALIZE NEW MATTER</span>
+</button>
+</div>
+</section>
+<!-- 2. LOADING STATE -->
+<section class="flex flex-col bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="p-4 border-b border-outline-variant bg-surface-container-low flex items-center justify-between">
+<span class="font-label-md text-label-md text-outline uppercase tracking-widest">Document Analysis</span>
+<span class="material-symbols-outlined text-outline text-sm">lock</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center p-20 min-h-[400px]">
+<div class="w-full max-w-sm">
+<div class="flex justify-between items-end mb-4">
+<div class="space-y-1">
+<h4 class="font-label-md text-label-md text-primary">VIKI AI</h4>
+<p class="text-[11px] font-label-sm text-outline uppercase tracking-widest">Synthesizing Brief...</p>
+</div>
+<div class="text-[11px] font-label-sm text-secondary italic">Step 2 of 4</div>
+</div>
+<!-- Labeled Intent Line -->
+<div class="relative h-[1px] bg-outline-variant w-full overflow-hidden">
+<div class="absolute top-0 h-full bg-primary loading-line"></div>
+</div>
+<div class="mt-6 space-y-3 opacity-40 select-none">
+<div class="h-4 bg-surface-container w-3/4 rounded-sm"></div>
+<div class="h-4 bg-surface-container w-full rounded-sm"></div>
+<div class="h-4 bg-surface-container w-1/2 rounded-sm"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. ERROR STATE -->
+<section class="flex flex-col bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm lg:col-span-2">
+<div class="p-4 border-b border-outline-variant bg-surface-container-low flex items-center justify-between">
+<span class="font-label-md text-label-md text-outline uppercase tracking-widest">System Connectivity</span>
+<span class="flex items-center gap-2 text-[11px] font-label-sm text-error">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> DISCONNECTED
+                    </span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center p-margin-page min-h-[300px]">
+<div class="flex flex-col md:flex-row items-center gap-12 max-w-4xl">
+<div class="relative">
+<div class="w-24 h-24 rounded-full border border-error/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-error text-4xl" style="font-variation-settings: 'wght' 200;">cloud_off</span>
+</div>
+<div class="absolute -top-1 -right-1 w-6 h-6 bg-error-container text-on-error-container rounded-full flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-sm">priority_high</span>
+</div>
+</div>
+<div class="text-center md:text-left space-y-4">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Temporary Connection Interruption</h3>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-lg">
+                                    We encountered a subtle disruption while syncing with the High Court server. Your local drafts remain securely cached in the current session.
+                                </p>
+</div>
+<div class="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2">
+<button class="bg-primary text-on-primary px-6 py-2.5 rounded font-label-md text-label-md hover:bg-primary-container transition-colors inline-flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">refresh</span> Re-establish Connection
+                                </button>
+<button class="text-on-surface-variant px-6 py-2.5 rounded font-label-md text-label-md hover:bg-surface-container-high transition-colors">
+                                    View Offline Workspace
+                                </button>
+</div>
+<p class="text-[11px] font-label-sm text-outline italic">Error Code: E-503 (Server Congestion at Registry)</p>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. ASYMMETRIC BENTO GRID ELEMENT (REASSURING CONTEXT) -->
+<section class="bg-surface-container-low border border-outline-variant rounded-xl p-8 flex flex-col justify-between">
+<div>
+<h4 class="font-label-md text-label-md text-secondary uppercase tracking-[0.2em] mb-4">Firm Security</h4>
+<p class="font-headline-md text-headline-md text-primary leading-snug">
+                        "Precision in practice is the hallmark of legal excellence."
+                    </p>
+</div>
+<div class="mt-12 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A portrait of a distinguished senior legal partner in a professional suit, soft studio lighting, high-end corporate photography style, background blurred to show a mahogany-filled law library." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGsIZ6eETbD9Xr2sz-6Vm1V56LpD4weX2_qo8nYQKmGSEuy7akIk708h4xKB4WIF7Z1GU-3UP1nTFuSiY5cinx5ELF0H9SAYekJ1HhGIHM4IW5XVmMduxm6TaIS0qDdNYOifwL4hX4_g6zC3CB0XVqcd39h_OA71hVXgs0XzSZelaNGWOa6KPt3ZMC29840YfDyVymox4JCsqdxUPWUcZIfBSWRK98KWRxd7Hsd9jyOYBaokEGylXxsA"/>
+</div>
+<div>
+<div class="font-label-md text-label-md text-primary">Senior Advocate Mehta</div>
+<div class="text-[11px] font-label-sm text-outline">Compliance Oversight</div>
+</div>
+</div>
+</section>
+<!-- 5. STATUS SUMMARY CARD -->
+<section class="bg-surface-container-highest rounded-xl p-8 border border-outline-variant relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 opacity-10">
+<span class="material-symbols-outlined text-[140px] -rotate-12 translate-x-8 -translate-y-8">verified_user</span>
+</div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-6">
+<span class="w-2 h-2 rounded-full bg-[#9A7B4F]"></span>
+<h4 class="font-label-md text-label-md text-primary uppercase tracking-widest">Digital Stationery Audit</h4>
+</div>
+<ul class="space-y-4">
+<li class="flex justify-between items-center border-b border-outline-variant/30 pb-2">
+<span class="font-body-md text-body-md text-on-surface-variant">Encrypted Ledger</span>
+<span class="font-label-md text-label-md text-primary">STABLE</span>
+</li>
+<li class="flex justify-between items-center border-b border-outline-variant/30 pb-2">
+<span class="font-body-md text-body-md text-on-surface-variant">Archival Redundancy</span>
+<span class="font-label-md text-label-md text-primary">99.9%</span>
+</li>
+<li class="flex justify-between items-center border-b border-outline-variant/30 pb-2">
+<span class="font-body-md text-body-md text-on-surface-variant">VICI Neural Link</span>
+<span class="font-label-md text-label-md text-secondary">IDLE</span>
+</li>
+</ul>
+<div class="mt-8">
+<button class="w-full py-3 bg-white border border-outline-variant text-primary font-label-md text-label-md hover:shadow-md transition-shadow">
+                            Download Audit Certificate
+                        </button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Global FAB (Contextual for New Matter) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center group hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform">add</span>
+</button>
+<script>
+        // Micro-interaction for error retry
+        document.querySelector('button.bg-primary').addEventListener('click', function() {
+            const btn = this;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">autorenew</span> Attempting...';
+            btn.classList.add('opacity-80');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.classList.remove('opacity-80');
+            }, 2000);
+        });
+
+        // Simple subtle parallax effect for cards
+        document.addEventListener('mousemove', (e) => {
+            const cards = document.querySelectorAll('.shadow-sm');
+            const x = e.clientX / window.innerWidth - 0.5;
+            const y = e.clientY / window.innerHeight - 0.5;
+            
+            cards.forEach(card => {
+                card.style.transform = `translate(${x * 10}px, ${y * 10}px)`;
+            });
+        });
+    </script>
+</body></html>
