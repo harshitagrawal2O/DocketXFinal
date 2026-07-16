@@ -15,6 +15,7 @@ import type {
   StartAgentRunResponse,
   TemplateDTO,
   TemplateSummary,
+  UpsertTemplateRequest,
   VersionSummary,
 } from "@docket/shared";
 
@@ -168,6 +169,20 @@ export const auditApi = {
 export const templatesApi = {
   list: () => req<TemplateSummary[]>("/api/templates"),
   get: (id: string) => req<TemplateDTO>(`/api/templates/${id}`),
+  create: (body: UpsertTemplateRequest) =>
+    req<TemplateDTO>("/api/templates", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  update: (id: string, body: UpsertTemplateRequest) =>
+    req<TemplateDTO>(`/api/templates/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+  remove: (id: string) =>
+    req<{ ok: true }>(`/api/templates/${id}`, { method: "DELETE" }),
+  clone: (id: string) =>
+    req<TemplateDTO>(`/api/templates/${id}/clone`, { method: "POST" }),
   analyze: (body: AnalyzeTemplateRequest) =>
     req<TemplateDTO>("/api/templates/analyze", {
       method: "POST",

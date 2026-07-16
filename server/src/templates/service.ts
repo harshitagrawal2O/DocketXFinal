@@ -71,6 +71,76 @@ export async function getTemplate(id: string, userId: string): Promise<TemplateD
   return toTemplateDTO(row);
 }
 
+/** Clone any visible template into a new firm-owned, editable copy ("Copy as New Template"). */
+export async function cloneTemplate(source: TemplateDTO, ownerId: string): Promise<TemplateDTO> {
+  const row = await prisma.template.create({
+    data: {
+      ownerId,
+      title: `${source.title} (copy)`,
+      category: source.category,
+      kind: source.kind,
+      description: source.description,
+      bodyHtml: source.bodyHtml,
+      variables: source.variables as unknown as Prisma.InputJsonValue,
+      source: "uploaded",
+    },
+  });
+  return toTemplateDTO(row);
+}
+
+/** Create an owned template from scratch (Create Template). */
+export async function createOwnedTemplate(
+  body: { title: string; category: string; kind: string; description: string; bodyHtml: string; variables: TemplateVariable[] },
+  ownerId: string,
+): Promise<TemplateDTO> {
+  const row = await prisma.template.create({
+    data: {
+      ownerId,
+      title: body.title,
+      category: body.category,
+      kind: body.kind,
+      description: body.description,
+      bodyHtml: body.bodyHtml,
+      variables: body.variables as unknown as Prisma.InputJsonValue,
+      source: "uploaded",
+    },
+  });
+  return toTemplateDTO(row);
+}
+
+/** Update an owned template. Builtins (ownerId null) are read-only. */
+export async function updateTemplate(
+  id: string,
+  ownerId: string,
+  body: { title: string; category: string; kind: string; description: string; bodyHtml: string; variables: TemplateVariable[] },
+): Promise<TemplateDTO | "not_found" | "readonly"> {
+  const existing = await prisma.template.findUnique({ where: { id } });
+  if (!existing) return "not_found";
+  if (existing.ownerId == null) return "readonly";
+  if (existing.ownerId !== ownerId) return "not_found";
+  const row = await prisma.template.update({
+    where: { id },
+    data: {
+      title: body.title,
+      category: body.category,
+      kind: body.kind,
+      description: body.description,
+      bodyHtml: body.bodyHtml,
+      variables: body.variables as unknown as Prisma.InputJsonValue,
+    },
+  });
+  return toTemplateDTO(row);
+}
+
+export async function deleteTemplate(id: string, ownerId: string): Promise<"ok" | "not_found" | "readonly"> {
+  const existing = await prisma.template.findUnique({ where: { id } });
+  if (!existing) return "not_found";
+  if (existing.ownerId == null) return "readonly";
+  if (existing.ownerId !== ownerId) return "not_found";
+  await prisma.template.delete({ where: { id } });
+  return "ok";
+}
+
 export async function createTemplate(draft: TemplateDraft, source: "uploaded" | "viki", ownerId: string): Promise<TemplateDTO> {
   const row = await prisma.template.create({
     data: {
@@ -117,6 +187,45 @@ export async function generateDocument(
       userId: ownerId,
       userName: ownerName,
       detail: { generatedFromTemplate: template.title },
+    },
+  });
+  return doc.id;
+}
+
+/**
+ * Create a Document from already-final HTML (the Viki-personalised path, where
+ * the whole body has been drafted for the case). Records what was personalised.
+ */
+export async function generateDocumentFromHtml(
+  html: string,
+  documentTitle: string,
+  kind: TemplateDTO["kind"],
+  templateId: string,
+  ownerId: string,
+  ownerName: string,
+  personalizationNotes: string[],
+): Promise<string> {
+  const doc = await prisma.document.create({
+    data: {
+      title: documentTitle,
+      kind,
+      ownerId,
+      initialHtml: html,
+      templateId,
+      members: { create: { userId: ownerId, role: "owner" } },
+    },
+  });
+  await prisma.auditEvent.create({
+    data: {
+      documentId: doc.id,
+      type: "version_saved",
+      userId: ownerId,
+      userName: ownerName,
+      detail: {
+        generatedFromTemplate: templateId,
+        personalized: true,
+        notes: personalizationNotes.slice(0, 10).join(" • ").slice(0, 900),
+      },
     },
   });
   return doc.id;

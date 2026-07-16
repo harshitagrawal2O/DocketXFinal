@@ -162,3 +162,79 @@ export async function fillTemplateFromBrief(
   for (const { key, value } of input.values ?? []) out[key] = value;
   return out;
 }
+
+const PRODUCE_DOC_TOOL: Anthropic.Tool = {
+  name: "produce_document",
+  description:
+    "Produce the FINAL, case-personalised document. bodyHtml must be complete clean HTML with all {{placeholders}} already resolved from the brief AND the clauses tailored to this specific matter (party-specific recitals, deal-specific commercials, jurisdiction/seat, special conditions the brief implies). Add or adapt clauses where the case clearly needs them; keep standard boilerplate intact.",
+  input_schema: {
+    type: "object",
+    properties: {
+      bodyHtml: { type: "string", description: "The complete personalised document as HTML (h1/h2/p/ol/ul/li/strong). No {{placeholders}} left." },
+      personalizationNotes: {
+        type: "array",
+        description: "Short bullet notes of what you tailored to this case and why (for the reviewing lawyer).",
+        items: { type: "string" },
+      },
+      unresolved: {
+        type: "array",
+        description: "Facts the brief did NOT supply that the lawyer must confirm (left as a clearly marked blank in the body).",
+        items: { type: "string" },
+      },
+    },
+    required: ["bodyHtml", "personalizationNotes"],
+  },
+};
+
+const PERSONALIZE_SYSTEM = `You are Viki, an advanced legal/CA drafting assistant for Indian law and CA firms. You are given a base template and a case brief. Produce a COMPLETE document personalised to this specific matter — not a mechanical fill.
+
+Rules:
+- Resolve every {{placeholder}} from the brief. Where the brief implies more than a value (e.g. a specific indemnity cap, a phased payment schedule, an exclusivity carve-out, a particular arbitration seat), TAILOR or ADD the relevant clause so the document actually fits the deal.
+- Use precise, current Indian legal drafting and the current statutory framework (Companies Act 2013; CGST/IGST Acts 2017; Income-tax Act 1961; Arbitration and Conciliation Act 1996; Bharatiya Nyaya Sanhita/Nagarik Suraksha Sanhita/Sakshya Adhiniyam 2023 — never the repealed IPC/CrPC/Evidence Act). Cite a statute section only if it is real and you are confident.
+- NEVER invent facts, figures, party names, or dates not present in the brief. If a required fact is missing, leave a clearly marked blank like <strong>[TO CONFIRM: description]</strong> in the body AND list it under unresolved — do not guess.
+- Preserve protective boilerplate (governing law, dispute resolution, notices, confidentiality, execution/stamp block).
+- Finish by calling produce_document.`;
+
+export interface PersonalizedDocument {
+  bodyHtml: string;
+  personalizationNotes: string[];
+  unresolved: string[];
+}
+
+/**
+ * Advanced case personalisation: given a template + a case brief, Viki drafts
+ * the full document tailored to the matter (clause-level, not just variable
+ * fill). The result is initial authoring for a NEW document and still enters
+ * the human review pipeline in the editor.
+ */
+export async function personalizeDocument(
+  template: Pick<TemplateDTO, "title" | "variables" | "bodyHtml">,
+  brief: string,
+): Promise<PersonalizedDocument> {
+  const varSpec = template.variables
+    .map((v) => `- {{${v.key}}} (${v.type}${v.required ? ", required" : ""}): ${v.label}${v.hint ? ` — ${v.hint}` : ""}`)
+    .join("\n");
+  const msg = await client().messages.create({
+    model: MODEL,
+    max_tokens: 8192,
+    system: PERSONALIZE_SYSTEM,
+    tools: [PRODUCE_DOC_TOOL],
+    tool_choice: { type: "tool", name: "produce_document" },
+    messages: [
+      {
+        role: "user",
+        content: `TEMPLATE: ${template.title}\n\nPLACEHOLDERS:\n${varSpec}\n\nBASE TEMPLATE HTML:\n"""\n${template.bodyHtml}\n"""\n\nCASE BRIEF:\n"""\n${brief}\n"""\n\nProduce the personalised document.`,
+      },
+    ],
+  });
+  const block = msg.content.find(
+    (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "produce_document",
+  );
+  if (!block) throw new Error("Viki did not return a document");
+  const input = block.input as { bodyHtml: string; personalizationNotes?: string[]; unresolved?: string[] };
+  return {
+    bodyHtml: input.bodyHtml,
+    personalizationNotes: input.personalizationNotes ?? [],
+    unresolved: input.unresolved ?? [],
+  };
+}

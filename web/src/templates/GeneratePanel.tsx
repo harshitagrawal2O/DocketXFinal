@@ -219,6 +219,12 @@ function VariableInput({
 // From brief (Viki) mode
 // ---------------------------------------------------------------------------
 
+interface Personalization {
+  documentId: string;
+  notes: string[];
+  unresolved: string[];
+}
+
 function FromBrief({
   tpl,
   onOpenDocument,
@@ -230,6 +236,7 @@ function FromBrief({
   const [brief, setBrief] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<Personalization | null>(null);
 
   async function generate() {
     if (!title.trim() || !brief.trim() || busy) return;
@@ -240,11 +247,60 @@ function FromBrief({
         documentTitle: title.trim(),
         brief: brief.trim(),
       });
-      onOpenDocument(res.documentId);
+      const notes = res.personalizationNotes ?? [];
+      const unresolved = res.unresolved ?? [];
+      // If Viki reported what it tailored, show the summary and let the reviewer
+      // read it before jumping into the document. Otherwise open straightaway.
+      if (notes.length > 0 || unresolved.length > 0) {
+        setResult({ documentId: res.documentId, notes, unresolved });
+        setBusy(false);
+      } else {
+        onOpenDocument(res.documentId);
+      }
     } catch {
       setError("Viki could not prepare the document.");
       setBusy(false);
     }
+  }
+
+  if (result) {
+    return (
+      <div className="generate-form">
+        <div className="personalization-card">
+          <p className="personalization-title">✨ Viki tailored this to your case:</p>
+          {result.notes.length > 0 ? (
+            <ul className="personalization-notes">
+              {result.notes.map((n, i) => (
+                <li key={i}>{n}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">Document drafted from your brief.</p>
+          )}
+
+          {result.unresolved.length > 0 && (
+            <div className="unresolved-block">
+              <p className="unresolved-title">⚠ Confirm these details:</p>
+              <ul>
+                {result.unresolved.map((u, i) => (
+                  <li key={i}>{u}</li>
+                ))}
+              </ul>
+              <p className="field-hint muted">
+                Left as <code>[TO CONFIRM: …]</code> blanks in the document.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <button
+          className="btn btn-primary btn-block"
+          onClick={() => onOpenDocument(result.documentId)}
+        >
+          Open document →
+        </button>
+      </div>
+    );
   }
 
   return (

@@ -41,10 +41,16 @@ Auth: session cookie `docket_session` (set by login). Dev shortcut header `x-use
 ## Templates (library + generation)
 - `GET  /api/templates` → `TemplateSummary[]` (builtin + the caller's own)
 - `GET  /api/templates/:id` → `TemplateDTO` (full, incl. `bodyHtml` with `{{vars}}` + `variables`)
+- `POST /api/templates` `UpsertTemplateRequest` → `TemplateDTO` (Create Template; firm-owned)
+- `PUT  /api/templates/:id` `UpsertTemplateRequest` → `TemplateDTO` (edit an OWNED template; builtins 403 read-only)
+- `DELETE /api/templates/:id` → `{ok:true}` (owned only; builtins 403)
+- `POST /api/templates/:id/clone` → `TemplateDTO` ("Copy as New Template" — editable firm-owned copy of any visible template, incl. presets)
+- Builtin templates have `ownerId: null` and `source: "builtin"` → render as read-only "System Preset"; the detail view shows `bodyHtml` with `{{variables}}` highlighted + a "Copy as New Template" action.
 - `POST /api/templates/analyze` `AnalyzeTemplateRequest {text,title?}` → `TemplateDTO` (Viki turns an uploaded doc into a fillable template; source `uploaded`)
 - `POST /api/templates/draft` `DraftTemplateRequest {instruction,useWebSearch?}` → `TemplateDTO` (Viki drafts a new template; source `viki`)
-- `POST /api/templates/:id/generate` `GenerateFromTemplateRequest {documentTitle, values?, brief?}` → `GenerateResult {documentId}`
-  - `values` = manual form-fill; `brief` = Viki fills variables from a case brief; if both, explicit `values` win. Creates a Document owned by the caller.
+- `POST /api/templates/:id/generate` `GenerateFromTemplateRequest {documentTitle, values?, brief?}` → `GenerateResult {documentId, personalizationNotes?, unresolved?}`
+  - `values` (no brief) = deterministic form-fill.
+  - `brief` present = ADVANCED Viki personalisation: Viki drafts the whole document tailored to the case (clause-level, not just variable fill) and returns `personalizationNotes[]` (what it tailored, show to the reviewer) + `unresolved[]` (facts to confirm; left as `[TO CONFIRM: …]` blanks in the body).
 - `POST /api/templates/:id/generate-batch` `GenerateBatchRequest {titlePattern, rows[]}` → `GenerateBatchResult {documentIds[]}` (one doc per row; `{{vars}}` resolved in the title too)
 
 ## Export / print

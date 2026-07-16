@@ -83,8 +83,22 @@ export interface GenerateBatchRequest {
   rows: Record<string, string>[];
 }
 
+/** Create/update a template manually (Create Template / edit an owned one). */
+export interface UpsertTemplateRequest {
+  title: string;
+  category: TemplateCategory;
+  kind: TemplateDTO["kind"];
+  description: string;
+  bodyHtml: string;
+  variables: TemplateVariable[];
+}
+
 export interface GenerateResult {
   documentId: string;
+  /** Present on the Viki-from-brief path: what Viki tailored to the case. */
+  personalizationNotes?: string[];
+  /** Facts the brief did not supply that a lawyer should confirm. */
+  unresolved?: string[];
 }
 
 export interface GenerateBatchResult {

@@ -4,15 +4,21 @@ import {
   listTemplates,
   getTemplate,
   createTemplate,
+  createOwnedTemplate,
+  updateTemplate,
+  deleteTemplate,
+  cloneTemplate,
   generateDocument,
+  generateDocumentFromHtml,
   renderTitle,
 } from "../templates/service.js";
-import { analyzeTemplate, draftTemplate, fillTemplateFromBrief } from "../agent/templateAgent.js";
+import { analyzeTemplate, draftTemplate, personalizeDocument } from "../agent/templateAgent.js";
 import type {
   AnalyzeTemplateRequest,
   DraftTemplateRequest,
   GenerateBatchRequest,
   GenerateFromTemplateRequest,
+  UpsertTemplateRequest,
 } from "@docket/shared";
 
 export const templatesRouter = Router();
@@ -25,6 +31,49 @@ templatesRouter.get("/templates", async (req: AuthedRequest, res) => {
 templatesRouter.get("/templates/:id", async (req: AuthedRequest, res) => {
   const t = await getTemplate(req.params.id!, req.user!.id);
   if (!t) return res.status(404).json({ error: "Template not found" });
+  return res.json(t);
+});
+
+// Create an owned template from scratch (Create Template).
+templatesRouter.post("/templates", async (req: AuthedRequest, res) => {
+  const b = (req.body ?? {}) as UpsertTemplateRequest;
+  if (!b.title || !b.bodyHtml) return res.status(400).json({ error: "title and bodyHtml required" });
+  const t = await createOwnedTemplate(
+    { title: b.title, category: b.category ?? "other", kind: b.kind ?? "contract", description: b.description ?? "", bodyHtml: b.bodyHtml, variables: b.variables ?? [] },
+    req.user!.id,
+  );
+  return res.json(t);
+});
+
+// Update an owned template (builtins are read-only).
+templatesRouter.put("/templates/:id", async (req: AuthedRequest, res) => {
+  const b = (req.body ?? {}) as UpsertTemplateRequest;
+  if (!b.title || !b.bodyHtml) return res.status(400).json({ error: "title and bodyHtml required" });
+  const result = await updateTemplate(req.params.id!, req.user!.id, {
+    title: b.title,
+    category: b.category ?? "other",
+    kind: b.kind ?? "contract",
+    description: b.description ?? "",
+    bodyHtml: b.bodyHtml,
+    variables: b.variables ?? [],
+  });
+  if (result === "not_found") return res.status(404).json({ error: "Template not found" });
+  if (result === "readonly") return res.status(403).json({ error: "System presets are read-only. Copy as a new template to edit." });
+  return res.json(result);
+});
+
+templatesRouter.delete("/templates/:id", async (req: AuthedRequest, res) => {
+  const result = await deleteTemplate(req.params.id!, req.user!.id);
+  if (result === "not_found") return res.status(404).json({ error: "Template not found" });
+  if (result === "readonly") return res.status(403).json({ error: "System presets cannot be deleted." });
+  return res.json({ ok: true });
+});
+
+// Copy any visible template into an editable, firm-owned copy.
+templatesRouter.post("/templates/:id/clone", async (req: AuthedRequest, res) => {
+  const src = await getTemplate(req.params.id!, req.user!.id);
+  if (!src) return res.status(404).json({ error: "Template not found" });
+  const t = await cloneTemplate(src, req.user!.id);
   return res.json(t);
 });
 
@@ -61,17 +110,28 @@ templatesRouter.post("/templates/:id/generate", async (req: AuthedRequest, res) 
   const { documentTitle, values, brief } = (req.body ?? {}) as GenerateFromTemplateRequest;
   if (!documentTitle) return res.status(400).json({ error: "documentTitle required" });
 
-  let merged: Record<string, string> = { ...(values ?? {}) };
+  // Viki-from-brief path: advanced case personalisation — Viki drafts the whole
+  // document tailored to the matter (clause-level), not just a variable fill.
   if (brief && brief.trim()) {
     try {
-      const filled = await fillTemplateFromBrief(t, brief);
-      // Explicit form values win over Viki's inferred values.
-      merged = { ...filled, ...merged };
+      const personalized = await personalizeDocument(t, brief);
+      const documentId = await generateDocumentFromHtml(
+        personalized.bodyHtml,
+        documentTitle,
+        t.kind,
+        t.id,
+        req.user!.id,
+        req.user!.name,
+        personalized.personalizationNotes,
+      );
+      return res.json({ documentId, personalizationNotes: personalized.personalizationNotes, unresolved: personalized.unresolved });
     } catch (err) {
-      return res.status(502).json({ error: `Viki fill failed: ${(err as Error).message}` });
+      return res.status(502).json({ error: `Viki personalisation failed: ${(err as Error).message}` });
     }
   }
-  const documentId = await generateDocument(t, documentTitle, merged, req.user!.id, req.user!.name);
+
+  // Pure form-fill path: deterministic {{variable}} substitution.
+  const documentId = await generateDocument(t, documentTitle, values ?? {}, req.user!.id, req.user!.name);
   return res.json({ documentId });
 });
 
