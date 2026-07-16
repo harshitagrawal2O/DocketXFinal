@@ -6,7 +6,7 @@ import { flattenFragment, anchorAtOffset, resolveAnchor, locateText } from "../y
 import { getFragment } from "../yjs/mutations.js";
 import { upsertProposal } from "../proposals/broadcast.js";
 import { toDTO } from "../proposals/service.js";
-import { verifyHunkCitations } from "./citations.js";
+import { verifyHunkCitationsFull } from "./citationGrounding.js";
 import { recordUsage } from "./usage.js";
 import { withLLMSlot } from "../llm/limiter.js";
 import { SYSTEM_PROMPT, TOOLS } from "./vikiPrompt.js";
@@ -190,7 +190,8 @@ export async function runAgent(run: ActiveRun): Promise<void> {
         section: c.section,
         verified: null,
       }));
-      const verification = verifyHunkCitations(rawCitations);
+      // Deterministic registry pre-check + adversarial grounding, fail closed.
+      const verification = await verifyHunkCitationsFull(rawCitations, h.newText, run.userId);
       if (!verification.ok) {
         await audit(documentId, "citation_blocked", run, { agentRunId: runId, detail: { hunkIndex: k, reason: verification.blockedReason ?? "citation failed" } });
         emit(runId, { type: "hunk_blocked", hunkIndex: k, reason: verification.blockedReason ?? "Citation verification failed", citations: verification.citations });
