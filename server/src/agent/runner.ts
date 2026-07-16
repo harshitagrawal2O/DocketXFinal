@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import * as Y from "yjs";
 import { createId } from "../util/id.js";
 import { prisma } from "../db.js";
 import { whenLoaded } from "../yjs/docStore.js";
@@ -100,30 +101,33 @@ export async function runAgent(run: ActiveRun): Promise<void> {
   }
 
   const scopedText = selectionBounds ? snapshot.slice(selectionBounds.start, selectionBounds.end) : snapshot;
+  const isEmptyDraft = scope === "document" && scopedText.trim().length === 0;
 
-  // This agent locates and replaces EXISTING text — it cannot draft a whole
-  // document from a blank page (there is nothing to locate). Rather than let
-  // Viki improvise oldText that doesn't exist and produce a pile of confusing
-  // blocked/dangling hunks, redirect up front to the tools built for this:
-  // "Draft with Viki" (chat intake) or Templates → Generate.
-  if (scope === "document" && scopedText.trim().length === 0) {
-    // Not a clarifying question — there's nothing to "answer" that would let
-    // this run usefully resume, so don't invite that interaction. Just
-    // explain clearly and finish; the intent line persists on screen.
-    emit(runId, {
-      type: "intent",
-      text:
-        "This document is empty — I make targeted edits to existing text, so there's nothing here yet to locate and revise. Use \"Draft with Viki\" or generate from a template to draft a new document from scratch, then come back here for edits.",
-    });
-    emit(runId, { type: "run_state", state: "awaiting_review" });
-    await audit(documentId, "agent_run_completed", run, { agentRunId: runId, detail: { hunks: 0, redirectedEmptyDoc: true } });
-    emit(runId, { type: "run_complete", agentRunId: runId });
-    return;
+  if (isEmptyDraft) {
+    // This agent normally locates and replaces EXISTING text via oldText —
+    // meaningless on a blank page. Rather than redirect the user to a
+    // different tool, handle "draft the whole thing" right here: an
+    // empty-oldText hunk anchored at position 0 is a valid insert (see
+    // locateText's empty-document special case), but an anchor still needs
+    // an actual Y.XmlText LEAF to attach to, and a truly empty fragment has
+    // none. Bootstrap one empty paragraph so the normal staging/anchoring/
+    // streaming machinery below works completely unchanged from here on —
+    // same live token streaming, same Accept/Reject review, no new code path.
+    const frag = getFragment(doc);
+    if (frag.length === 0) {
+      doc.transact(() => {
+        const el = new Y.XmlElement("paragraph");
+        frag.insert(0, [el]);
+        el.insert(0, [new Y.XmlText()]);
+      }, "viki-bootstrap");
+    }
   }
 
-  const userContent =
-    `DOCUMENT${scope === "selection" ? " (selection only — you may only edit within this text)" : ""}:\n"""\n${scopedText}\n"""\n\n` +
-    `INSTRUCTION: ${instruction}`;
+  const userContent = isEmptyDraft
+    ? `The document is currently EMPTY.\n\nINSTRUCTION: ${instruction}\n\n` +
+      `Draft the complete document to fulfil this instruction. Propose it as a SINGLE hunk with oldText set to "" (empty string) — that inserts your content at the start of the document. Use blank lines between sections/paragraphs (this is plain text, not HTML) and a clear heading line for the title and each numbered section.`
+    : `DOCUMENT${scope === "selection" ? " (selection only — you may only edit within this text)" : ""}:\n"""\n${scopedText}\n"""\n\n` +
+      `INSTRUCTION: ${instruction}`;
 
   let messages: Anthropic.MessageParam[] = [
     ...run.history.map((h) => ({ role: h.role, content: h.content })),
@@ -234,6 +238,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
       const hunks = input.hunks ?? [];
       const checklistLabels = input.checklist ?? hunks.map((_, i) => `Change ${i + 1}`);
       const iterChecklist: ChecklistItem[] = checklistLabels.map((label, i) => ({ id: `i${iteration}-c${i}`, label, done: false }));
+      const blockedThisIteration: string[] = [];
 
       for (let k = 0; k < hunks.length; k++) {
         if (run.interrupted) break;
@@ -250,8 +255,10 @@ export async function runAgent(run: ActiveRun): Promise<void> {
         // Deterministic registry pre-check + adversarial grounding, fail closed.
         const verification = await verifyHunkCitationsFull(rawCitations, h.newText, run.userId);
         if (!verification.ok) {
-          await audit(documentId, "citation_blocked", run, { agentRunId: runId, detail: { hunkIndex: k, reason: verification.blockedReason ?? "citation failed" } });
-          emit(runId, { type: "hunk_blocked", proposalId: pid, hunkIndex: k, reason: verification.blockedReason ?? "Citation verification failed", citations: verification.citations });
+          const reason = verification.blockedReason ?? "Citation verification failed";
+          await audit(documentId, "citation_blocked", run, { agentRunId: runId, detail: { hunkIndex: k, reason } });
+          emit(runId, { type: "hunk_blocked", proposalId: pid, hunkIndex: k, reason, citations: verification.citations });
+          blockedThisIteration.push(reason);
           continue;
         }
 
@@ -259,36 +266,30 @@ export async function runAgent(run: ActiveRun): Promise<void> {
         const flat = flattenFragment(getFragment(doc));
         const located = locateText(flat.text, h.oldText, h.contextBefore, h.contextAfter);
         if (!located) {
-          emit(runId, {
-            type: "hunk_blocked",
-            proposalId: pid,
-            hunkIndex: k,
-            reason:
-              flat.text.trim().length === 0
-                ? "The document is empty, so there is no existing text to locate and edit. Use \"Draft with Viki\" or generate from a template to create a new document from scratch."
-                : "Could not locate the target text unambiguously in the current document.",
-            citations: verification.citations,
-          });
+          const reason =
+            flat.text.trim().length === 0
+              ? 'The document is empty and this hunk did not use oldText: "" to insert — could not locate where to place it.'
+              : "Could not locate the target text unambiguously in the current document.";
+          emit(runId, { type: "hunk_blocked", proposalId: pid, hunkIndex: k, reason, citations: verification.citations });
+          blockedThisIteration.push(reason);
           continue;
         }
 
         // Scope enforcement: selection runs may only stage inside the selection.
         if (selectionBounds && (located.start < selectionBounds.start || located.end > selectionBounds.end)) {
           console.warn(`[viki] dropped out-of-scope hunk k=${k} range=${located.start}-${located.end} bounds=${selectionBounds.start}-${selectionBounds.end}`);
-          emit(runId, {
-            type: "hunk_blocked",
-            proposalId: pid,
-            hunkIndex: k,
-            reason: "This change falls outside the selection you scoped the run to, so it was dropped.",
-            citations: verification.citations,
-          });
+          const reason = "This change falls outside the selection you scoped the run to, so it was dropped.";
+          emit(runId, { type: "hunk_blocked", proposalId: pid, hunkIndex: k, reason, citations: verification.citations });
+          blockedThisIteration.push(reason);
           continue;
         }
 
         const anchorStart = anchorAtOffset(flat, located.start, 1);
         const anchorEnd = anchorAtOffset(flat, located.end, -1);
         if (!anchorStart || !anchorEnd) {
-          emit(runId, { type: "hunk_blocked", proposalId: pid, hunkIndex: k, reason: "Failed to create stable anchors.", citations: verification.citations });
+          const reason = "Failed to create stable anchors.";
+          emit(runId, { type: "hunk_blocked", proposalId: pid, hunkIndex: k, reason, citations: verification.citations });
+          blockedThisIteration.push(reason);
           continue;
         }
 
@@ -322,27 +323,33 @@ export async function runAgent(run: ActiveRun): Promise<void> {
 
       if (run.interrupted) break;
 
-      const done = input.done ?? true; // safe default if the model omits the field
       const isLastAllowedIteration = iteration === MAX_AGENT_ITERATIONS - 1;
-      if (done || isLastAllowedIteration) {
+
+      // A whole-document draft is ONE hunk (see isEmptyDraft above) — if it
+      // gets blocked, EVERYTHING is lost, not just one clause, which is a far
+      // worse outcome than the normal per-clause case. Rather than accept
+      // that, force a self-correcting continuation: tell Viki exactly what
+      // was blocked and why, and have it redraft without the problem —
+      // reusing the same agentic continuation as a genuine "done:false" turn.
+      const shouldForceRetry = isEmptyDraft && totalStaged === 0 && blockedThisIteration.length > 0 && !isLastAllowedIteration;
+
+      const done = input.done ?? true; // safe default if the model omits the field
+      if (!shouldForceRetry && (done || isLastAllowedIteration)) {
         break iterationLoop; // finalize below
       }
 
       // Continue the SAME run: fold this turn's tool call + result into the
       // conversation, then loop back for another pass. This is the agentic
       // step — no human re-invocation needed.
+      const continuationNote = shouldForceRetry
+        ? `Nothing could be staged this pass — every proposed hunk was blocked: ${blockedThisIteration.join(" ")} Redraft the SAME document addressing this (e.g. remove or fix the problematic citation) and propose it again as a single hunk with oldText: "".`
+        : `Staged ${hunks.length} hunk(s) this pass (${totalStaged} total so far in this run). Continue only if the instruction is not yet fully addressed; otherwise call stage_changes again with an empty hunks array and done:true, or ask_clarifying_question if you need a fact.`;
       messages = [
         ...messages,
         { role: "assistant", content: finalMsg.content },
         {
           role: "user",
-          content: [
-            {
-              type: "tool_result",
-              tool_use_id: toolUse.id,
-              content: `Staged ${hunks.length} hunk(s) this pass (${totalStaged} total so far in this run). Continue only if the instruction is not yet fully addressed; otherwise call stage_changes again with an empty hunks array and done:true, or ask_clarifying_question if you need a fact.`,
-            },
-          ],
+          content: [{ type: "tool_result", tool_use_id: toolUse.id, content: continuationNote }],
         },
       ];
     }

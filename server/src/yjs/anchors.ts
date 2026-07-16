@@ -132,7 +132,11 @@ export function locateText(
   contextBefore: string,
   contextAfter: string,
 ): LocatedRange | null {
-  if (oldText.length === 0) return null;
+  // An empty oldText is only ever valid as "insert at the very start of a
+  // genuinely empty document" (the whole-document-draft case) — never as a
+  // free-floating insert into real content, which would be hopelessly
+  // ambiguous (insert where, exactly?).
+  if (oldText.length === 0) return flatText.length === 0 ? { start: 0, end: 0 } : null;
   const matches: number[] = [];
   let from = 0;
   for (;;) {

@@ -106,6 +106,12 @@
 }
 .ProseMirror p {
   margin: 0 0 0.9em;
+  /* A whole-document draft (Viki on a blank document) inserts as ONE
+     paragraph's plain text with real blank-line separators between sections
+     — without this, those separators collapse under normal HTML whitespace
+     rules and the draft reads as one run-on block. pre-wrap preserves them
+     as visible breaks while still wrapping normally (unlike `pre`). */
+  white-space: pre-wrap;
 }
 .ProseMirror h1 {
   font-size: 1.7em;
