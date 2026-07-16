@@ -171,6 +171,28 @@ export async function markOutdatedForEdit(
 }
 
 /**
+ * Client-driven conflict rule: the editor already resolves both the human edit
+ * range and each staged proposal's range to ProseMirror positions (via the
+ * y-prosemirror binding) and detects overlap there, then sends the overlapping
+ * proposal ids. We flip exactly those that are still `staged` — the server
+ * stays authoritative on the status transition without needing to translate
+ * between ProseMirror and flat-text coordinate systems.
+ */
+export async function markOutdatedByIds(documentId: string, proposalIds: string[]): Promise<DiffProposal[]> {
+  const flipped: DiffProposal[] = [];
+  for (const id of proposalIds) {
+    const row = await prisma.diffProposal.findUnique({ where: { id } });
+    if (!row || row.documentId !== documentId || row.status !== "staged") continue;
+    const updated = await prisma.diffProposal.update({ where: { id }, data: { status: "outdated" } });
+    await audit(documentId, "proposal_outdated", null, { proposalId: id, agentRunId: row.agentRunId });
+    const dto = toDTO(updated);
+    upsertProposal(dto);
+    flipped.push(dto);
+  }
+  return flipped;
+}
+
+/**
  * When accepting a proposal changes text under another run's staged hunk, that
  * other hunk becomes outdated (Phase 4: overlapping hunks from two runs).
  */

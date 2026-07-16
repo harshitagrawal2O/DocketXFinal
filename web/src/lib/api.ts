@@ -105,10 +105,10 @@ export const proposalsApi = {
       method: "POST",
       body: JSON.stringify({ editedText }),
     }),
-  markOutdated: (docId: string, editRange: { start: number; end: number }) =>
+  markOutdated: (docId: string, proposalIds: string[]) =>
     req<DiffProposal[]>(`/api/documents/${docId}/mark-outdated`, {
       method: "POST",
-      body: JSON.stringify({ editRange }),
+      body: JSON.stringify({ proposalIds }),
     }),
 };
 

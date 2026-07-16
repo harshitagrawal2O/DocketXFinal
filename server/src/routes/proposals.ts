@@ -7,7 +7,7 @@ import {
   acceptProposal,
   rejectProposal,
   listProposals,
-  markOutdatedForEdit,
+  markOutdatedByIds,
   reconcileOverlaps,
 } from "../proposals/service.js";
 import { currentRangeOffsets } from "../yjs/mutations.js";
@@ -69,10 +69,10 @@ proposalsRouter.post("/proposals/:pid/edit-accept", requireCap("review", docIdFo
 proposalsRouter.post("/documents/:id/mark-outdated", async (req: AuthedRequest, res) => {
   const role = await getRole(req.params.id!, req.user!.id);
   if (!role || !can(role, "edit")) return res.status(403).json({ error: "Cannot edit" });
-  const { editRange } = req.body ?? {};
-  if (!editRange || typeof editRange.start !== "number" || typeof editRange.end !== "number") {
-    return res.status(400).json({ error: "editRange {start,end} required" });
+  const { proposalIds } = req.body ?? {};
+  if (!Array.isArray(proposalIds) || proposalIds.some((x) => typeof x !== "string")) {
+    return res.status(400).json({ error: "proposalIds: string[] required" });
   }
-  const flipped = await markOutdatedForEdit(req.params.id!, editRange);
+  const flipped = await markOutdatedByIds(req.params.id!, proposalIds);
   return res.json(flipped);
 });

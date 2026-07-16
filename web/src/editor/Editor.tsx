@@ -97,14 +97,16 @@ export function Editor({ ydoc, provider, user, documentId, role }: Props) {
       if (to < 0) return;
 
       const decoState = proposalDecoKey.getState(editor.state);
-      const overlapsStaged = decoState?.ranges.some(
-        (r) => r.status === "staged" && !(to < r.from || from > r.to),
-      );
-      if (overlapsStaged) {
+      // Overlap is detected here in ProseMirror coordinates (both the edit
+      // range and each proposal range live in PM space). We send the ids we
+      // found overlapping; the server flips exactly those. This avoids any
+      // ProseMirror<->flat-text coordinate mismatch on the server.
+      const overlappingIds = (decoState?.ranges ?? [])
+        .filter((r) => r.status === "staged" && !(to < r.from || from > r.to))
+        .map((r) => r.id);
+      if (overlappingIds.length > 0) {
         // Fire-and-forget; server broadcasts `outdated` over the Y.Map.
-        void proposalsApi
-          .markOutdated(documentId, { start: from, end: to })
-          .catch(() => undefined);
+        void proposalsApi.markOutdated(documentId, overlappingIds).catch(() => undefined);
       }
     };
     editor.on("update", onUpdate);

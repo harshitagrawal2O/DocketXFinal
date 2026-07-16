@@ -21,7 +21,7 @@ Auth: session cookie `docket_session` (set by login). Dev shortcut header `x-use
 - `POST /api/proposals/:pid/accept` → `ProposalActionResult` (review cap; idempotent)
 - `POST /api/proposals/:pid/reject` → `ProposalActionResult` (review cap; idempotent)
 - `POST /api/proposals/:pid/edit-accept` `{ editedText }` → `ProposalActionResult`
-- `POST /api/documents/:id/mark-outdated` `{ editRange: {start,end} }` → `DiffProposal[]` (flips overlapping staged proposals)
+- `POST /api/documents/:id/mark-outdated` `{ proposalIds: string[] }` → `DiffProposal[]` (client detects overlap in ProseMirror coords and sends the ids; server flips those still `staged`)
 
 ## Agent runs (Viki)
 - `POST /api/documents/:id/agent-runs` `StartAgentRunRequest` → `StartAgentRunResponse` (run_agent cap)
