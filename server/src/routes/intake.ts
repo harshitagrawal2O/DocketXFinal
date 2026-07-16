@@ -4,10 +4,13 @@ import { createId } from "../util/id.js";
 import { createSession, getSession, subscribeIntake, emitIntake } from "../agent/intakeManager.js";
 import { runIntakeTurn, GREETING } from "../agent/intake.js";
 import { requireLLM } from "../llm/availability.js";
+import { rateLimit } from "../middleware/rateLimit.js";
 import type { IntakeMessageRequest, IntakeStartResponse } from "@docket/shared";
 
 export const intakeRouter = Router();
 intakeRouter.use(requireAuth);
+
+const llmLimit = rateLimit({ bucket: "intake", max: 40, windowMs: 60 * 1000 });
 
 // Start a chat intake session. Viki's opening greeting is canned (no model call).
 intakeRouter.post("/intake", requireLLM, (req: AuthedRequest, res) => {
@@ -43,7 +46,7 @@ intakeRouter.get("/intake/:id/stream", (req: AuthedRequest, res) => {
 });
 
 // Send a user message; Viki responds asynchronously over the SSE stream.
-intakeRouter.post("/intake/:id/message", (req: AuthedRequest, res) => {
+intakeRouter.post("/intake/:id/message", llmLimit, (req: AuthedRequest, res) => {
   const session = getSession(req.params.id!);
   if (!session || session.userId !== req.user!.id) return res.status(404).json({ error: "Session not found" });
   const { message } = (req.body ?? {}) as IntakeMessageRequest;

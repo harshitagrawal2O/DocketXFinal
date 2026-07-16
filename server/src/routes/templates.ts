@@ -16,6 +16,9 @@ import {
 import { enqueueBriefBatch } from "../jobs/queue.js";
 import { analyzeTemplate, draftTemplate, personalizeDocument } from "../agent/templateAgent.js";
 import { requireLLM, isLLMAvailable } from "../llm/availability.js";
+import { rateLimit } from "../middleware/rateLimit.js";
+
+const tplLlmLimit = rateLimit({ bucket: "template-llm", max: 30, windowMs: 60 * 1000 });
 import type {
   AnalyzeTemplateRequest,
   DraftTemplateRequest,
@@ -81,7 +84,7 @@ templatesRouter.post("/templates/:id/clone", async (req: AuthedRequest, res) => 
 });
 
 // Upload + analyze a firm's document into a reusable template.
-templatesRouter.post("/templates/analyze", requireLLM, async (req: AuthedRequest, res) => {
+templatesRouter.post("/templates/analyze", tplLlmLimit, requireLLM, async (req: AuthedRequest, res) => {
   const { text, title } = (req.body ?? {}) as AnalyzeTemplateRequest;
   if (!text || text.trim().length < 40) return res.status(400).json({ error: "Provide the document text to analyze" });
   try {
@@ -94,7 +97,7 @@ templatesRouter.post("/templates/analyze", requireLLM, async (req: AuthedRequest
 });
 
 // Viki drafts a new template from an instruction.
-templatesRouter.post("/templates/draft", requireLLM, async (req: AuthedRequest, res) => {
+templatesRouter.post("/templates/draft", tplLlmLimit, requireLLM, async (req: AuthedRequest, res) => {
   const { instruction, useWebSearch } = (req.body ?? {}) as DraftTemplateRequest;
   if (!instruction) return res.status(400).json({ error: "instruction required" });
   try {
@@ -107,7 +110,7 @@ templatesRouter.post("/templates/draft", requireLLM, async (req: AuthedRequest, 
 });
 
 // Generate one case-specific document (form-fill and/or Viki-from-brief).
-templatesRouter.post("/templates/:id/generate", async (req: AuthedRequest, res) => {
+templatesRouter.post("/templates/:id/generate", tplLlmLimit, async (req: AuthedRequest, res) => {
   const t = await getTemplate(req.params.id!, req.user!.id);
   if (!t) return res.status(404).json({ error: "Template not found" });
   const { documentTitle, values, brief } = (req.body ?? {}) as GenerateFromTemplateRequest;
@@ -141,7 +144,7 @@ templatesRouter.post("/templates/:id/generate", async (req: AuthedRequest, res) 
 
 // Batch: one document per row (deterministic form-fill, sync) OR one per brief
 // (Viki-personalised, queued on the durable job queue → returns a batchId).
-templatesRouter.post("/templates/:id/generate-batch", async (req: AuthedRequest, res) => {
+templatesRouter.post("/templates/:id/generate-batch", tplLlmLimit, async (req: AuthedRequest, res) => {
   const t = await getTemplate(req.params.id!, req.user!.id);
   if (!t) return res.status(404).json({ error: "Template not found" });
   const { titlePattern, rows, briefs } = (req.body ?? {}) as GenerateBatchRequest;

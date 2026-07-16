@@ -22,6 +22,7 @@ model User {
   auditEvents  AuditEvent[]
   versions     Version[]
   templates    Template[]        @relation("TemplateOwner")
+  sessions     Session[]
 }
 
 model Document {
@@ -99,6 +100,18 @@ model AuditEvent {
   createdAt  DateTime @default(now())
 
   @@index([documentId, createdAt])
+}
+
+// Persistent auth session (survives restarts, unlike an in-memory map).
+model Session {
+  token     String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // A durable batch of case-personalised documents generated via the queue.
