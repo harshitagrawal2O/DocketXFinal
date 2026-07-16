@@ -198,6 +198,33 @@ export const templatesApi = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  /**
+   * Real file upload (PDF/DOCX/TXT/MD) — multipart, not JSON, so this bypasses
+   * `req()`'s Content-Type: application/json header (the browser sets the
+   * correct multipart boundary automatically when body is a FormData).
+   */
+  analyzeFile: async (file: File, title?: string): Promise<TemplateDTO> => {
+    const form = new FormData();
+    form.append("file", file);
+    if (title) form.append("title", title);
+    const res = await fetch(`${API_URL}/api/templates/analyze-file`, {
+      method: "POST",
+      credentials: "include",
+      headers: devHeaders(),
+      body: form,
+    });
+    if (!res.ok) {
+      let message = `${res.status} ${res.statusText}`;
+      try {
+        const body = (await res.json()) as { error?: string; message?: string };
+        message = body.error ?? body.message ?? message;
+      } catch {
+        /* non-JSON error body */
+      }
+      throw new ApiError(res.status, message);
+    }
+    return (await res.json()) as TemplateDTO;
+  },
   draft: (body: DraftTemplateRequest) =>
     req<TemplateDTO>("/api/templates/draft", {
       method: "POST",

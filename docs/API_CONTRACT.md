@@ -47,6 +47,7 @@ Auth: session cookie `docket_session` (set by login). Dev shortcut header `x-use
 - `POST /api/templates/:id/clone` → `TemplateDTO` ("Copy as New Template" — editable firm-owned copy of any visible template, incl. presets)
 - Builtin templates have `ownerId: null` and `source: "builtin"` → render as read-only "System Preset"; the detail view shows `bodyHtml` with `{{variables}}` highlighted + a "Copy as New Template" action.
 - `POST /api/templates/analyze` `AnalyzeTemplateRequest {text,title?}` → `TemplateDTO` (Viki turns an uploaded doc into a fillable template; source `uploaded`)
+- `POST /api/templates/analyze-file` `multipart/form-data { file, title? }` → `TemplateDTO`. Real file upload — accepts `.pdf`, `.docx`, `.txt`, `.md` (max 20MB; legacy `.doc` and scanned/image-only PDFs are rejected with a clear message). Server extracts text (`mammoth` for docx, `pdfjs-dist` for pdf — capped at 200 pages) then runs the same analysis as the text path. Errors: 415 unsupported type, 422 unreadable/too little text, 502 Viki failure.
 - `POST /api/templates/draft` `DraftTemplateRequest {instruction,useWebSearch?}` → `TemplateDTO` (Viki drafts a new template; source `viki`)
 - `POST /api/templates/:id/generate` `GenerateFromTemplateRequest {documentTitle, values?, brief?}` → `GenerateResult {documentId, personalizationNotes?, unresolved?}`
   - `values` (no brief) = deterministic form-fill.

@@ -3,6 +3,7 @@ import type { Role } from "@docket/shared";
 import { can } from "@docket/shared";
 import { useAgent, type LiveRunState } from "./AgentContext";
 import { useEditorInstance } from "@/editor/EditorContext";
+import { EmptyState, ErrorState } from "@/shell/States";
 
 const STATE_LABEL: Record<LiveRunState, string> = {
   thinking: "Thinking",
@@ -135,6 +136,18 @@ export function AgentPanel({ role }: { role: Role }) {
       </div>
 
       <div className="flex-1 space-y-6 overflow-y-auto p-6 no-scrollbar">
+        {!agent.running &&
+          !agent.intent &&
+          agent.blocked.length === 0 &&
+          !agent.clarifying &&
+          !agent.error && (
+            <EmptyState
+              icon="auto_awesome"
+              heading="Ask Viki to draft or revise"
+              body="Describe what you need above — tighten a clause, add a schedule, draft a whole section — and Viki will propose changes here for your review. Nothing is ever written to the document without your Accept."
+            />
+          )}
+
         {/* Invariant #2: the intent line renders before any spinner — this
             block never shows a bare/unlabeled loading indicator. */}
         {(agent.running || agent.intent) && (
@@ -250,9 +263,12 @@ export function AgentPanel({ role }: { role: Role }) {
         )}
 
         {agent.error && (
-          <div className="rounded border border-error/30 bg-error-container/20 p-3 text-label-sm text-on-error-container">
-            {agent.error}
-          </div>
+          <ErrorState
+            title="Viki hit a problem"
+            body={agent.error}
+            onRetry={agent.draft.instruction.trim() ? () => void agent.submit() : undefined}
+            retryLabel="Try again"
+          />
         )}
       </div>
     </div>

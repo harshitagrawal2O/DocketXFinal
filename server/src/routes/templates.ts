@@ -1,5 +1,7 @@
 import { Router } from "express";
+import multer from "multer";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
+import { extractText, MAX_UPLOAD_BYTES, UnsupportedFileError, FileParseError } from "../templates/fileExtract.js";
 import {
   listTemplates,
   getTemplate,
@@ -19,6 +21,10 @@ import { requireLLM, isLLMAvailable } from "../llm/availability.js";
 import { rateLimit } from "../middleware/rateLimit.js";
 
 const tplLlmLimit = rateLimit({ bucket: "template-llm", max: 30, windowMs: 60 * 1000 });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_UPLOAD_BYTES },
+});
 import type {
   AnalyzeTemplateRequest,
   DraftTemplateRequest,
@@ -95,6 +101,53 @@ templatesRouter.post("/templates/analyze", tplLlmLimit, requireLLM, async (req: 
     return res.status(502).json({ error: (err as Error).message });
   }
 });
+
+// Upload a real file (PDF / DOCX / TXT) — extract text server-side, then
+// analyze it into a template exactly like the paste-text path.
+templatesRouter.post(
+  "/templates/analyze-file",
+  tplLlmLimit,
+  requireLLM,
+  (req: AuthedRequest, res, next) => {
+    upload.single("file")(req, res, (err: unknown) => {
+      if (err instanceof multer.MulterError) {
+        const message =
+          err.code === "LIMIT_FILE_SIZE"
+            ? `File is too large — the limit is ${Math.floor(MAX_UPLOAD_BYTES / (1024 * 1024))}MB.`
+            : err.message;
+        return res.status(400).json({ error: message });
+      }
+      if (err) return next(err);
+      next();
+    });
+  },
+  async (req: AuthedRequest, res) => {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "No file uploaded (expected field 'file')" });
+    // Confidentiality (invariant #7): log metadata only, never content.
+    console.log(`[templates] analyzing upload: ${file.originalname} (${file.mimetype}, ${file.size}B)`);
+
+    let text: string;
+    try {
+      text = await extractText(file.buffer, file.originalname);
+    } catch (err) {
+      const status = err instanceof UnsupportedFileError ? 415 : err instanceof FileParseError ? 422 : 500;
+      return res.status(status).json({ error: (err as Error).message });
+    }
+    if (text.trim().length < 40) {
+      return res.status(422).json({ error: "Could not find enough readable text in that file to build a template." });
+    }
+
+    const title = typeof req.body?.title === "string" && req.body.title.trim() ? req.body.title.trim() : undefined;
+    try {
+      const draft = await analyzeTemplate(text, title, req.user!.id);
+      const t = await createTemplate(draft, "uploaded", req.user!.id);
+      return res.json(t);
+    } catch (err) {
+      return res.status(502).json({ error: (err as Error).message });
+    }
+  },
+);
 
 // Viki drafts a new template from an instruction.
 templatesRouter.post("/templates/draft", tplLlmLimit, requireLLM, async (req: AuthedRequest, res) => {
