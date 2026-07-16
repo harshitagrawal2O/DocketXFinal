@@ -8,7 +8,8 @@ import type * as Y from "yjs";
 import type { WebsocketProvider } from "y-websocket";
 import type { Role, SessionUser } from "@docket/shared";
 import { can } from "@docket/shared";
-import { proposalsApi } from "@/lib/api";
+import { exportDocx, proposalsApi } from "@/lib/api";
+import { downloadBlob, safeFileName } from "@/lib/download";
 import { XML_FRAGMENT } from "@/lib/yjs";
 import { ySyncPluginKey } from "y-prosemirror";
 import { CommentMark } from "./CommentMark";
@@ -23,12 +24,26 @@ interface Props {
   user: SessionUser;
   documentId: string;
   role: Role;
+  title: string;
+  /** Server-provided HTML for a template-generated doc awaiting seeding. */
+  initialHtml: string | null;
 }
 
-export function Editor({ ydoc, provider, user, documentId, role }: Props) {
+export function Editor({
+  ydoc,
+  provider,
+  user,
+  documentId,
+  role,
+  title,
+  initialHtml,
+}: Props) {
   const { setEditor } = useEditorInstance();
   const staging = useStaging();
   const comments = useComments();
+  const [printHtml, setPrintHtml] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   // Stable ref so the editor's captured decoration-click callback always sees
   // the freshest setActive without re-creating the editor.
@@ -64,6 +79,41 @@ export function Editor({ ydoc, provider, user, documentId, role }: Props) {
     setEditor(editor ?? null);
     return () => setEditor(null);
   }, [editor, setEditor]);
+
+  // Client-side seeding of template-generated docs. The FIRST client to open a
+  // doc whose server record carries `initialHtml` seeds the empty Yjs fragment,
+  // guarded by a `seeded` flag in a `meta` Y.Map set in the SAME transaction so
+  // exactly one client seeds and all tabs converge. We only seed after the
+  // provider has synced the server state — otherwise a reconnecting client
+  // could see a momentarily-empty fragment and double-seed.
+  useEffect(() => {
+    if (!editor || !initialHtml) return;
+    let handled = false;
+
+    const seedOnce = () => {
+      if (handled) return;
+      handled = true;
+      const meta = ydoc.getMap<boolean>("meta");
+      // Already seeded (by us earlier, or by another tab) → never re-seed.
+      if (meta.get("seeded") === true) return;
+      // Someone typed / the fragment already has content → don't clobber it.
+      if (!editor.isEmpty) return;
+      ydoc.transact(() => {
+        editor.commands.setContent(initialHtml, false);
+        meta.set("seeded", true);
+      });
+    };
+
+    if (provider.synced) {
+      seedOnce();
+      return;
+    }
+    const onSync = (isSynced: boolean) => {
+      if (isSynced) seedOnce();
+    };
+    provider.on("sync", onSync);
+    return () => provider.off("sync", onSync);
+  }, [editor, provider, ydoc, initialHtml]);
 
   // Push proposals into the decoration plugin whenever they change.
   useEffect(() => {
@@ -126,6 +176,35 @@ export function Editor({ ydoc, provider, user, documentId, role }: Props) {
     setShowCommentBox(false);
   }, [editor, comments, commentDraft]);
 
+  const handlePrint = useCallback(() => {
+    if (!editor) return;
+    setPrintHtml(editor.getHTML());
+    // Let React paint the print-only view before opening the print dialog.
+    requestAnimationFrame(() => window.print());
+  }, [editor]);
+
+  const handleDownloadDocx = useCallback(async () => {
+    if (!editor || exporting) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const blob = await exportDocx(documentId, editor.getHTML(), title);
+      downloadBlob(blob, `${safeFileName(title)}.docx`);
+    } catch {
+      setExportError("Could not export .docx. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  }, [editor, documentId, title, exporting]);
+
+  const handleDownloadHtml = useCallback(() => {
+    if (!editor) return;
+    const doc = `<!doctype html><html><head><meta charset="utf-8"><title>${title
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")}</title></head><body>${editor.getHTML()}</body></html>`;
+    downloadBlob(new Blob([doc], { type: "text/html" }), `${safeFileName(title)}.html`);
+  }, [editor, title]);
+
   const hasSelection = editor ? editor.state.selection.from !== editor.state.selection.to : false;
 
   if (!editor) {
@@ -178,7 +257,28 @@ export function Editor({ ydoc, provider, user, documentId, role }: Props) {
             💬 Comment
           </button>
         )}
+        <span className="toolbar-divider" />
+        <button className="btn btn-sm" onClick={handlePrint} title="Print or Save as PDF">
+          🖨 Print
+        </button>
+        <button
+          className="btn btn-sm"
+          onClick={() => void handleDownloadDocx()}
+          disabled={exporting}
+          title="Download as Word (.docx)"
+        >
+          {exporting ? "Preparing…" : "⬇ .docx"}
+        </button>
+        <button
+          className="btn btn-sm"
+          onClick={handleDownloadHtml}
+          title="Download as HTML"
+        >
+          ⬇ .html
+        </button>
       </div>
+
+      {exportError && <div className="error-line">{exportError}</div>}
 
       {showCommentBox && (
         <div className="comment-compose">
@@ -200,6 +300,15 @@ export function Editor({ ydoc, provider, user, documentId, role }: Props) {
       )}
 
       <EditorContent editor={editor} className="editor-surface" />
+
+      {/* Clean print view: hidden on screen, revealed only by the print
+          stylesheet (@media print) so window.print() / Save-as-PDF is tidy. */}
+      {printHtml !== null && (
+        <div className="print-doc" aria-hidden="true">
+          <h1 className="print-doc-title">{title}</h1>
+          <div className="print-doc-body" dangerouslySetInnerHTML={{ __html: printHtml }} />
+        </div>
+      )}
     </div>
   );
 }

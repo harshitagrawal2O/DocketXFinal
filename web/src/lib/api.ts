@@ -1,12 +1,20 @@
 import type {
+  AnalyzeTemplateRequest,
   AuditPage,
   DiffProposal,
   DocumentSummary,
+  DraftTemplateRequest,
+  GenerateBatchRequest,
+  GenerateBatchResult,
+  GenerateFromTemplateRequest,
+  GenerateResult,
   ProposalActionResult,
   Role,
   SessionUser,
   StartAgentRunRequest,
   StartAgentRunResponse,
+  TemplateDTO,
+  TemplateSummary,
   VersionSummary,
 } from "@docket/shared";
 
@@ -85,6 +93,8 @@ export const docsApi = {
     req<{
       summary: DocumentSummary;
       members: { userId: string; name: string; role: Role }[];
+      /** Non-null for template-generated docs awaiting client-side seeding. */
+      initialHtml: string | null;
     }>(`/api/documents/${id}`),
   addMember: (id: string, email: string, role: Role) =>
     req<{ userId: string; name: string; role: Role }>(`/api/documents/${id}/members`, {
@@ -153,5 +163,60 @@ export const auditApi = {
     return req<AuditPage>(`/api/documents/${docId}/audit${qs ? `?${qs}` : ""}`);
   },
 };
+
+// ---- Templates (library + generation) ----
+export const templatesApi = {
+  list: () => req<TemplateSummary[]>("/api/templates"),
+  get: (id: string) => req<TemplateDTO>(`/api/templates/${id}`),
+  analyze: (body: AnalyzeTemplateRequest) =>
+    req<TemplateDTO>("/api/templates/analyze", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  draft: (body: DraftTemplateRequest) =>
+    req<TemplateDTO>("/api/templates/draft", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  generate: (id: string, body: GenerateFromTemplateRequest) =>
+    req<GenerateResult>(`/api/templates/${id}/generate`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  generateBatch: (id: string, body: GenerateBatchRequest) =>
+    req<GenerateBatchResult>(`/api/templates/${id}/generate-batch`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+};
+
+// ---- Export ----
+/**
+ * Serialize-and-download path: the client posts the live Tiptap HTML and gets
+ * back a `.docx` binary. Uses raw fetch (not `req`) because the response is a
+ * Blob, not JSON — same base URL + credentials + dev header as the JSON client.
+ */
+export async function exportDocx(docId: string, html: string, title: string): Promise<Blob> {
+  const res = await fetch(`${API_URL}/api/documents/${docId}/export/docx`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...devHeaders(),
+    },
+    body: JSON.stringify({ html, title }),
+  });
+  if (!res.ok) {
+    let message = `${res.status} ${res.statusText}`;
+    try {
+      const body = (await res.json()) as { error?: string; message?: string };
+      message = body.error ?? body.message ?? message;
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new ApiError(res.status, message);
+  }
+  return res.blob();
+}
 
 export { devHeaders };

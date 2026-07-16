@@ -3,6 +3,7 @@ import * as Y from "yjs";
 import { getDoc, whenLoaded, persistence } from "../src/yjs/docStore.js";
 import { getFragment } from "../src/yjs/mutations.js";
 import { flattenFragment, anchorAtOffset, locateText } from "../src/yjs/anchors.js";
+import { BUILTIN_TEMPLATES } from "../src/templates/builtin.js";
 
 /**
  * Deterministic seed for local dev + the Phase-5 pilot (docs/pilot-script.md).
@@ -329,6 +330,33 @@ async function main(): Promise<void> {
     // flushDocument merges stored updates; safe to ignore if unavailable.
   }
   console.log("[seed] Y.Doc flushed to y-leveldb");
+
+  // --- 8. Builtin (global) template library ---
+  for (const t of BUILTIN_TEMPLATES) {
+    await prisma.template.upsert({
+      where: { id: t.id },
+      update: {
+        title: t.title,
+        category: t.category,
+        kind: t.kind,
+        description: t.description,
+        bodyHtml: t.bodyHtml,
+        variables: t.variables as unknown as Prisma.InputJsonValue,
+      },
+      create: {
+        id: t.id,
+        ownerId: null,
+        source: "builtin",
+        title: t.title,
+        category: t.category,
+        kind: t.kind,
+        description: t.description,
+        bodyHtml: t.bodyHtml,
+        variables: t.variables as unknown as Prisma.InputJsonValue,
+      },
+    });
+  }
+  console.log(`[seed] ${BUILTIN_TEMPLATES.length} builtin templates upserted`);
 
   console.log("[seed] done.");
 }

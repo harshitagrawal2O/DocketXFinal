@@ -15,9 +15,19 @@ const KINDS = Object.keys(KIND_LABEL) as DocumentSummary["kind"][];
 interface Props {
   selectedId: string | null;
   onSelect: (id: string) => void;
+  templatesActive: boolean;
+  onOpenTemplates: () => void;
+  /** Bumped by the app to force a re-fetch (e.g. after a template generates a doc). */
+  reloadKey: number;
 }
 
-export function Sidebar({ selectedId, onSelect }: Props) {
+export function Sidebar({
+  selectedId,
+  onSelect,
+  templatesActive,
+  onOpenTemplates,
+  reloadKey,
+}: Props) {
   const { user, logout } = useSession();
   const [docs, setDocs] = useState<DocumentSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +45,7 @@ export function Sidebar({ selectedId, onSelect }: Props) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   async function create() {
     if (!newTitle.trim()) return;
@@ -98,6 +108,15 @@ export function Sidebar({ selectedId, onSelect }: Props) {
           </div>
         </div>
       )}
+
+      <div className="sidebar-nav">
+        <button
+          className={`sidebar-nav-btn${templatesActive ? " active" : ""}`}
+          onClick={onOpenTemplates}
+        >
+          📄 New from template
+        </button>
+      </div>
 
       <nav className="doc-list">
         {docs === null && !error && <div className="intent-line">Loading documents…</div>}

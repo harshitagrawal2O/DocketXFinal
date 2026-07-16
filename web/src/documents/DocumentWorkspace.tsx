@@ -27,6 +27,8 @@ interface DocMeta {
   title: string;
   role: Role;
   members: { userId: string; name: string; role: Role }[];
+  /** Non-null for template-generated docs still awaiting client-side seeding. */
+  initialHtml: string | null;
 }
 
 export function DocumentWorkspace({
@@ -48,7 +50,13 @@ export function DocumentWorkspace({
     docsApi
       .get(documentId)
       .then((d) => {
-        if (alive) setMeta({ title: d.summary.title, role: d.summary.myRole, members: d.members });
+        if (alive)
+          setMeta({
+            title: d.summary.title,
+            role: d.summary.myRole,
+            members: d.members,
+            initialHtml: d.initialHtml,
+          });
       })
       .catch(() => alive && setMetaError("Could not load this document."));
     return () => {
@@ -96,6 +104,8 @@ export function DocumentWorkspace({
                     user={user}
                     documentId={documentId}
                     role={role}
+                    title={meta.title}
+                    initialHtml={meta.initialHtml}
                   />
                 </main>
 

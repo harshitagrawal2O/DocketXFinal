@@ -38,6 +38,25 @@ Auth: session cookie `docket_session` (set by login). Dev shortcut header `x-use
 ## Audit
 - `GET /api/documents/:id/audit?cursor=&type=` → `AuditPage`
 
+## Templates (library + generation)
+- `GET  /api/templates` → `TemplateSummary[]` (builtin + the caller's own)
+- `GET  /api/templates/:id` → `TemplateDTO` (full, incl. `bodyHtml` with `{{vars}}` + `variables`)
+- `POST /api/templates/analyze` `AnalyzeTemplateRequest {text,title?}` → `TemplateDTO` (Viki turns an uploaded doc into a fillable template; source `uploaded`)
+- `POST /api/templates/draft` `DraftTemplateRequest {instruction,useWebSearch?}` → `TemplateDTO` (Viki drafts a new template; source `viki`)
+- `POST /api/templates/:id/generate` `GenerateFromTemplateRequest {documentTitle, values?, brief?}` → `GenerateResult {documentId}`
+  - `values` = manual form-fill; `brief` = Viki fills variables from a case brief; if both, explicit `values` win. Creates a Document owned by the caller.
+- `POST /api/templates/:id/generate-batch` `GenerateBatchRequest {titlePattern, rows[]}` → `GenerateBatchResult {documentIds[]}` (one doc per row; `{{vars}}` resolved in the title too)
+
+## Export / print
+- `POST /api/documents/:id/export/docx` `{ html, title }` → `.docx` binary (attachment). Client serializes the live Tiptap doc to HTML and downloads the blob.
+- Print + Save-as-PDF are client-side: a Print button renders a clean print view and calls `window.print()` (a print stylesheet handles margins/page-breaks/letterhead).
+
+## Template-generated documents (seeding)
+`GET /api/documents/:id` now also returns `initialHtml: string | null`. When non-null and the
+doc's Yjs XmlFragment is still empty, the FIRST client to open seeds it via
+`editor.commands.setContent(initialHtml)` inside a guard (set a `seeded` flag in a Y.Map
+named `meta` in the same transaction) so exactly one client seeds and all tabs converge.
+
 ## Realtime (Yjs)
 - WS `VITE_YJS_WS_URL/<documentId>` — y-websocket-compatible sync + awareness.
 - Proposal upserts/removals broadcast over the same doc via a Y.Map named `proposals`

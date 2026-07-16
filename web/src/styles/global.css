@@ -1241,6 +1241,295 @@ textarea:focus {
   font-family: var(--mono);
 }
 
+/* ---- Sidebar nav (Templates) ---- */
+.sidebar-nav {
+  padding: 8px 8px 0;
+}
+.sidebar-nav-btn {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+.sidebar-nav-btn:hover {
+  background: var(--surface-2);
+}
+.sidebar-nav-btn.active {
+  background: var(--accent-weak);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---- Templates view ---- */
+.templates-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.templates-view {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 22px 22px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.templates-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.templates-head h2 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+.templates-head p {
+  margin: 0;
+}
+.template-group-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.template-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.template-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-weak);
+}
+.template-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.template-card-title {
+  font-weight: 650;
+}
+.template-card-desc {
+  font-size: 12.5px;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.template-card-meta {
+  font-size: 11.5px;
+  text-transform: capitalize;
+}
+.tpl-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.tpl-badge--builtin {
+  color: var(--accent);
+  background: var(--accent-weak);
+}
+.tpl-badge--uploaded {
+  color: var(--amber);
+  background: var(--amber-bg);
+}
+.tpl-badge--viki {
+  color: var(--green);
+  background: var(--green-bg);
+}
+
+/* ---- Generate / upload panels ---- */
+.generate-title {
+  font-size: 20px;
+  margin: 8px 0 4px;
+}
+.mode-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+.mode-tabs button {
+  border: none;
+  background: transparent;
+  padding: 7px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+}
+.mode-tabs button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.generate-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.generate-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.field-hint {
+  font-size: 11.5px;
+}
+.tpl-req {
+  color: var(--red);
+}
+.generate-preview {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  position: sticky;
+  top: 12px;
+}
+.generate-preview-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.tpl-preview-doc {
+  padding: 22px 26px;
+  line-height: 1.7;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.tpl-preview-doc h1 {
+  font-size: 1.5em;
+}
+.tpl-preview-doc h2 {
+  font-size: 1.25em;
+}
+.tpl-preview-doc p {
+  margin: 0 0 0.8em;
+}
+.tpl-blank {
+  background: var(--amber-bg);
+  color: var(--amber);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-weight: 600;
+}
+
+/* ---- Batch grid ---- */
+.batch-toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.batch-grid-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.batch-grid {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.batch-grid th {
+  text-align: left;
+  padding: 6px 8px;
+  background: var(--surface-2);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.batch-grid td {
+  padding: 3px 4px;
+  border-top: 1px solid var(--border);
+}
+.batch-grid td input {
+  width: 100%;
+  min-width: 120px;
+  padding: 5px 7px;
+}
+.batch-result-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.link-btn {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  padding: 4px 0;
+  text-align: left;
+  text-decoration: underline;
+}
+
+.toolbar-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+  margin: 2px 4px;
+}
+
+/* ---- Print view (hidden on screen; shown by @media print) ---- */
+.print-doc {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  .generate-split {
+    grid-template-columns: 1fr;
+  }
+  .generate-preview {
+    position: static;
+  }
+}
+
 /* ============================================================
    Responsive: under ~700px the rail collapses to a bottom sheet
    and the sidebar narrows. The activity feed stays usable.
@@ -1304,5 +1593,72 @@ textarea:focus {
   }
   .rail.open ~ .rail-toggle {
     bottom: calc(78vh + 8px);
+  }
+}
+
+/* ============================================================
+   Print: firms print directly or Save-as-PDF from the browser
+   dialog. Hide all app chrome and lay the document out on clean
+   A4 pages with black text on white and sensible page breaks.
+   ============================================================ */
+@page {
+  size: A4;
+  margin: 20mm 18mm;
+}
+@media print {
+  /* Reveal only the dedicated print view; hide everything else. */
+  body * {
+    visibility: hidden;
+  }
+  .print-doc,
+  .print-doc * {
+    visibility: visible;
+  }
+  .print-doc {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: #000;
+    background: #fff;
+    font-family: var(--font);
+    line-height: 1.6;
+  }
+  .print-doc-title {
+    font-size: 20pt;
+    font-weight: 700;
+    margin: 0 0 16pt;
+    padding-bottom: 8pt;
+    border-bottom: 1px solid #000;
+  }
+  .print-doc-body {
+    font-size: 11.5pt;
+  }
+  .print-doc-body h1 {
+    font-size: 16pt;
+  }
+  .print-doc-body h2 {
+    font-size: 13.5pt;
+  }
+  .print-doc-body h1,
+  .print-doc-body h2,
+  .print-doc-body h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  .print-doc-body p,
+  .print-doc-body li,
+  .print-doc-body blockquote,
+  .print-doc-body table {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .print-doc-body p {
+    margin: 0 0 0.7em;
+  }
+  .print-doc-body ul,
+  .print-doc-body ol {
+    padding-left: 22pt;
   }
 }

@@ -3,10 +3,13 @@ import { useSession } from "@/session/SessionContext";
 import { AuthScreen } from "@/session/AuthScreen";
 import { Sidebar } from "@/documents/Sidebar";
 import { DocumentWorkspace } from "@/documents/DocumentWorkspace";
+import { TemplatesView } from "@/templates/TemplatesView";
 
 export function App() {
   const { user, loading, error } = useSession();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [docsReloadKey, setDocsReloadKey] = useState(0);
 
   if (loading) {
     return (
@@ -30,16 +33,34 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <Sidebar selectedId={selectedId} onSelect={setSelectedId} />
+      <Sidebar
+        selectedId={showTemplates ? null : selectedId}
+        onSelect={(id) => {
+          setShowTemplates(false);
+          setSelectedId(id);
+        }}
+        templatesActive={showTemplates}
+        onOpenTemplates={() => setShowTemplates(true)}
+        reloadKey={docsReloadKey}
+      />
       <div className="app-main">
-        {selectedId ? (
+        {showTemplates ? (
+          <TemplatesView
+            onOpenDocument={(id) => {
+              setShowTemplates(false);
+              setSelectedId(id);
+              // The generated doc isn't in the sidebar list yet — refresh it.
+              setDocsReloadKey((k) => k + 1);
+            }}
+          />
+        ) : selectedId ? (
           <DocumentWorkspace key={selectedId} documentId={selectedId} user={user} />
         ) : (
           <div className="empty-state app-empty">
             <p className="empty-title">Select a document</p>
             <p className="muted">
-              Choose a document from the sidebar, or create a new one to start drafting with
-              Viki.
+              Choose a document from the sidebar, start a new one, or generate one from a
+              template.
             </p>
           </div>
         )}

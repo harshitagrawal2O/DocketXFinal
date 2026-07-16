@@ -21,6 +21,7 @@ model User {
   documents    Document[]        @relation("DocumentOwner")
   auditEvents  AuditEvent[]
   versions     Version[]
+  templates    Template[]        @relation("TemplateOwner")
 }
 
 model Document {
@@ -29,6 +30,10 @@ model Document {
   kind      String   @default("contract") // contract | opinion | filing | memo
   ownerId   String
   owner     User     @relation("DocumentOwner", fields: [ownerId], references: [id])
+  // When generated from a template, the instantiated HTML the client seeds into
+  // the (empty) Yjs doc on first open. Cleared conceptually once seeded.
+  initialHtml String?
+  templateId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -94,6 +99,25 @@ model AuditEvent {
   createdAt  DateTime @default(now())
 
   @@index([documentId, createdAt])
+}
+
+// Reusable fillable document skeleton. ownerId null = builtin/global; otherwise
+// firm-owned (uploaded-and-analyzed or Viki-drafted).
+model Template {
+  id          String   @id @default(cuid())
+  ownerId     String?
+  owner       User?    @relation("TemplateOwner", fields: [ownerId], references: [id])
+  title       String
+  category    String   @default("other")
+  kind        String   @default("contract")
+  description String   @default("")
+  bodyHtml    String
+  variables   Json     @default("[]")
+  source      String   @default("builtin") // builtin | uploaded | viki
+  createdAt   DateTime @default(now())
+
+  @@index([ownerId])
+  @@index([category])
 }
 
 // Named Yjs snapshots (gc disabled so history survives). Rollback creates a new version.

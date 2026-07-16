@@ -48,6 +48,9 @@ documentsRouter.get("/:id", async (req: AuthedRequest, res) => {
   return res.json({
     summary: { id: doc.id, title: doc.title, kind: doc.kind as DocumentSummary["kind"], myRole: role } satisfies DocumentSummary,
     members: doc.members.map((m) => ({ userId: m.userId, name: m.user.name, role: m.role })),
+    // Present only for template-generated docs; client seeds it into the empty
+    // Yjs doc on first open (guarded so only one client seeds).
+    initialHtml: doc.initialHtml ?? null,
   });
 });
 
