@@ -10,9 +10,9 @@ Auth: session cookie `docket_session` (set by login). Dev shortcut header `x-use
 - `GET  /api/auth/me` → `SessionUser | 401`
 
 ## Documents
-- `GET  /api/documents` → `DocumentSummary[]` (docs the user is a member of)
+- `GET  /api/documents` → `DocumentSummary[]` (docs the user is a member of). `DocumentSummary` now includes `updatedAt` (ISO) and a DERIVED `status: "draft" | "in_review"` (in_review iff the doc has any `staged`/`streaming` DiffProposal — not a stored workflow field).
 - `POST /api/documents` `{ title, kind }` → `DocumentSummary` (caller becomes owner)
-- `GET  /api/documents/:id` → `{ summary: DocumentSummary, members: {userId,name,role}[] }`
+- `GET  /api/documents/:id` → `{ summary: DocumentSummary, members: {userId,name,email,color,role}[], initialHtml }`
 - `POST /api/documents/:id/members` `{ email, role }` → member (owner only)
 - `PATCH /api/documents/:id/members/:userId` `{ role }` → member (owner only)
 

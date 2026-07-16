@@ -14,11 +14,21 @@ documentsRouter.get("/", async (req: AuthedRequest, res) => {
     include: { document: true },
     orderBy: { document: { updatedAt: "desc" } },
   });
+  const docIds = memberships.map((m) => m.documentId);
+  const pending = await prisma.diffProposal.findMany({
+    where: { documentId: { in: docIds }, status: { in: ["staged", "streaming"] } },
+    select: { documentId: true },
+    distinct: ["documentId"],
+  });
+  const inReview = new Set(pending.map((p) => p.documentId));
+
   const summaries: DocumentSummary[] = memberships.map((m) => ({
     id: m.document.id,
     title: m.document.title,
     kind: m.document.kind as DocumentSummary["kind"],
     myRole: m.role as Role,
+    updatedAt: m.document.updatedAt.toISOString(),
+    status: inReview.has(m.documentId) ? "in_review" : "draft",
   }));
   res.json(summaries);
 });
@@ -34,7 +44,14 @@ documentsRouter.post("/", async (req: AuthedRequest, res) => {
       members: { create: { userId: req.user!.id, role: "owner" } },
     },
   });
-  const summary: DocumentSummary = { id: doc.id, title: doc.title, kind: doc.kind as DocumentSummary["kind"], myRole: "owner" };
+  const summary: DocumentSummary = {
+    id: doc.id,
+    title: doc.title,
+    kind: doc.kind as DocumentSummary["kind"],
+    myRole: "owner",
+    updatedAt: doc.updatedAt.toISOString(),
+    status: "draft",
+  };
   return res.json(summary);
 });
 
@@ -46,8 +63,15 @@ documentsRouter.get("/:id", async (req: AuthedRequest, res) => {
     include: { members: { include: { user: true } } },
   });
   return res.json({
-    summary: { id: doc.id, title: doc.title, kind: doc.kind as DocumentSummary["kind"], myRole: role } satisfies DocumentSummary,
-    members: doc.members.map((m) => ({ userId: m.userId, name: m.user.name, role: m.role })),
+    summary: {
+      id: doc.id,
+      title: doc.title,
+      kind: doc.kind as DocumentSummary["kind"],
+      myRole: role,
+      updatedAt: doc.updatedAt.toISOString(),
+      status: "draft",
+    } satisfies DocumentSummary,
+    members: doc.members.map((m) => ({ userId: m.userId, name: m.user.name, email: m.user.email, color: m.user.color, role: m.role })),
     // Present only for template-generated docs; client seeds it into the empty
     // Yjs doc on first open (guarded so only one client seeds).
     initialHtml: doc.initialHtml ?? null,
@@ -81,4 +105,18 @@ documentsRouter.patch("/:id/members/:userId", requireCap("manage_sharing"), asyn
     data: { documentId: req.params.id!, type: "role_changed", userId: req.user!.id, userName: req.user!.name, detail: { target: member.user.name, role } },
   });
   return res.json({ userId: member.userId, name: member.user.name, role: member.role });
+});
+
+documentsRouter.delete("/:id/members/:userId", requireCap("manage_sharing"), async (req: AuthedRequest, res) => {
+  if (req.params.userId === req.user!.id) return res.status(400).json({ error: "Owner cannot remove themself" });
+  const member = await prisma.documentMember.findUnique({
+    where: { documentId_userId: { documentId: req.params.id!, userId: req.params.userId! } },
+    include: { user: true },
+  });
+  if (!member) return res.status(404).json({ error: "Not a member" });
+  await prisma.documentMember.delete({ where: { documentId_userId: { documentId: req.params.id!, userId: req.params.userId! } } });
+  await prisma.auditEvent.create({
+    data: { documentId: req.params.id!, type: "role_changed", userId: req.user!.id, userName: req.user!.name, detail: { target: member.user.name, role: "removed" } },
+  });
+  return res.json({ ok: true });
 });

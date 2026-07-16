@@ -20,6 +20,9 @@ export interface DocumentSummary {
   title: string;
   kind: "contract" | "opinion" | "filing" | "memo";
   myRole: Role;
+  updatedAt: string;
+  /** Derived, not stored: "in_review" if any staged/streaming proposal exists, else "draft". */
+  status: "draft" | "in_review";
 }
 
 export interface ProposalActionResult {

@@ -8,6 +8,7 @@ import type {
   GenerateBatchResult,
   GenerateFromTemplateRequest,
   GenerateResult,
+  BatchStatus,
   IntakeStartResponse,
   ProposalActionResult,
   Role,
@@ -17,6 +18,7 @@ import type {
   TemplateDTO,
   TemplateSummary,
   UpsertTemplateRequest,
+  UsageSummary,
   VersionSummary,
 } from "@docket/shared";
 
@@ -94,7 +96,7 @@ export const docsApi = {
   get: (id: string) =>
     req<{
       summary: DocumentSummary;
-      members: { userId: string; name: string; role: Role }[];
+      members: { userId: string; name: string; email: string; color: string; role: Role }[];
       /** Non-null for template-generated docs awaiting client-side seeding. */
       initialHtml: string | null;
     }>(`/api/documents/${id}`),
@@ -103,6 +105,13 @@ export const docsApi = {
       method: "POST",
       body: JSON.stringify({ email, role }),
     }),
+  updateMemberRole: (id: string, userId: string, role: Role) =>
+    req<{ userId: string; name: string; role: Role }>(`/api/documents/${id}/members/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+  removeMember: (id: string, userId: string) =>
+    req<{ ok: true }>(`/api/documents/${id}/members/${userId}`, { method: "DELETE" }),
 };
 
 // ---- Proposals ----
@@ -200,10 +209,20 @@ export const templatesApi = {
       body: JSON.stringify(body),
     }),
   generateBatch: (id: string, body: GenerateBatchRequest) =>
-    req<GenerateBatchResult>(`/api/templates/${id}/generate-batch`, {
+    req<GenerateBatchResult | { batchId: string }>(`/api/templates/${id}/generate-batch`, {
       method: "POST",
       body: JSON.stringify(body),
     }),
+};
+
+// ---- Batches (durable queue — briefs[] generation) ----
+export const batchesApi = {
+  get: (batchId: string) => req<BatchStatus>(`/api/batches/${batchId}`),
+};
+
+// ---- Usage & billing ----
+export const usageApi = {
+  summary: (days = 30) => req<UsageSummary>(`/api/usage/summary?days=${days}`),
 };
 
 // ---- Interactive intake (chat-first document creation) ----

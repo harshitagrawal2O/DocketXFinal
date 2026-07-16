@@ -396,7 +396,9 @@ function Batch({
         titlePattern: titlePattern.trim(),
         rows,
       });
-      setCreated(res.documentIds);
+      // rows[] always takes the synchronous form-fill path (documentIds), never
+      // the queued briefs[] path (batchId) — see docs/API_CONTRACT.md.
+      setCreated("documentIds" in res ? res.documentIds : []);
     } catch {
       setError("Could not generate the batch.");
     } finally {
