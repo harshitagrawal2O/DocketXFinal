@@ -62,7 +62,33 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   res.status(500).json({ error: err.message });
 });
 
+/**
+ * A failure to LISTEN (e.g. EADDRINUSE — something else already on this port)
+ * is a fatal startup condition, not a transient runtime error. It must NOT be
+ * swallowed by the process-level unhandledRejection/uncaughtException backstop
+ * above (that backstop exists for request-handling errors, so one bad request
+ * doesn't take down the server for everyone else) — here we want a loud, clear
+ * failure so whoever is running `npm run dev` immediately sees why nothing
+ * came up, instead of a half-started server that never actually bound.
+ */
+function reportListenFailure(label: string, port: number, err: NodeJS.ErrnoException): never {
+  if (err.code === "EADDRINUSE") {
+    console.error(
+      `\n[docket] Cannot start ${label} — port ${port} is already in use.\n` +
+        `Something else (maybe a leftover server from a previous run) is listening there.\n` +
+        (process.platform === "win32"
+          ? `Find it with:  Get-NetTCPConnection -LocalPort ${port} -State Listen | Select OwningProcess\n` +
+            `Then stop it:  Stop-Process -Id <pid> -Force\n`
+          : `Find it with:  lsof -i :${port}\nThen stop it:  kill <pid>\n`),
+    );
+  } else {
+    console.error(`\n[docket] Cannot start ${label} on port ${port}:`, err.message, "\n");
+  }
+  process.exit(1);
+}
+
 const httpServer = createServer(app);
+httpServer.on("error", (err: NodeJS.ErrnoException) => reportListenFailure("the API server", PORT, err));
 httpServer.listen(PORT, () => console.log(`[docket] API on http://localhost:${PORT}`));
 
 // Start queue workers in-process unless a standalone worker is used.
@@ -76,4 +102,5 @@ if (process.env.WORKER_MODE !== "external") {
 const yjsServer = createServer();
 const wss = new WebSocketServer({ server: yjsServer });
 attachYjsWebSocket(wss);
+yjsServer.on("error", (err: NodeJS.ErrnoException) => reportListenFailure("the Yjs WebSocket server", YJS_PORT, err));
 yjsServer.listen(YJS_PORT, () => console.log(`[docket] Yjs WS on ws://localhost:${YJS_PORT}`));
