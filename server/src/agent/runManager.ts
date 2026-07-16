@@ -67,9 +67,20 @@ export function stopRun(runId: string): boolean {
   return true;
 }
 
-export function endRun(runId: string): void {
-  // Keep briefly so late subscribers can drain; then drop.
+/** Terminal run: keep briefly so late SSE subscribers can drain, then drop. */
+const DRAIN_TTL_MS = 5000;
+/**
+ * A run paused on a clarifying question needs to survive until a HUMAN types
+ * an answer — seconds to several minutes, not milliseconds. Using the short
+ * drain TTL here was a real bug: the run (and its history, needed to resume)
+ * was deleted ~5s after the question was asked, so any answer submitted
+ * after that 404'd with "Run not found or expired".
+ */
+const AWAITING_ANSWER_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+export function endRun(runId: string, opts: { awaitingAnswer?: boolean } = {}): void {
   const run = runs.get(runId);
   if (!run) return;
-  setTimeout(() => runs.delete(runId), 5000);
+  const ttl = opts.awaitingAnswer ? AWAITING_ANSWER_TTL_MS : DRAIN_TTL_MS;
+  setTimeout(() => runs.delete(runId), ttl);
 }

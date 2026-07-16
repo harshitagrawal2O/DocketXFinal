@@ -140,6 +140,16 @@ export function AgentProvider({
           break;
         case "clarifying_question":
           setClarifying(evt.question);
+          setRunning(false);
+          setRunState("awaiting_review");
+          // The server intentionally keeps this connection open in case the
+          // run needs to resume, but the client has nothing further to do
+          // with it right now — answering opens a brand-new stream via
+          // startRequest(). Left open, this connection just idles until some
+          // browser/proxy timeout eventually kills it, which streamAgentRun
+          // would otherwise (wrongly) report as "the stream was interrupted".
+          // Closing it ourselves is a clean, expected abort, not an error.
+          abortRef.current?.abort();
           break;
         case "run_complete":
         case "run_interrupted":

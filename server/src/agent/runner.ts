@@ -73,6 +73,8 @@ function intentFor(instruction: string): string {
 export async function runAgent(run: ActiveRun): Promise<void> {
   const { runId, documentId, instruction, scope } = run;
 
+  let awaitingAnswer = false;
+
   emit(runId, { type: "run_state", state: "thinking" });
   emit(runId, { type: "intent", text: intentFor(instruction) });
 
@@ -167,6 +169,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
       run.history.push({ role: "assistant", content: `Clarifying question: ${question}` });
       emit(runId, { type: "run_state", state: "awaiting_review" });
       emit(runId, { type: "clarifying_question", question });
+      awaitingAnswer = true;
       return; // run stays open; answer route resumes it
     }
 
@@ -263,7 +266,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
       emit(runId, { type: "error", message: (err as Error).message });
     }
   } finally {
-    endRun(runId);
+    endRun(runId, { awaitingAnswer });
   }
 }
 
