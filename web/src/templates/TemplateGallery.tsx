@@ -31,11 +31,19 @@ interface Props {
   onOpenTemplate: (id: string) => void;
   onCreate: () => void;
   onUpload: () => void;
+  /** Open the chat-first "Draft with Viki" intake flow. */
+  onDraftWithViki: () => void;
   /** Bumped after a create/upload/draft/delete succeeds so the gallery re-fetches. */
   reloadKey: number;
 }
 
-export function TemplateGallery({ onOpenTemplate, onCreate, onUpload, reloadKey }: Props) {
+export function TemplateGallery({
+  onOpenTemplate,
+  onCreate,
+  onUpload,
+  onDraftWithViki,
+  reloadKey,
+}: Props) {
   const [templates, setTemplates] = useState<TemplateSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,6 +104,9 @@ export function TemplateGallery({ onOpenTemplate, onCreate, onUpload, reloadKey 
           </p>
         </div>
         <div className="templates-head-actions">
+          <button className="btn viki-cta" onClick={onDraftWithViki}>
+            ✨ Draft with Viki
+          </button>
           <button className="btn btn-sm" onClick={onUpload}>
             Upload / draft
           </button>
@@ -104,6 +115,21 @@ export function TemplateGallery({ onOpenTemplate, onCreate, onUpload, reloadKey 
           </button>
         </div>
       </header>
+
+      <button className="viki-banner" onClick={onDraftWithViki}>
+        <span className="viki-banner-icon" aria-hidden="true">
+          ✨
+        </span>
+        <span className="viki-banner-text">
+          <strong>Not sure which template?</strong>
+          <span className="muted">
+            Chat with Viki — describe your matter and she'll draft the whole document.
+          </span>
+        </span>
+        <span className="viki-banner-arrow" aria-hidden="true">
+          →
+        </span>
+      </button>
 
       <div className="gallery-controls">
         <select

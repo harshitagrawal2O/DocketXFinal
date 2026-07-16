@@ -82,7 +82,7 @@ templatesRouter.post("/templates/analyze", async (req: AuthedRequest, res) => {
   const { text, title } = (req.body ?? {}) as AnalyzeTemplateRequest;
   if (!text || text.trim().length < 40) return res.status(400).json({ error: "Provide the document text to analyze" });
   try {
-    const draft = await analyzeTemplate(text, title);
+    const draft = await analyzeTemplate(text, title, req.user!.id);
     const t = await createTemplate(draft, "uploaded", req.user!.id);
     return res.json(t);
   } catch (err) {
@@ -95,7 +95,7 @@ templatesRouter.post("/templates/draft", async (req: AuthedRequest, res) => {
   const { instruction, useWebSearch } = (req.body ?? {}) as DraftTemplateRequest;
   if (!instruction) return res.status(400).json({ error: "instruction required" });
   try {
-    const draft = await draftTemplate(instruction, Boolean(useWebSearch));
+    const draft = await draftTemplate(instruction, Boolean(useWebSearch), req.user!.id);
     const t = await createTemplate(draft, "viki", req.user!.id);
     return res.json(t);
   } catch (err) {
@@ -114,7 +114,7 @@ templatesRouter.post("/templates/:id/generate", async (req: AuthedRequest, res) 
   // document tailored to the matter (clause-level), not just a variable fill.
   if (brief && brief.trim()) {
     try {
-      const personalized = await personalizeDocument(t, brief);
+      const personalized = await personalizeDocument(t, brief, req.user!.id);
       const documentId = await generateDocumentFromHtml(
         personalized.bodyHtml,
         documentTitle,

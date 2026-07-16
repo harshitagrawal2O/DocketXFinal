@@ -8,6 +8,7 @@ import type {
   GenerateBatchResult,
   GenerateFromTemplateRequest,
   GenerateResult,
+  IntakeStartResponse,
   ProposalActionResult,
   Role,
   SessionUser,
@@ -202,6 +203,22 @@ export const templatesApi = {
     req<GenerateBatchResult>(`/api/templates/${id}/generate-batch`, {
       method: "POST",
       body: JSON.stringify(body),
+    }),
+};
+
+// ---- Interactive intake (chat-first document creation) ----
+export const intakeApi = {
+  /** Open a session; returns the id to stream and Viki's canned greeting. */
+  start: () => req<IntakeStartResponse>("/api/intake", { method: "POST" }),
+  /**
+   * Send the user's turn. Viki replies asynchronously over the SSE stream, so
+   * this resolves to `{ ok: true }` once accepted — a 409 means Viki is still
+   * responding to the previous message.
+   */
+  sendMessage: (id: string, message: string) =>
+    req<{ ok: true }>(`/api/intake/${id}/message`, {
+      method: "POST",
+      body: JSON.stringify({ message }),
     }),
 };
 

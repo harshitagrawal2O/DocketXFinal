@@ -2000,3 +2000,280 @@ textarea:focus {
     padding-left: 22pt;
   }
 }
+
+/* ============================================================
+   Draft with Viki — chat intake
+   ============================================================ */
+
+/* Gallery entry points */
+.viki-cta {
+  background: var(--accent-weak);
+  color: var(--accent);
+  border-color: transparent;
+  font-weight: 600;
+}
+.viki-cta:hover:not(:disabled) {
+  background: var(--accent-weak);
+  filter: brightness(0.97);
+}
+.viki-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  margin: 0 0 4px;
+  border: 1px solid var(--accent);
+  background: var(--accent-weak);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text);
+}
+.viki-banner:hover {
+  filter: brightness(0.98);
+}
+.viki-banner-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.viki-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.viki-banner-arrow {
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Chat layout */
+.viki-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.viki-chat-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.viki-chat-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.viki-chat-title h2 {
+  margin: 0;
+}
+.viki-chat-title p {
+  margin: 2px 0 0;
+}
+.viki-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent-weak);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.viki-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.viki-row {
+  display: flex;
+}
+.viki-row--user {
+  justify-content: flex-end;
+}
+.viki-row--assistant {
+  justify-content: flex-start;
+}
+.viki-bubble {
+  max-width: min(680px, 82%);
+  padding: 10px 14px;
+  border-radius: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.viki-bubble--user {
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.viki-bubble--assistant {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+.viki-bubble--error {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+
+/* Streaming caret */
+.viki-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  opacity: 0.7;
+  animation: viki-blink 1s step-end infinite;
+}
+@keyframes viki-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Template match chips */
+.viki-matches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 82%;
+}
+.viki-match-chip {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-weak);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+/* Document ready card */
+.viki-doc-card {
+  max-width: min(680px, 90%);
+  border: 1px solid var(--green);
+  background: var(--green-bg);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.viki-doc-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 15px;
+}
+.viki-doc-block-title {
+  margin: 0 0 4px;
+  font-weight: 650;
+}
+.viki-doc-card .personalization-notes {
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* Composer */
+.viki-composer {
+  border-top: 1px solid var(--border);
+  padding: 12px 24px 16px;
+  background: var(--surface);
+}
+.viki-state-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+  background: var(--accent-weak);
+  color: var(--accent);
+}
+.viki-state-chip--awaiting_user {
+  background: var(--green-bg);
+  color: var(--green);
+}
+.viki-state-chip--done {
+  background: var(--green-bg);
+  color: var(--green);
+}
+.viki-dots {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: viki-pulse 1s ease-in-out infinite;
+}
+@keyframes viki-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.viki-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.viki-input {
+  flex: 1;
+  resize: none;
+  min-height: 42px;
+  max-height: 160px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  line-height: 1.4;
+}
+.viki-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+.viki-input:disabled {
+  opacity: 0.6;
+}
+.viki-send {
+  flex-shrink: 0;
+}
+.viki-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+
+@media (max-width: 700px) {
+  .viki-chat-head,
+  .viki-messages,
+  .viki-composer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .viki-bubble,
+  .viki-doc-card,
+  .viki-matches {
+    max-width: 92%;
+  }
+}

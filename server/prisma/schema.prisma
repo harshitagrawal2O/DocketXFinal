@@ -101,6 +101,21 @@ model AuditEvent {
   @@index([documentId, createdAt])
 }
 
+// Per-call LLM usage for cost metering + billing. NEVER stores prompt content.
+model UsageEvent {
+  id           String   @id @default(cuid())
+  userId       String?
+  documentId   String?
+  kind         String // agent_run | template_analyze | template_draft | personalize | intake
+  model        String
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([kind, createdAt])
+}
+
 // Reusable fillable document skeleton. ownerId null = builtin/global; otherwise
 // firm-owned (uploaded-and-analyzed or Viki-drafted).
 model Template {

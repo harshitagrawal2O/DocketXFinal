@@ -53,6 +53,17 @@ Auth: session cookie `docket_session` (set by login). Dev shortcut header `x-use
   - `brief` present = ADVANCED Viki personalisation: Viki drafts the whole document tailored to the case (clause-level, not just variable fill) and returns `personalizationNotes[]` (what it tailored, show to the reviewer) + `unresolved[]` (facts to confirm; left as `[TO CONFIRM: …]` blanks in the body).
 - `POST /api/templates/:id/generate-batch` `GenerateBatchRequest {titlePattern, rows[]}` → `GenerateBatchResult {documentIds[]}` (one doc per row; `{{vars}}` resolved in the title too)
 
+## Interactive intake (chat-first document creation)
+Viki drives a conversation: asks what document you need, matches the template
+library, asks clarifying questions, then drafts the personalised document.
+- `POST /api/intake` → `IntakeStartResponse {sessionId, greeting}` (greeting is canned, no model call)
+- `GET  /api/intake/:id/stream` → SSE of `IntakeSSEEvent` (`state | assistant_delta | assistant_message | template_matches | document_ready | error`)
+- `POST /api/intake/:id/message` `IntakeMessageRequest {message}` → `{ok:true}` (Viki responds asynchronously over the SSE stream; 409 if still responding)
+On `document_ready`, open `documentId` in the workspace (it entered the review pipeline like any generated doc), and show `personalizationNotes` / `unresolved`.
+
+## Usage metering
+Every LLM call records a `UsageEvent` (kind, model, input/output tokens, userId) — never prompt/doc content. Foundation for cost + billing.
+
 ## Export / print
 - `POST /api/documents/:id/export/docx` `{ html, title }` → `.docx` binary (attachment). Client serializes the live Tiptap doc to HTML and downloads the blob.
 - Print + Save-as-PDF are client-side: a Print button renders a clean print view and calls `window.print()` (a print stylesheet handles margins/page-breaks/letterhead).

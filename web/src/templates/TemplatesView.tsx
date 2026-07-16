@@ -3,13 +3,15 @@ import { TemplateGallery } from "./TemplateGallery";
 import { TemplateDetail } from "./TemplateDetail";
 import { GeneratePanel } from "./GeneratePanel";
 import { UploadTemplate } from "./UploadTemplate";
+import { IntakeChat } from "@/intake/IntakeChat";
 
 type View =
   | { mode: "gallery" }
   | { mode: "detail"; templateId: string }
   | { mode: "new" }
   | { mode: "generate"; templateId: string }
-  | { mode: "upload" };
+  | { mode: "upload" }
+  | { mode: "viki" };
 
 interface Props {
   /** Open a (freshly-generated or existing) document in the workspace. */
@@ -32,7 +34,12 @@ export function TemplatesView({ onOpenDocument }: Props) {
           onOpenTemplate={(id) => setView({ mode: "detail", templateId: id })}
           onCreate={() => setView({ mode: "new" })}
           onUpload={() => setView({ mode: "upload" })}
+          onDraftWithViki={() => setView({ mode: "viki" })}
         />
+      )}
+
+      {view.mode === "viki" && (
+        <IntakeChat onBack={backToGallery} onOpenDocument={onOpenDocument} />
       )}
 
       {(view.mode === "detail" || view.mode === "new") && (

@@ -200,7 +200,7 @@ export async function generateDocumentFromHtml(
   html: string,
   documentTitle: string,
   kind: TemplateDTO["kind"],
-  templateId: string,
+  templateId: string | null,
   ownerId: string,
   ownerName: string,
   personalizationNotes: string[],

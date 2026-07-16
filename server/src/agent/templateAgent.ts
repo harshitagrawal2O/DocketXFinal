@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { TemplateDraft, TemplateDTO, TemplateVariable } from "@docket/shared";
+import { recordUsage } from "./usage.js";
 
 const MODEL = process.env.VIKI_MODEL ?? "claude-opus-4-8";
 const WEB_SEARCH_ENABLED = process.env.VIKI_WEB_SEARCH === "true";
@@ -79,7 +80,7 @@ function extractRegisterTemplate(msg: Anthropic.Message): TemplateDraft {
 }
 
 /** Turn an uploaded document into a fillable template. */
-export async function analyzeTemplate(text: string, title?: string): Promise<TemplateDraft> {
+export async function analyzeTemplate(text: string, title?: string, userId?: string): Promise<TemplateDraft> {
   const msg = await client().messages.create({
     model: MODEL,
     max_tokens: 8192,
@@ -93,11 +94,12 @@ export async function analyzeTemplate(text: string, title?: string): Promise<Tem
       },
     ],
   });
+  await recordUsage({ kind: "template_analyze", model: MODEL, usage: msg.usage, userId });
   return extractRegisterTemplate(msg);
 }
 
 /** Draft a brand-new template from an instruction (optionally web-search-backed). */
-export async function draftTemplate(instruction: string, useWebSearch = false): Promise<TemplateDraft> {
+export async function draftTemplate(instruction: string, useWebSearch = false, userId?: string): Promise<TemplateDraft> {
   const tools: Anthropic.ToolUnion[] = [REGISTER_TEMPLATE_TOOL];
   const canSearch = useWebSearch && WEB_SEARCH_ENABLED;
   if (canSearch) {
@@ -113,6 +115,7 @@ export async function draftTemplate(instruction: string, useWebSearch = false): 
     tool_choice: canSearch ? { type: "auto" } : { type: "tool", name: "register_template" },
     messages: [{ role: "user", content: `Draft a template: ${instruction}` }],
   });
+  await recordUsage({ kind: "template_draft", model: MODEL, usage: msg.usage, userId });
   return extractRegisterTemplate(msg);
 }
 
@@ -139,6 +142,7 @@ const FILL_TOOL: Anthropic.Tool = {
 export async function fillTemplateFromBrief(
   template: Pick<TemplateDTO, "title" | "variables" | "bodyHtml">,
   brief: string,
+  userId?: string,
 ): Promise<Record<string, string>> {
   const varSpec = template.variables.map((v) => `- ${v.key} (${v.type}${v.required ? ", required" : ""}): ${v.label}${v.hint ? ` — ${v.hint}` : ""}`).join("\n");
   const msg = await client().messages.create({
@@ -155,6 +159,7 @@ export async function fillTemplateFromBrief(
       },
     ],
   });
+  await recordUsage({ kind: "personalize", model: MODEL, usage: msg.usage, userId });
   const block = msg.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "fill_values");
   if (!block) throw new Error("Viki did not return values");
   const input = block.input as { values: { key: string; value: string }[] };
@@ -201,6 +206,31 @@ export interface PersonalizedDocument {
   unresolved: string[];
 }
 
+const FROM_SCRATCH_SYSTEM = `You are Viki, an advanced legal/CA drafting assistant for Indian law and CA firms. Draft a COMPLETE document from scratch for the matter described, when no suitable template exists. Follow the same rules as personalisation: precise current Indian legal drafting; current statutory framework only (never the repealed IPC/CrPC/Evidence Act); cite a section only if real and certain; NEVER invent facts — leave <strong>[TO CONFIRM: description]</strong> blanks and list them under unresolved; include protective boilerplate (governing law, dispute resolution, notices, execution/stamp block). Finish by calling produce_document.`;
+
+/** Draft a full document from scratch (no template) for the intake flow. */
+export async function draftDocumentFromScratch(instruction: string, userId?: string): Promise<PersonalizedDocument> {
+  const msg = await client().messages.create({
+    model: MODEL,
+    max_tokens: 8192,
+    system: FROM_SCRATCH_SYSTEM,
+    tools: [PRODUCE_DOC_TOOL],
+    tool_choice: { type: "tool", name: "produce_document" },
+    messages: [{ role: "user", content: `Draft this document:\n"""\n${instruction}\n"""` }],
+  });
+  await recordUsage({ kind: "intake", model: MODEL, usage: msg.usage, userId });
+  const block = msg.content.find(
+    (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "produce_document",
+  );
+  if (!block) throw new Error("Viki did not return a document");
+  const input = block.input as { bodyHtml: string; personalizationNotes?: string[]; unresolved?: string[] };
+  return {
+    bodyHtml: input.bodyHtml,
+    personalizationNotes: input.personalizationNotes ?? [],
+    unresolved: input.unresolved ?? [],
+  };
+}
+
 /**
  * Advanced case personalisation: given a template + a case brief, Viki drafts
  * the full document tailored to the matter (clause-level, not just variable
@@ -210,6 +240,7 @@ export interface PersonalizedDocument {
 export async function personalizeDocument(
   template: Pick<TemplateDTO, "title" | "variables" | "bodyHtml">,
   brief: string,
+  userId?: string,
 ): Promise<PersonalizedDocument> {
   const varSpec = template.variables
     .map((v) => `- {{${v.key}}} (${v.type}${v.required ? ", required" : ""}): ${v.label}${v.hint ? ` — ${v.hint}` : ""}`)
@@ -227,6 +258,7 @@ export async function personalizeDocument(
       },
     ],
   });
+  await recordUsage({ kind: "personalize", model: MODEL, usage: msg.usage, userId });
   const block = msg.content.find(
     (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "produce_document",
   );
