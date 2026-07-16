@@ -202,12 +202,41 @@ export function AgentPanel({ role }: { role: Role }) {
       )}
 
       <div className="flex-1 space-y-6 overflow-y-auto p-6 no-scrollbar">
+        {/* Persistent conversation memory: what Viki and this user discussed
+            on this document in PRIOR (already-ended) runs — not just within
+            the current one. Oldest first, like a normal chat thread. */}
+        {agent.turns.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="text-label-sm font-label-sm uppercase tracking-tighter text-outline">
+              Conversation history
+            </h4>
+            <div className="space-y-2">
+              {agent.turns.map((t) => (
+                <div
+                  key={t.id}
+                  className={`rounded-lg p-3 text-body-md ${
+                    t.role === "user"
+                      ? "bg-primary-container text-on-primary-container"
+                      : "bg-surface-container-high text-on-surface"
+                  }`}
+                >
+                  <p className="mb-1 text-[10px] uppercase tracking-wide opacity-60">
+                    {t.role === "user" ? "You" : "Viki"} · {new Date(t.createdAt).toLocaleString()}
+                  </p>
+                  <p className="whitespace-pre-wrap">{t.content}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {!agent.running &&
           !editingPrompt &&
           !agent.intent &&
           agent.blocked.length === 0 &&
           !agent.clarifying &&
-          !agent.error && (
+          !agent.error &&
+          agent.turns.length === 0 && (
             <EmptyState
               icon="auto_awesome"
               heading="Ask Viki to draft or revise"
@@ -236,6 +265,22 @@ export function AgentPanel({ role }: { role: Role }) {
                 <span className="text-label-sm italic text-outline">{agent.intent}</span>
               )}
             </div>
+
+            {/* Adaptive plan, visible as it happens: research Viki did mid-run
+                (cross-document lookups, web/statute search) before deciding
+                on its final changes. */}
+            {agent.toolLog.length > 0 && (
+              <div className="space-y-1.5">
+                {agent.toolLog.map((t, i) => (
+                  <div key={i} className="flex items-center gap-2 text-label-sm text-outline">
+                    <span className="material-symbols-outlined text-[14px]">
+                      {t.tool === "web_search" ? "travel_explore" : t.tool === "read_document" ? "description" : "search"}
+                    </span>
+                    <span className="italic">{t.detail}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {agent.checklist.length > 0 && (
               <div>

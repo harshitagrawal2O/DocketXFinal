@@ -32,6 +32,13 @@ export type AgentSSEEvent =
   | { type: "hunk_blocked"; proposalId: string; hunkIndex: number; reason: string; citations: Citation[] }
   /** Viki needs a fact instead of inventing it. */
   | { type: "clarifying_question"; question: string }
+  /**
+   * Viki called a read-only research tool mid-run (cross-document lookup or
+   * web/statute search) — surfaced live so the plan visibly adapts as Viki
+   * finds things, instead of the user seeing a silent gap before the next
+   * checklist update.
+   */
+  | { type: "tool_call"; tool: "search_documents" | "read_document" | "web_search"; detail: string }
   | { type: "run_complete"; agentRunId: string }
   | { type: "run_interrupted"; agentRunId: string }
   | { type: "error"; message: string };

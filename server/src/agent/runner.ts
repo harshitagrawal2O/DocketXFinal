@@ -9,14 +9,18 @@ import { upsertProposal } from "../proposals/broadcast.js";
 import { toDTO } from "../proposals/service.js";
 import { verifyHunkCitationsFull } from "./citationGrounding.js";
 import { recordUsage } from "./usage.js";
-import { withLLMSlot } from "../llm/limiter.js";
 import { SYSTEM_PROMPT, TOOLS } from "./vikiPrompt.js";
 import { extractNewTexts } from "./streamParse.js";
 import { emit, endRun, type ActiveRun } from "./runManager.js";
+import { runVikiTurn } from "./llmProvider.js";
+import { loadRecentTurns, recordTurn, summarizeAssistantTurn } from "./conversation.js";
+import { searchFirmDocuments, readFirmDocument } from "./tools/firmDocuments.js";
 import type { Citation, ChecklistItem } from "@docket/shared";
 import type { Prisma } from "@prisma/client";
 
 const MODEL = process.env.VIKI_MODEL ?? "claude-opus-4-8";
+/** Anthropic server-executed web search tool (account-gated) — same flag/pattern as templateAgent.ts. */
+const WEB_SEARCH_ENABLED = process.env.VIKI_WEB_SEARCH === "true";
 
 interface RawHunk {
   oldText: string;
@@ -34,11 +38,15 @@ interface RawHunk {
  */
 const MAX_AGENT_ITERATIONS = Math.max(1, Number(process.env.VIKI_MAX_ITERATIONS ?? 4));
 
-function client(): Anthropic {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
-  return new Anthropic({ apiKey });
-}
+/**
+ * Within ONE iteration, Viki may call a read-only research tool
+ * (search_documents/read_document) several times before settling on
+ * stage_changes/ask_clarifying_question. Bounded separately from
+ * MAX_AGENT_ITERATIONS so a research detour doesn't eat into the self-check
+ * budget, but still capped — a model stuck only ever researching, never
+ * producing an actual change or question, must not loop forever.
+ */
+const MAX_TOOL_ROUNDS = 6;
 
 /** Tolerant scan for the checklist string array while JSON still streams. */
 function extractChecklist(raw: string): string[] {
@@ -70,6 +78,45 @@ function extractChecklist(raw: string): string[] {
 function intentFor(instruction: string): string {
   const trimmed = instruction.trim().replace(/\s+/g, " ");
   return `Reading the document and planning changes for: "${trimmed.slice(0, 120)}${trimmed.length > 120 ? "…" : ""}"`;
+}
+
+/** Run one of the read-only research tools and report both the model-facing result and a human-facing summary. */
+async function runInfoTool(
+  name: "search_documents" | "read_document",
+  input: unknown,
+  run: ActiveRun,
+  currentDocumentId: string,
+): Promise<{ toolResult: string; summary: string }> {
+  if (name === "search_documents") {
+    const { query } = (input ?? {}) as { query?: string };
+    const q = (query ?? "").trim();
+    const hits = await searchFirmDocuments(run.userId, currentDocumentId, q);
+    const summary = hits.length > 0
+      ? `Searching your other documents for "${q}" — ${hits.length} result(s).`
+      : `Searching your other documents for "${q}" — no matches.`;
+    const toolResult =
+      hits.length === 0
+        ? "No other documents matched that search."
+        : hits.map((h) => `[${h.id}] ${h.title} (${h.kind}, updated ${h.updatedAt}): ${h.snippet || "(empty document)"}`).join("\n\n");
+    return { toolResult, summary };
+  }
+
+  const { documentId } = (input ?? {}) as { documentId?: string };
+  const doc = documentId ? await readFirmDocument(run.userId, documentId) : null;
+  if (!doc) {
+    return {
+      toolResult: "That document was not found, or you don't have access to it.",
+      summary: "Tried to read a document, but it wasn't accessible.",
+    };
+  }
+  await audit(currentDocumentId, "document_cross_read", run, {
+    agentRunId: run.runId,
+    detail: { sourceDocumentId: documentId ?? "" },
+  });
+  return {
+    toolResult: `TITLE: ${doc.title}\n\n${doc.text}${doc.truncated ? "\n\n[...truncated]" : ""}`,
+    summary: `Read "${doc.title}"${doc.truncated ? " (truncated)" : ""}.`,
+  };
 }
 
 /**
@@ -129,7 +176,22 @@ export async function runAgent(run: ActiveRun): Promise<void> {
     : `DOCUMENT${scope === "selection" ? " (selection only — you may only edit within this text)" : ""}:\n"""\n${scopedText}\n"""\n\n` +
       `INSTRUCTION: ${instruction}`;
 
+  // Persistent cross-run memory: prior completed runs on this document, oldest
+  // first. Distinct from run.history below, which only carries THIS run's own
+  // in-progress thread (populated only when resuming after a clarifying
+  // question) — persisted turns come from runs that already fully ended.
+  const persistedTurns = await loadRecentTurns(documentId);
+
+  // Record the human side of this turn once, up front: on a fresh run that's
+  // the instruction; on a resume (answering a clarifying question) it's the
+  // answer agentRuns.ts already pushed onto run.history just before calling
+  // us, not the (already-recorded, on the original run) original instruction.
+  const isFreshRun = run.history.length === 0;
+  const humanTurnText = isFreshRun ? instruction : (run.history[run.history.length - 1]?.content ?? instruction);
+  await recordTurn(documentId, runId, "user", humanTurnText);
+
   let messages: Anthropic.MessageParam[] = [
+    ...persistedTurns,
     ...run.history.map((h) => ({ role: h.role, content: h.content })),
     { role: "user", content: userContent },
   ];
@@ -139,6 +201,24 @@ export async function runAgent(run: ActiveRun): Promise<void> {
   let totalStaged = 0;
   // Checklist items from FINISHED iterations, shown alongside the live one.
   const accumulatedChecklist: ChecklistItem[] = [];
+  // Distilled for the persistent conversation-memory turn recorded on exit.
+  const stagedReasonings: string[] = [];
+  const allBlockedReasons: string[] = [];
+  let assistantSummary: string | null = null;
+
+  const tools: Anthropic.ToolUnion[] = [...TOOLS];
+  if (WEB_SEARCH_ENABLED) {
+    // Anthropic server-side web search tool; executed by the API within the
+    // turn — no manual round-trip needed (see llmProvider.ts's server_tool_use
+    // handling for the live "searching the web" indicator).
+    tools.push({ type: "web_search_20250305", name: "web_search", max_uses: 3 } as unknown as Anthropic.ToolUnion);
+  }
+  // Forcing a specific custom tool (tool_choice:any) conflicts with letting
+  // the server-side web_search tool call itself autonomously first — same
+  // tradeoff templateAgent.ts makes; only relax to auto when search is on.
+  const toolChoice: Anthropic.MessageCreateParamsStreaming["tool_choice"] = WEB_SEARCH_ENABLED
+    ? { type: "auto" }
+    : { type: "any" };
 
   try {
     iterationLoop: for (let iteration = 0; iteration < MAX_AGENT_ITERATIONS; iteration++) {
@@ -158,34 +238,38 @@ export async function runAgent(run: ActiveRun): Promise<void> {
       const emittedLen: number[] = [];
       const provisionalIds: string[] = [];
       let lastChecklist: string[] = [];
-      let raw = "";
       const ensureId = (k: number): string => {
         if (!provisionalIds[k]) provisionalIds[k] = createId();
         return provisionalIds[k]!;
       };
 
-      const finalMsg = await withLLMSlot(async () => {
-        const stream = client().messages.stream(
-          {
-            model: MODEL,
-            max_tokens: 4096,
-            system: SYSTEM_PROMPT,
-            tools: TOOLS,
-            tool_choice: { type: "any" },
-            messages,
+      // One outer iteration may involve several model calls: zero or more
+      // read-only research calls (search_documents/read_document), then the
+      // one that actually decides stage_changes/ask_clarifying_question.
+      // Definite-assignment (!): every path through the loop below either
+      // assigns both and breaks, continues, or throws — never falls through.
+      let toolUse!: Anthropic.ToolUseBlock;
+      let assistantContent!: Anthropic.MessageParam["content"];
+      toolRoundLoop: for (let toolRound = 0; ; toolRound++) {
+        if (toolRound >= MAX_TOOL_ROUNDS) {
+          throw new Error("Viki made too many research calls without producing a change or a question.");
+        }
+
+        const result = await runVikiTurn({
+          model: MODEL,
+          system: SYSTEM_PROMPT,
+          tools,
+          toolChoice,
+          messages,
+          maxTokens: 4096,
+          signal: run.abort.signal,
+          onDraftingStart: () => {
+            if (iteration === 0 && toolRound === 0) emit(runId, { type: "run_state", state: "drafting" });
           },
-          { signal: run.abort.signal },
-        );
-
-        let drafting = false;
-        for await (const ev of stream) {
-          if (ev.type === "content_block_delta" && ev.delta.type === "input_json_delta") {
-            if (!drafting) {
-              drafting = true;
-              if (iteration === 0) emit(runId, { type: "run_state", state: "drafting" });
-            }
-            raw += ev.delta.partial_json;
-
+          onServerToolUse: () => {
+            emit(runId, { type: "tool_call", tool: "web_search", detail: "Searching the web for supporting or current statutory text…" });
+          },
+          onRawJsonDelta: (raw) => {
             // Live checklist: this iteration's items alongside prior ones.
             const cl = extractChecklist(raw);
             if (cl.length !== lastChecklist.length || cl.some((c, i) => c !== lastChecklist[i])) {
@@ -205,17 +289,31 @@ export async function runAgent(run: ActiveRun): Promise<void> {
                 emittedLen[k] = full.length;
               }
             }
-          }
+          },
+        });
+        await recordUsage({ kind: "agent_run", model: MODEL, usage: result.usage, userId: run.userId, documentId });
+
+        const tu = result.toolUse;
+        if (!tu) throw new Error("Viki returned no tool call");
+
+        if (tu.name === "search_documents" || tu.name === "read_document") {
+          const { toolResult, summary } = await runInfoTool(tu.name, tu.input, run, documentId);
+          emit(runId, { type: "tool_call", tool: tu.name, detail: summary });
+          messages = [
+            ...messages,
+            { role: "assistant", content: result.assistantContent },
+            { role: "user", content: [{ type: "tool_result", tool_use_id: tu.id, content: toolResult }] },
+          ];
+          continue toolRoundLoop;
         }
 
-        return await stream.finalMessage();
-      });
-      await recordUsage({ kind: "agent_run", model: MODEL, usage: finalMsg.usage, userId: run.userId, documentId });
-      const toolUse = finalMsg.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-      if (!toolUse) throw new Error("Viki returned no tool call");
+        toolUse = tu;
+        assistantContent = result.assistantContent;
+        break toolRoundLoop;
+      }
 
-      if (toolUse.name === "ask_clarifying_question") {
-        const question = String((toolUse.input as { question?: string }).question ?? "Could you clarify?");
+      if (toolUse!.name === "ask_clarifying_question") {
+        const question = String((toolUse!.input as { question?: string }).question ?? "Could you clarify?");
         // Keep the run alive for resume; record turns (with a summary of any
         // work already staged in this run, so resuming doesn't lose context).
         run.history.push({ role: "user", content: userContent });
@@ -229,12 +327,13 @@ export async function runAgent(run: ActiveRun): Promise<void> {
         emit(runId, { type: "run_state", state: "awaiting_review" });
         emit(runId, { type: "clarifying_question", question });
         awaitingAnswer = true;
+        assistantSummary = summarizeAssistantTurn({ stagedReasonings, blockedReasons: allBlockedReasons, clarifyingQuestion: question });
         return; // run stays open; answer route resumes it
       }
 
       // stage_changes
       if (iteration === 0) emit(runId, { type: "run_state", state: "self_checking" });
-      const input = toolUse.input as { checklist?: string[]; hunks?: RawHunk[]; done?: boolean };
+      const input = toolUse!.input as { checklist?: string[]; hunks?: RawHunk[]; done?: boolean };
       const hunks = input.hunks ?? [];
       const checklistLabels = input.checklist ?? hunks.map((_, i) => `Change ${i + 1}`);
       const iterChecklist: ChecklistItem[] = checklistLabels.map((label, i) => ({ id: `i${iteration}-c${i}`, label, done: false }));
@@ -314,12 +413,14 @@ export async function runAgent(run: ActiveRun): Promise<void> {
         const dto = toDTO(row);
         upsertProposal(dto);
         totalStaged++;
+        stagedReasonings.push(h.reasoning);
 
         if (iterChecklist[k]) iterChecklist[k]!.done = true;
         emit(runId, { type: "checklist", items: [...accumulatedChecklist, ...iterChecklist] });
         emit(runId, { type: "hunk_complete", proposal: dto });
       }
       accumulatedChecklist.push(...iterChecklist);
+      allBlockedReasons.push(...blockedThisIteration);
 
       if (run.interrupted) break;
 
@@ -335,6 +436,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
 
       const done = input.done ?? true; // safe default if the model omits the field
       if (!shouldForceRetry && (done || isLastAllowedIteration)) {
+        assistantSummary = summarizeAssistantTurn({ stagedReasonings, blockedReasons: allBlockedReasons });
         break iterationLoop; // finalize below
       }
 
@@ -346,15 +448,16 @@ export async function runAgent(run: ActiveRun): Promise<void> {
         : `Staged ${hunks.length} hunk(s) this pass (${totalStaged} total so far in this run). Continue only if the instruction is not yet fully addressed; otherwise call stage_changes again with an empty hunks array and done:true, or ask_clarifying_question if you need a fact.`;
       messages = [
         ...messages,
-        { role: "assistant", content: finalMsg.content },
+        { role: "assistant", content: assistantContent! },
         {
           role: "user",
-          content: [{ type: "tool_result", tool_use_id: toolUse.id, content: continuationNote }],
+          content: [{ type: "tool_result", tool_use_id: toolUse!.id, content: continuationNote }],
         },
       ];
     }
 
     if (run.interrupted) {
+      assistantSummary = summarizeAssistantTurn({ stagedReasonings, blockedReasons: allBlockedReasons, interrupted: true });
       await audit(documentId, "agent_run_interrupted", run, { agentRunId: runId });
       emit(runId, { type: "run_interrupted", agentRunId: runId });
     } else {
@@ -364,14 +467,17 @@ export async function runAgent(run: ActiveRun): Promise<void> {
     }
   } catch (err) {
     if (run.interrupted || (err as Error).name === "AbortError") {
+      assistantSummary = summarizeAssistantTurn({ stagedReasonings, blockedReasons: allBlockedReasons, interrupted: true });
       await audit(documentId, "agent_run_interrupted", run, { agentRunId: runId });
       emit(runId, { type: "run_interrupted", agentRunId: runId });
     } else {
       // Never log document contents; only the error message.
       console.error(`[viki] run ${runId} error:`, (err as Error).message);
+      assistantSummary = summarizeAssistantTurn({ stagedReasonings, blockedReasons: allBlockedReasons, errorMessage: (err as Error).message });
       emit(runId, { type: "error", message: (err as Error).message });
     }
   } finally {
+    if (assistantSummary) await recordTurn(documentId, runId, "assistant", assistantSummary);
     endRun(runId, { awaitingAnswer });
   }
 }

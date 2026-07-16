@@ -43,6 +43,20 @@ export interface AuditPage {
   nextCursor?: string | null;
 }
 
+/**
+ * A distilled turn in Viki's persistent conversation on a document — spans
+ * separate runs, so a follow-up instruction has real context (see
+ * server/src/agent/conversation.ts). content is always plain text, never a
+ * raw provider tool-call payload.
+ */
+export interface AgentTurnDTO {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  agentRunId?: string | null;
+  createdAt: string;
+}
+
 export interface SessionUser {
   id: string;
   name: string;

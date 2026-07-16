@@ -10,3 +10,4 @@ server/prisma/*.db
 server/.yjs-data/
 coverage/
 .vite/
+*.tsbuildinfo

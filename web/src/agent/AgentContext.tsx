@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -10,6 +11,7 @@ import {
 import type {
   AgentRunScope,
   AgentSSEEvent,
+  AgentTurnDTO,
   ChecklistItem,
   Citation,
   DiffProposal,
@@ -29,6 +31,11 @@ export interface BlockedHunk {
   citations: Citation[];
 }
 
+export interface ToolLogEntry {
+  tool: "search_documents" | "read_document" | "web_search";
+  detail: string;
+}
+
 export interface AgentDraft {
   instruction: string;
   scope: AgentRunScope;
@@ -43,6 +50,9 @@ interface AgentState {
   blocked: BlockedHunk[];
   clarifying: string | null;
   error: string | null;
+  toolLog: ToolLogEntry[];
+  /** Persisted conversation history from prior (already-ended) runs on this document. */
+  turns: AgentTurnDTO[];
   draft: AgentDraft;
   setDraft: (d: AgentDraft) => void;
   /** Start a run from the current draft (reads editor selection if scoped). */
@@ -74,7 +84,23 @@ export function AgentProvider({
   const [blocked, setBlocked] = useState<BlockedHunk[]>([]);
   const [clarifying, setClarifying] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [toolLog, setToolLog] = useState<ToolLogEntry[]>([]);
+  const [turns, setTurns] = useState<AgentTurnDTO[]>([]);
   const [draft, setDraft] = useState<AgentDraft>({ instruction: "", scope: "document" });
+
+  const refreshTurns = useCallback(() => {
+    agentApi
+      .turns(documentId)
+      .then(setTurns)
+      .catch(() => {
+        /* Non-fatal — the live run panel still works without prior history. */
+      });
+  }, [documentId]);
+
+  // Persistent conversation memory: load prior runs' history once per document.
+  useEffect(() => {
+    refreshTurns();
+  }, [refreshTurns]);
 
   const abortRef = useRef<AbortController | null>(null);
   // Accumulated streaming text per proposalId, plus hunk order for skeletons.
@@ -90,6 +116,7 @@ export function AgentProvider({
     setBlocked([]);
     setClarifying(null);
     setError(null);
+    setToolLog([]);
     bufferRef.current.clear();
     orderRef.current = 0;
   }, []);
@@ -105,6 +132,9 @@ export function AgentProvider({
           break;
         case "checklist":
           setChecklist(evt.items);
+          break;
+        case "tool_call":
+          setToolLog((log) => [...log, { tool: evt.tool, detail: evt.detail }]);
           break;
         case "hunk_delta": {
           const prevText = bufferRef.current.get(evt.proposalId) ?? "";
@@ -160,14 +190,19 @@ export function AgentProvider({
         case "run_interrupted":
           setRunning(false);
           setRunState((s) => (s === "awaiting_review" ? s : "awaiting_review"));
+          // The server just recorded this run's outcome as a persistent
+          // conversation turn — pull it in so it's there next time this
+          // panel (or a teammate's) shows the history thread.
+          refreshTurns();
           break;
         case "error":
           setError(evt.message);
           setRunning(false);
+          refreshTurns();
           break;
       }
     },
-    [documentId, upsertLocal, discardLocal],
+    [documentId, upsertLocal, discardLocal, refreshTurns],
   );
 
   const openStream = useCallback(
@@ -267,6 +302,8 @@ export function AgentProvider({
       blocked,
       clarifying,
       error,
+      toolLog,
+      turns,
       draft,
       setDraft,
       submit,
@@ -274,7 +311,7 @@ export function AgentProvider({
       stop,
       rerun,
     }),
-    [running, runId, intent, runState, checklist, blocked, clarifying, error, draft, submit, answer, stop, rerun],
+    [running, runId, intent, runState, checklist, blocked, clarifying, error, toolLog, turns, draft, submit, answer, stop, rerun],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

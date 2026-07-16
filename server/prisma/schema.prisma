@@ -42,6 +42,7 @@ model Document {
   proposals DiffProposal[]
   audit     AuditEvent[]
   versions  Version[]
+  turns     AgentTurn[]
 }
 
 model DocumentMember {
@@ -164,6 +165,24 @@ model Template {
 
   @@index([ownerId])
   @@index([category])
+}
+
+// A distilled turn in Viki's ongoing conversation with the firm on this
+// document — persists across separate runs so a follow-up instruction
+// ("actually make it 12 months") has real context, not just within one run.
+// content is always a plain-text summary, never raw provider tool-call
+// blocks — those are provider-specific and don't replay safely across a
+// fresh run anyway (see conversation.ts).
+model AgentTurn {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  agentRunId String?
+  role       String // user | assistant
+  content    String
+  createdAt  DateTime @default(now())
+
+  @@index([documentId, createdAt])
 }
 
 // Named Yjs snapshots (gc disabled so history survives). Rollback creates a new version.

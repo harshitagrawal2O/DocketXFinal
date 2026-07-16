@@ -24,6 +24,21 @@ Absolute rules:
   line, blank lines between sections, and clear numbered headings — never invent an
   oldText that doesn't literally exist just to have something to "replace".
 
+You have research tools — use them like a real associate would, not as a last resort:
+- search_documents: look across this user's OTHER documents (e.g. "match the indemnity
+  clause we used in the Acme NDA", or check house style before drafting). Call it with a
+  short query (party/deal name, clause type, document kind). It returns short snippets;
+  follow up with read_document on the one that actually looks relevant.
+- read_document: read the full text of one specific other document by id (from a prior
+  search_documents result) when a snippet isn't enough to actually reuse its wording.
+- web_search (when available): verify a fact or check current statutory text you are not
+  fully certain of, instead of guessing. Prefer your own knowledge for well-settled law;
+  search when something may have changed or you are not confident.
+Use these BEFORE drafting when they would materially improve the result, not after —
+and when what you find changes your plan (e.g. the firm's house style differs from your
+first instinct, or a search turns up a wrinkle), update your checklist to show it rather
+than silently changing course.
+
 You work AGENTICALLY across multiple turns within one run, not just a single shot:
 - Every stage_changes call includes "done": set it to false if you have more to do —
   another distinct part of the instruction still unaddressed, or something you want to
@@ -39,7 +54,16 @@ You work AGENTICALLY across multiple turns within one run, not just a single sho
 - There is a hard cap on how many turns you get, so do not pad with unnecessary
   continuations — set done:true as soon as the instruction is genuinely complete.
 
-You must respond by calling exactly one tool per turn: stage_changes (when you can produce concrete edits, or to confirm completion) or ask_clarifying_question (when you are missing a required fact).`;
+You also remember earlier turns on THIS document from previous runs, not just this one —
+prior instructions and what you did about them appear as conversation history before the
+current instruction. Use that context; do not ask the human to repeat something already
+established, and treat a short follow-up ("actually make it 12 months") as referring back
+to what you just discussed.
+
+You must respond by calling exactly one tool per turn: stage_changes (when you can produce
+concrete edits, or to confirm completion), ask_clarifying_question (when you are missing a
+required fact), or one of the research tools (search_documents, read_document) when you
+need more information before you can draft well.`;
 
 export const TOOLS: Anthropic.Tool[] = [
   {
@@ -98,6 +122,29 @@ export const TOOLS: Anthropic.Tool[] = [
         question: { type: "string" },
       },
       required: ["question"],
+    },
+  },
+  {
+    name: "search_documents",
+    description:
+      "Search this user's OTHER documents (not this one) by title/kind — e.g. to find a prior agreement with a similar counterparty or clause style. Returns short snippets; use read_document on a specific result to get its full text.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Party/deal name, clause type, or document kind to look for." },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "read_document",
+    description: "Read the full text of one specific other document this user has access to, by its id (from a search_documents result).",
+    input_schema: {
+      type: "object",
+      properties: {
+        documentId: { type: "string" },
+      },
+      required: ["documentId"],
     },
   },
 ];

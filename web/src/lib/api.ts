@@ -1,4 +1,5 @@
 import type {
+  AgentTurnDTO,
   AnalyzeTemplateRequest,
   AuditPage,
   DiffProposal,
@@ -142,6 +143,8 @@ export const agentApi = {
     }),
   stop: (runId: string) =>
     req<{ ok: true }>(`/api/agent-runs/${runId}/stop`, { method: "POST" }),
+  /** Persistent conversation history for this document (spans separate runs). */
+  turns: (docId: string) => req<AgentTurnDTO[]>(`/api/documents/${docId}/agent-turns`),
 };
 
 // ---- Versions ----

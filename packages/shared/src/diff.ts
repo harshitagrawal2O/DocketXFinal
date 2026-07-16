@@ -90,6 +90,7 @@ export interface AuditEventDTO {
     | "proposal_edited_accepted"
     | "proposal_outdated"
     | "citation_blocked"
+    | "document_cross_read"
     | "human_edit_session"
     | "version_saved"
     | "version_rollback"

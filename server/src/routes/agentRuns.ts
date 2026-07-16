@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../db.js";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
-import { requireCap } from "../auth/roles.js";
+import { getRole, requireCap } from "../auth/roles.js";
 import { requireLLM } from "../llm/availability.js";
 import { rateLimit } from "../middleware/rateLimit.js";
 
@@ -9,9 +9,29 @@ const runLimit = rateLimit({ bucket: "agent-run", max: 30, windowMs: 60 * 1000 }
 import { createId } from "../util/id.js";
 import { createRun, getRun, subscribe, stopRun } from "../agent/runManager.js";
 import { runAgent } from "../agent/runner.js";
-import type { StartAgentRunRequest } from "@docket/shared";
+import type { AgentTurnDTO, StartAgentRunRequest } from "@docket/shared";
 
 export const agentRunsRouter = Router();
+
+// Persistent conversation history for a document (spans separate runs).
+// Any member may read it — it's informational, same trust level as the
+// activity/audit feed, not gated behind run_agent like starting a new run.
+agentRunsRouter.get("/documents/:id/agent-turns", requireAuth, async (req: AuthedRequest, res) => {
+  const role = await getRole(req.params.id!, req.user!.id);
+  if (!role) return res.status(403).json({ error: "Not a member of this document" });
+  const rows = await prisma.agentTurn.findMany({
+    where: { documentId: req.params.id! },
+    orderBy: { createdAt: "asc" },
+  });
+  const turns: AgentTurnDTO[] = rows.map((r) => ({
+    id: r.id,
+    role: r.role as "user" | "assistant",
+    content: r.content,
+    agentRunId: r.agentRunId,
+    createdAt: r.createdAt.toISOString(),
+  }));
+  return res.json(turns);
+});
 
 // Start a run (run_agent capability).
 agentRunsRouter.post(
