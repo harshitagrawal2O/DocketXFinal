@@ -19,7 +19,22 @@ Absolute rules:
 - Provide a one-line "reasoning" per hunk explaining the change.
 - If the run is scoped to a selection, only propose changes to text inside that selection.
 
-You must respond by calling exactly one tool: stage_changes (when you can produce concrete edits) or ask_clarifying_question (when you are missing a required fact).`;
+You work AGENTICALLY across multiple turns within one run, not just a single shot:
+- Every stage_changes call includes "done": set it to false if you have more to do —
+  another distinct part of the instruction still unaddressed, or something you want to
+  verify elsewhere in the document — and you will automatically get another turn to
+  continue, with full knowledge of what you already staged. Set "done": true once the
+  instruction is FULLY satisfied. Prefer setting done:false over trying to cram an
+  entire complex, multi-part instruction into a single pass.
+- On a continuation turn, first genuinely SELF-CHECK your own prior hunks in this run
+  against the instruction and against each other (no contradictions, no overlapping
+  edits, citations still sound) before deciding whether anything more is needed. If
+  everything already staged is correct and complete, call stage_changes again with an
+  empty hunks array and done:true — that is a valid, expected way to finish.
+- There is a hard cap on how many turns you get, so do not pad with unnecessary
+  continuations — set done:true as soon as the instruction is genuinely complete.
+
+You must respond by calling exactly one tool per turn: stage_changes (when you can produce concrete edits, or to confirm completion) or ask_clarifying_question (when you are missing a required fact).`;
 
 export const TOOLS: Anthropic.Tool[] = [
   {
@@ -60,8 +75,13 @@ export const TOOLS: Anthropic.Tool[] = [
             required: ["oldText", "contextBefore", "contextAfter", "reasoning", "newText"],
           },
         },
+        done: {
+          type: "boolean",
+          description:
+            "true if this fully completes the instruction (may be paired with an empty hunks array if a prior turn already covered everything). false if you have more distinct changes to make — you will automatically get another turn with full knowledge of what you've already staged.",
+        },
       },
-      required: ["checklist", "hunks"],
+      required: ["checklist", "hunks", "done"],
     },
   },
   {

@@ -1,14 +1,41 @@
 import * as Y from "yjs";
 import { LeveldbPersistence } from "y-leveldb";
 import { snapshotText } from "./mutations.js";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 
 /**
  * One gc-disabled Y.Doc per document, kept warm in memory and persisted to
  * y-leveldb. gc:false is REQUIRED so version-history snapshots (Phase 5) can
  * reconstruct past states — see docs/phase-0-findings.md.
+ *
+ * A relative YJS_DATA_DIR resolves against process.cwd() — which is NOT
+ * stable across how this monorepo gets invoked: `npm run dev -w server` runs
+ * with cwd=server/, but an ad-hoc `tsx`/`node` script from the repo root (or
+ * the seed script, or a one-off debug invocation) resolves the SAME relative
+ * path against a DIFFERENT directory. That silently produces two unrelated
+ * leveldb stores — real content written by one process looks "empty" to
+ * another, with no error. Anchor a relative path to the server package root
+ * instead (found by walking up from this file to the nearest package.json —
+ * robust to running from source, src/yjs/, or compiled, dist/src/yjs/), so
+ * every entry point agrees on one real directory. An absolute YJS_DATA_DIR
+ * (if ever set) is still honored as-is.
  */
+function findServerRoot(startDir: string): string {
+  let dir = startDir;
+  for (let i = 0; i < 6; i++) {
+    if (existsSync(join(dir, "package.json"))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return startDir; // fallback: shouldn't happen inside this package
+}
 
-const DATA_DIR = process.env.YJS_DATA_DIR ?? "./.yjs-data";
+const serverRoot = findServerRoot(dirname(fileURLToPath(import.meta.url)));
+const rawDataDir = process.env.YJS_DATA_DIR ?? "./.yjs-data";
+const DATA_DIR = isAbsolute(rawDataDir) ? rawDataDir : resolve(serverRoot, rawDataDir);
 const persistence = new LeveldbPersistence(DATA_DIR);
 
 interface Entry {

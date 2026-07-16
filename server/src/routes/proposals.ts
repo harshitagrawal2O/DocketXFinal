@@ -11,7 +11,7 @@ import {
   reconcileOverlaps,
 } from "../proposals/service.js";
 import { currentRangeOffsets } from "../yjs/mutations.js";
-import { getDoc } from "../yjs/docStore.js";
+import { whenLoaded } from "../yjs/docStore.js";
 import { saveVersion } from "./versions.js";
 
 export const proposalsRouter = Router();
@@ -35,7 +35,7 @@ proposalsRouter.post("/proposals/:pid/accept", requireCap("review", docIdForProp
     const result = await acceptProposal(req.params.pid!, { userId: req.user!.id, name: req.user!.name });
     // Flip other runs' hunks that overlapped the newly-accepted range.
     if (result.status === "accepted" || result.status === "edited_accepted") {
-      const range = currentRangeOffsets(getDoc(p.documentId), result.anchorStart, result.anchorEnd);
+      const range = currentRangeOffsets(await whenLoaded(p.documentId), result.anchorStart, result.anchorEnd);
       if (range) await reconcileOverlaps(p.documentId, range);
       // Automatic version snapshot on every accepted agent change (Phase 5).
       await saveVersion(p.documentId, `Auto: accepted change`, true, { userId: req.user!.id, name: req.user!.name });

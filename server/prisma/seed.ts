@@ -2,7 +2,7 @@ import "../src/loadEnv.js";
 import { PrismaClient, Prisma } from "@prisma/client";
 import * as Y from "yjs";
 import { getDoc, whenLoaded, persistence } from "../src/yjs/docStore.js";
-import { getFragment } from "../src/yjs/mutations.js";
+import { getFragment, snapshotText } from "../src/yjs/mutations.js";
 import { flattenFragment, anchorAtOffset, locateText } from "../src/yjs/anchors.js";
 import { BUILTIN_TEMPLATES } from "../src/templates/builtin.js";
 
@@ -206,8 +206,13 @@ async function main(): Promise<void> {
   //        persists the SAME content the WS server will serve. ---
   const doc = await whenLoaded(DOC_ID);
   const frag = getFragment(doc);
-  if (frag.length === 0) {
+  // Check actual TEXT length, not frag.length (child-node count) — a doc can
+  // have paragraph element shells with no text inside them (e.g. left behind
+  // by a rollback/edit during dev testing), which frag.length alone can't see.
+  const hasRealText = snapshotText(doc).trim().length > 0;
+  if (!hasRealText) {
     doc.transact(() => {
+      if (frag.length > 0) frag.delete(0, frag.length); // clear empty shells first
       for (const p of CONTRACT) {
         const el = new Y.XmlElement("paragraph");
         frag.insert(frag.length, [el]);

@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../db.js";
-import { getDoc } from "../yjs/docStore.js";
+import { whenLoaded } from "../yjs/docStore.js";
 import { applyAccept, currentRangeOffsets, rangesOverlap } from "../yjs/mutations.js";
 import { upsertProposal } from "./broadcast.js";
 import type { Citation, DiffProposal, ProposalStatus } from "@docket/shared";
@@ -75,7 +75,10 @@ export async function acceptProposal(
     const isEdit = opts.editedText !== undefined;
     const text = isEdit ? opts.editedText! : row.newText;
 
-    const doc = getDoc(row.documentId);
+    // getDoc() alone can race the async leveldb load on first access in this
+    // process — a false "anchors don't resolve" would wrongly flip a valid
+    // proposal to outdated instead of applying it. Await the load.
+    const doc = await whenLoaded(row.documentId);
     const ok = applyAccept(doc, row.anchorStart, row.anchorEnd, text, "viki-accept");
     if (!ok) {
       // Anchors no longer resolve — treat as outdated rather than corrupt text.
@@ -144,7 +147,7 @@ export async function markOutdatedForEdit(
   documentId: string,
   editRange: { start: number; end: number },
 ): Promise<DiffProposal[]> {
-  const doc = getDoc(documentId);
+  const doc = await whenLoaded(documentId);
   const staged = await prisma.diffProposal.findMany({
     where: { documentId, status: "staged" },
   });
