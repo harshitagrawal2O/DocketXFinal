@@ -70,7 +70,11 @@ async function judge(brief: string, bodyHtml: string): Promise<{ completeness: n
 }
 
 async function main(): Promise<void> {
-  const catalog = await listTemplates("seed-user-priya");
+  // Eval runs against the seed user, whose bootstrap organization has no
+  // databaseUrlEnc of its own — its tenant data lives on this same DATABASE_URL
+  // (see schema.prisma's header), so the control-plane `prisma` client doubles
+  // as the tenant client here.
+  const catalog = await listTemplates(prisma, "seed-user-priya");
   const rows: { case: string; c: number; f: number; h: number; notes: string }[] = [];
 
   for (const ec of CASES) {
@@ -79,10 +83,10 @@ async function main(): Promise<void> {
       console.log(`[eval] no template matches ${ec.templateMatch} — skipping`);
       continue;
     }
-    const template = await getTemplate(match.id, "seed-user-priya");
+    const template = await getTemplate(prisma, match.id, "seed-user-priya");
     if (!template) continue;
     console.log(`[eval] generating: ${template.title} …`);
-    const doc = await personalizeDocument(template, ec.brief);
+    const doc = await personalizeDocument({ tenantDb: prisma, userId: "seed-user-priya" }, template, ec.brief);
     const s = await judge(ec.brief, doc.bodyHtml);
     rows.push({ case: template.title, c: s.completeness, f: s.faithfulness, h: s.honesty, notes: s.notes });
     console.log(`   completeness=${s.completeness} faithfulness=${s.faithfulness} honesty=${s.honesty}`);

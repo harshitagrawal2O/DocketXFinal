@@ -1,4 +1,25 @@
 // Docket v2 data model. Neon Postgres + Prisma (fixed stack).
+//
+// CONTROL PLANE vs TENANT PLANE: this file declares every model with ONE
+// Prisma Client class, but at runtime two DIFFERENT kinds of client
+// instances query it against two DIFFERENT physical databases:
+//   - the CONTROL-PLANE client (server/src/db.ts's `prisma`, pointed at
+//     DATABASE_URL) — User, Organization, Invite, Session. Shared by the
+//     whole platform.
+//   - a TENANT client per organization (server/src/tenantDb.ts's
+//     `getTenantClient`, pointed at that org's OWN Neon connection string,
+//     Organization.databaseUrlEnc) — Document, DocumentMember, DiffProposal,
+//     AuditEvent, Version, Template, Batch, UsageEvent, AgentTurn. This is
+//     what "separate database per organization" means in this product.
+//
+// Because tenant-plane rows can live in a PHYSICALLY DIFFERENT database than
+// the User table, there is NO Prisma @relation / foreign key from any
+// tenant-plane model to User — Postgres FK constraints cannot cross
+// databases. Anywhere a user needs to be identified from a tenant-plane row,
+// the id is a plain unconstrained String, denormalized alongside a
+// name/email/color snapshot captured at write time (DocumentMember already
+// needed this; AuditEvent/Version already did this for the same reason
+// before organizations existed at all).
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,34 +30,98 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id           String            @id @default(cuid())
-  email        String            @unique
-  name         String
-  passwordHash String?
-  color        String            @default("#4f46e5")
-  createdAt    DateTime          @default(now())
+// ============================================================================
+// CONTROL PLANE — always queried via server/src/db.ts's `prisma`.
+// ============================================================================
 
-  memberships  DocumentMember[]
-  documents    Document[]        @relation("DocumentOwner")
-  auditEvents  AuditEvent[]
-  versions     Version[]
-  templates    Template[]        @relation("TemplateOwner")
-  sessions     Session[]
+model Organization {
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  // AES-256-GCM ciphertext (server/src/util/crypto.ts). Null = this org runs
+  // on the platform's own ANTHROPIC_API_KEY (dev/bootstrap fallback).
+  anthropicApiKeyEnc  String?
+  // AES-256-GCM ciphertext of this org's OWN Neon connection string. Null =
+  // this org's tenant data lives on the platform's own DATABASE_URL (the
+  // default/bootstrap organization uses this so existing data isn't moved).
+  databaseUrlEnc      String?
+  // Raw input+output tokens remaining, deducted 1:1 from UsageEvent as Viki
+  // runs happen. The admin UI displays balance/1000 as "credits". Defaults to
+  // a free-trial allocation (1000 credits) so a brand-new signup can try
+  // Viki immediately, without an admin having to top up first.
+  creditBalanceTokens Int      @default(1000000)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  members User[]
+  invites Invite[]
 }
 
+// A pending invitation into an organization. The admin generates one (email +
+// role); the accept link carries `token`; there is no email-sending
+// infrastructure in this project yet, so the admin shares the link manually.
+model Invite {
+  id              String       @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email           String
+  role            String // admin | member
+  token           String       @unique
+  invitedByUserId String?
+  invitedByName   String?
+  acceptedAt      DateTime?
+  expiresAt       DateTime
+  createdAt       DateTime     @default(now())
+
+  @@index([organizationId])
+}
+
+model User {
+  id             String        @id @default(cuid())
+  email          String        @unique
+  name           String
+  passwordHash   String?
+  color          String        @default("#4f46e5")
+  // Null only very briefly between register() and org-assignment — every
+  // real user ends up in exactly one organization (as its sole admin if they
+  // signed up fresh, or as a member if they came through an invite link).
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  orgRole        String? // admin | member — ORG-level role, distinct from the per-document Role in packages/shared/src/roles.ts
+  createdAt      DateTime      @default(now())
+
+  sessions Session[]
+}
+
+// Persistent auth session (survives restarts, unlike an in-memory map).
+model Session {
+  token     String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// TENANT PLANE — always queried via a per-org client from server/src/tenantDb.ts.
+// Every model below is self-contained relative to the others in this section
+// (all coexist in the SAME physical database), but has NO relation to User.
+// ============================================================================
+
 model Document {
-  id        String   @id @default(cuid())
-  title     String
-  kind      String   @default("contract") // contract | opinion | filing | memo
-  ownerId   String
-  owner     User     @relation("DocumentOwner", fields: [ownerId], references: [id])
+  id      String @id @default(cuid())
+  title   String
+  kind    String @default("contract") // contract | opinion | filing | memo
+  ownerId String // control-plane User id — no cross-database FK.
   // When generated from a template, the instantiated HTML the client seeds into
   // the (empty) Yjs doc on first open. Cleared conceptually once seeded.
   initialHtml String?
   templateId  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   members   DocumentMember[]
   proposals DiffProposal[]
@@ -49,8 +134,12 @@ model DocumentMember {
   id         String   @id @default(cuid())
   documentId String
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  userId     String // control-plane User id — no cross-database FK.
+  // Denormalized at membership-creation time so this org's own document
+  // metadata never needs a live join into the control-plane database.
+  userName   String
+  userEmail  String
+  userColor  String
   role       String // owner | editor | commenter | viewer
   createdAt  DateTime @default(now())
 
@@ -58,24 +147,24 @@ model DocumentMember {
 }
 
 model DiffProposal {
-  id               String    @id @default(cuid())
-  documentId       String
-  document         Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  agentRunId       String
+  id         String @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  agentRunId String
 
   // Serialized Yjs RELATIVE positions (base64). Never absolute offsets.
-  anchorStart      String
-  anchorEnd        String
+  anchorStart String
+  anchorEnd   String
 
-  oldText          String
-  newText          String
-  editedText       String?
+  oldText    String
+  newText    String
+  editedText String?
 
-  reasoning        String
-  citations        Json      @default("[]")
+  reasoning String
+  citations Json   @default("[]")
 
-  status           String    @default("staged")
-  hunkIndex        Int       @default(0)
+  status    String @default("staged")
+  hunkIndex Int    @default(0)
 
   createdAt        DateTime  @default(now())
   resolvedAt       DateTime?
@@ -92,8 +181,7 @@ model AuditEvent {
   documentId String
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   type       String
-  userId     String?
-  user       User?    @relation(fields: [userId], references: [id])
+  userId     String? // control-plane User id — no cross-database FK.
   userName   String?
   proposalId String?
   agentRunId String?
@@ -103,37 +191,25 @@ model AuditEvent {
   @@index([documentId, createdAt])
 }
 
-// Persistent auth session (survives restarts, unlike an in-memory map).
-model Session {
-  token     String   @id
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([expiresAt])
-}
-
 // A durable batch of case-personalised documents generated via the queue.
 model Batch {
-  id            String   @id @default(cuid())
-  ownerId       String
-  templateId    String
-  titlePattern  String
-  total         Int
-  done          Int      @default(0)
-  failed        Int      @default(0)
-  status        String   @default("running") // running | complete | failed
-  documentIds   Json     @default("[]")
-  errors        Json     @default("[]")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  ownerId      String
+  templateId   String
+  titlePattern String
+  total        Int
+  done         Int      @default(0)
+  failed       Int      @default(0)
+  status       String   @default("running") // running | complete | failed
+  documentIds  Json     @default("[]")
+  errors       Json     @default("[]")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([ownerId, createdAt])
 }
 
-// Per-call LLM usage for cost metering + billing. NEVER stores prompt content.
+// Per-call LLM usage for cost metering + credit deduction. NEVER stores prompt content.
 model UsageEvent {
   id           String   @id @default(cuid())
   userId       String?
@@ -153,7 +229,6 @@ model UsageEvent {
 model Template {
   id          String   @id @default(cuid())
   ownerId     String?
-  owner       User?    @relation("TemplateOwner", fields: [ownerId], references: [id])
   title       String
   category    String   @default("other")
   kind        String   @default("contract")
@@ -187,16 +262,15 @@ model AgentTurn {
 
 // Named Yjs snapshots (gc disabled so history survives). Rollback creates a new version.
 model Version {
-  id           String   @id @default(cuid())
-  documentId   String
-  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  name         String
-  auto         Boolean  @default(false)
-  snapshot     Bytes // encoded Yjs snapshot (Y.encodeSnapshot)
-  createdByUserId String?
-  createdBy    User?    @relation(fields: [createdByUserId], references: [id])
-  createdByName String?
-  createdAt    DateTime @default(now())
+  id              String   @id @default(cuid())
+  documentId      String
+  document        Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  name            String
+  auto            Boolean  @default(false)
+  snapshot        Bytes // encoded Yjs snapshot (Y.encodeSnapshot)
+  createdByUserId String? // control-plane User id — no cross-database FK.
+  createdByName   String?
+  createdAt       DateTime @default(now())
 
   @@index([documentId, createdAt])
 }

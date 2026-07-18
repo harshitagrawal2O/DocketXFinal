@@ -89,8 +89,18 @@ async function resolveUser(req: Request): Promise<AuthedUser | null> {
   return { id: u.id, name: u.name, email: u.email, color: u.color };
 }
 
+export interface AuthedOrg {
+  id: string;
+  name: string;
+  role: "admin" | "member";
+}
+
 export interface AuthedRequest extends Request {
   user?: AuthedUser;
+  /** Set by attachOrg (server/src/auth/org.ts), which always runs right after attachUser. */
+  org?: AuthedOrg;
+  /** A PrismaClient pointed at THIS request's organization's own database — see server/src/tenantDb.ts. */
+  tenantDb?: import("@prisma/client").PrismaClient;
 }
 
 export async function attachUser(req: AuthedRequest, _res: Response, next: NextFunction): Promise<void> {

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { prisma } from "../db.js";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
+import { requireTenantDb, requireCredits } from "../auth/org.js";
 import { getRole, requireCap } from "../auth/roles.js";
 import { requireLLM } from "../llm/availability.js";
 import { rateLimit } from "../middleware/rateLimit.js";
@@ -16,10 +16,11 @@ export const agentRunsRouter = Router();
 // Persistent conversation history for a document (spans separate runs).
 // Any member may read it — it's informational, same trust level as the
 // activity/audit feed, not gated behind run_agent like starting a new run.
-agentRunsRouter.get("/documents/:id/agent-turns", requireAuth, async (req: AuthedRequest, res) => {
-  const role = await getRole(req.params.id!, req.user!.id);
+agentRunsRouter.get("/documents/:id/agent-turns", requireAuth, requireTenantDb, async (req: AuthedRequest, res) => {
+  const db = req.tenantDb!;
+  const role = await getRole(db, req.params.id!, req.user!.id);
   if (!role) return res.status(403).json({ error: "Not a member of this document" });
-  const rows = await prisma.agentTurn.findMany({
+  const rows = await db.agentTurn.findMany({
     where: { documentId: req.params.id! },
     orderBy: { createdAt: "asc" },
   });
@@ -37,9 +38,11 @@ agentRunsRouter.get("/documents/:id/agent-turns", requireAuth, async (req: Authe
 agentRunsRouter.post(
   "/documents/:id/agent-runs",
   requireAuth,
+  requireTenantDb,
   runLimit,
   requireLLM,
   requireCap("run_agent"),
+  requireCredits,
   async (req: AuthedRequest, res) => {
     const body = req.body as StartAgentRunRequest;
     if (!body?.instruction) return res.status(400).json({ error: "instruction required" });
@@ -54,7 +57,7 @@ agentRunsRouter.post(
     }
 
     const runId = createId("run");
-    await prisma.auditEvent.create({
+    await req.tenantDb!.auditEvent.create({
       data: { documentId: req.params.id!, type: "agent_run_started", userId: req.user!.id, userName: req.user!.name, agentRunId: runId, detail: { scope: body.scope } },
     });
 
@@ -63,6 +66,8 @@ agentRunsRouter.post(
       documentId: req.params.id!,
       userId: req.user!.id,
       userName: req.user!.name,
+      tenantDb: req.tenantDb!,
+      organizationId: req.org!.id,
       history: [],
       instruction: body.instruction,
       scope: body.scope,

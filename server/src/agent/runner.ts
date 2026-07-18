@@ -1,7 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import * as Y from "yjs";
 import { createId } from "../util/id.js";
-import { prisma } from "../db.js";
 import { whenLoaded } from "../yjs/docStore.js";
 import { flattenFragment, anchorAtOffset, resolveAnchor, locateText } from "../yjs/anchors.js";
 import { getFragment } from "../yjs/mutations.js";
@@ -15,6 +14,7 @@ import { emit, endRun, type ActiveRun } from "./runManager.js";
 import { runVikiTurn } from "./llmProvider.js";
 import { loadRecentTurns, recordTurn, summarizeAssistantTurn } from "./conversation.js";
 import { searchFirmDocuments, readFirmDocument } from "./tools/firmDocuments.js";
+import { getOrgUserIds } from "../auth/org.js";
 import type { Citation, ChecklistItem } from "@docket/shared";
 import type { Prisma } from "@prisma/client";
 
@@ -86,11 +86,12 @@ async function runInfoTool(
   input: unknown,
   run: ActiveRun,
   currentDocumentId: string,
+  orgUserIds: string[],
 ): Promise<{ toolResult: string; summary: string }> {
   if (name === "search_documents") {
     const { query } = (input ?? {}) as { query?: string };
     const q = (query ?? "").trim();
-    const hits = await searchFirmDocuments(run.userId, currentDocumentId, q);
+    const hits = await searchFirmDocuments(run.tenantDb, orgUserIds, currentDocumentId, q);
     const summary = hits.length > 0
       ? `Searching your other documents for "${q}" — ${hits.length} result(s).`
       : `Searching your other documents for "${q}" — no matches.`;
@@ -102,7 +103,7 @@ async function runInfoTool(
   }
 
   const { documentId } = (input ?? {}) as { documentId?: string };
-  const doc = documentId ? await readFirmDocument(run.userId, documentId) : null;
+  const doc = documentId ? await readFirmDocument(run.tenantDb, orgUserIds, documentId) : null;
   if (!doc) {
     return {
       toolResult: "That document was not found, or you don't have access to it.",
@@ -180,7 +181,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
   // first. Distinct from run.history below, which only carries THIS run's own
   // in-progress thread (populated only when resuming after a clarifying
   // question) — persisted turns come from runs that already fully ended.
-  const persistedTurns = await loadRecentTurns(documentId);
+  const persistedTurns = await loadRecentTurns(run.tenantDb, documentId);
 
   // Record the human side of this turn once, up front: on a fresh run that's
   // the instruction; on a resume (answering a clarifying question) it's the
@@ -188,13 +189,24 @@ export async function runAgent(run: ActiveRun): Promise<void> {
   // us, not the (already-recorded, on the original run) original instruction.
   const isFreshRun = run.history.length === 0;
   const humanTurnText = isFreshRun ? instruction : (run.history[run.history.length - 1]?.content ?? instruction);
-  await recordTurn(documentId, runId, "user", humanTurnText);
+  await recordTurn(run.tenantDb, documentId, runId, "user", humanTurnText);
 
   let messages: Anthropic.MessageParam[] = [
     ...persistedTurns,
     ...run.history.map((h) => ({ role: h.role, content: h.content })),
     { role: "user", content: userContent },
   ];
+
+  // Fetched lazily, once, only if Viki actually calls a research tool this
+  // run — the org's own member ids, used to scope search_documents/
+  // read_document to THIS firm even when its tenant data shares the
+  // platform's default database with other organizations (see
+  // firmDocuments.ts and auth/org.ts's getOrgUserIds).
+  let orgUserIdsCache: string[] | null = null;
+  const getCachedOrgUserIds = async (): Promise<string[]> => {
+    if (!orgUserIdsCache) orgUserIdsCache = await getOrgUserIds(run.organizationId);
+    return orgUserIdsCache;
+  };
 
   // Persisted DiffProposal ordering — continues across iterations, never resets.
   let globalHunkIndex = 0;
@@ -256,6 +268,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
         }
 
         const result = await runVikiTurn({
+          organizationId: run.organizationId,
           model: MODEL,
           system: SYSTEM_PROMPT,
           tools,
@@ -291,13 +304,14 @@ export async function runAgent(run: ActiveRun): Promise<void> {
             }
           },
         });
-        await recordUsage({ kind: "agent_run", model: MODEL, usage: result.usage, userId: run.userId, documentId });
+        await recordUsage({ tenantDb: run.tenantDb, organizationId: run.organizationId, kind: "agent_run", model: MODEL, usage: result.usage, userId: run.userId, documentId });
 
         const tu = result.toolUse;
         if (!tu) throw new Error("Viki returned no tool call");
 
         if (tu.name === "search_documents" || tu.name === "read_document") {
-          const { toolResult, summary } = await runInfoTool(tu.name, tu.input, run, documentId);
+          const orgUserIds = await getCachedOrgUserIds();
+          const { toolResult, summary } = await runInfoTool(tu.name, tu.input, run, documentId, orgUserIds);
           emit(runId, { type: "tool_call", tool: tu.name, detail: summary });
           messages = [
             ...messages,
@@ -352,7 +366,11 @@ export async function runAgent(run: ActiveRun): Promise<void> {
           verified: null,
         }));
         // Deterministic registry pre-check + adversarial grounding, fail closed.
-        const verification = await verifyHunkCitationsFull(rawCitations, h.newText, run.userId);
+        const verification = await verifyHunkCitationsFull(rawCitations, h.newText, {
+          tenantDb: run.tenantDb,
+          organizationId: run.organizationId,
+          userId: run.userId,
+        });
         if (!verification.ok) {
           const reason = verification.blockedReason ?? "Citation verification failed";
           await audit(documentId, "citation_blocked", run, { agentRunId: runId, detail: { hunkIndex: k, reason } });
@@ -392,7 +410,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
           continue;
         }
 
-        const row = await prisma.diffProposal.create({
+        const row = await run.tenantDb.diffProposal.create({
           data: {
             id: pid,
             documentId,
@@ -477,7 +495,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
       emit(runId, { type: "error", message: (err as Error).message });
     }
   } finally {
-    if (assistantSummary) await recordTurn(documentId, runId, "assistant", assistantSummary);
+    if (assistantSummary) await recordTurn(run.tenantDb, documentId, runId, "assistant", assistantSummary);
     endRun(runId, { awaitingAnswer });
   }
 }
@@ -488,7 +506,7 @@ async function audit(
   run: ActiveRun,
   extra: { proposalId?: string; agentRunId?: string; detail?: Record<string, string | number | boolean | null> },
 ): Promise<void> {
-  await prisma.auditEvent.create({
+  await run.tenantDb.auditEvent.create({
     data: {
       documentId,
       type,

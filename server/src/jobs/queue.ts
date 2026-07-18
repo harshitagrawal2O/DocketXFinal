@@ -1,8 +1,9 @@
 import PgBoss from "pg-boss";
 import { prisma } from "../db.js";
+import { getTenantClient } from "../tenantDb.js";
 import { getTemplate, generateDocumentFromHtml, renderTitle } from "../templates/service.js";
 import { personalizeDocument } from "../agent/templateAgent.js";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 
 /**
  * Durable, Postgres-backed job queue (§2a). Heavy fan-out — a batch of
@@ -12,6 +13,11 @@ import type { Prisma } from "@prisma/client";
  *
  * Runs in-process by default (startWorkers from index.ts). For horizontal
  * scale, run scripts/worker.ts as a separate process and set WORKER_MODE=external.
+ *
+ * Jobs carry `organizationId`, not a live tenant PrismaClient — a client
+ * instance can't survive serialization into the durable queue (or a restart
+ * between enqueue and execution). Each handler resolves the org's tenant
+ * client fresh via getTenantClient when the job actually runs.
  */
 
 const QUEUE_BATCH_ITEM = "batch-generate-item";
@@ -29,13 +35,25 @@ async function getBoss(): Promise<PgBoss> {
   return boss;
 }
 
+interface JobOwner {
+  id: string;
+  name: string;
+  email: string;
+  color: string;
+}
+
 export interface BatchItemJob {
   batchId: string;
+  organizationId: string;
   templateId: string;
   documentTitle: string;
   brief: string;
-  ownerId: string;
-  ownerName: string;
+  owner: JobOwner;
+}
+
+async function tenantDbForOrg(organizationId: string): Promise<PrismaClient> {
+  const org = await prisma.organization.findUniqueOrThrow({ where: { id: organizationId } });
+  return getTenantClient({ id: org.id, databaseUrlEnc: org.databaseUrlEnc });
 }
 
 /** Create a Batch row and enqueue one job per row. Returns the batchId. */
@@ -43,13 +61,14 @@ export async function enqueueBriefBatch(params: {
   templateId: string;
   titlePattern: string;
   briefs: string[];
-  ownerId: string;
-  ownerName: string;
+  organizationId: string;
+  owner: JobOwner;
 }): Promise<string> {
   const b = await getBoss();
-  const batch = await prisma.batch.create({
+  const tenantDb = await tenantDbForOrg(params.organizationId);
+  const batch = await tenantDb.batch.create({
     data: {
-      ownerId: params.ownerId,
+      ownerId: params.owner.id,
       templateId: params.templateId,
       titlePattern: params.titlePattern,
       total: params.briefs.length,
@@ -60,11 +79,11 @@ export async function enqueueBriefBatch(params: {
     const documentTitle = renderTitle(params.titlePattern, { brief });
     const job: BatchItemJob = {
       batchId: batch.id,
+      organizationId: params.organizationId,
       templateId: params.templateId,
       documentTitle,
       brief,
-      ownerId: params.ownerId,
-      ownerName: params.ownerName,
+      owner: params.owner,
     };
     await b.send(QUEUE_BATCH_ITEM, job, { retryLimit: 2, retryDelay: 5 });
   }
@@ -72,22 +91,27 @@ export async function enqueueBriefBatch(params: {
 }
 
 async function handleBatchItem(job: BatchItemJob): Promise<void> {
-  const template = await getTemplate(job.templateId, job.ownerId);
+  const tenantDb = await tenantDbForOrg(job.organizationId);
+  const template = await getTemplate(tenantDb, job.templateId, job.owner.id);
   if (!template) throw new Error(`Template ${job.templateId} not found`);
-  const personalized = await personalizeDocument(template, job.brief, job.ownerId);
+  const personalized = await personalizeDocument(
+    { tenantDb, organizationId: job.organizationId, userId: job.owner.id },
+    template,
+    job.brief,
+  );
   const documentId = await generateDocumentFromHtml(
+    tenantDb,
     personalized.bodyHtml,
     job.documentTitle,
     template.kind,
     template.id,
-    job.ownerId,
-    job.ownerName,
+    job.owner,
     personalized.personalizationNotes,
   );
-  const current = await prisma.batch.findUnique({ where: { id: job.batchId } });
+  const current = await tenantDb.batch.findUnique({ where: { id: job.batchId } });
   const ids = ((current?.documentIds as string[]) ?? []).concat(documentId);
   const done = (current?.done ?? 0) + 1;
-  await prisma.batch.update({
+  await tenantDb.batch.update({
     where: { id: job.batchId },
     data: {
       done,
@@ -97,12 +121,13 @@ async function handleBatchItem(job: BatchItemJob): Promise<void> {
   });
 }
 
-async function recordBatchFailure(batchId: string, message: string): Promise<void> {
-  const current = await prisma.batch.findUnique({ where: { id: batchId } });
+async function recordBatchFailure(organizationId: string, batchId: string, message: string): Promise<void> {
+  const tenantDb = await tenantDbForOrg(organizationId);
+  const current = await tenantDb.batch.findUnique({ where: { id: batchId } });
   if (!current) return;
   const errors = ((current.errors as string[]) ?? []).concat(message);
   const failed = current.failed + 1;
-  await prisma.batch.update({
+  await tenantDb.batch.update({
     where: { id: batchId },
     data: {
       failed,
@@ -122,7 +147,7 @@ export async function startWorkers(): Promise<void> {
     } catch (err) {
       // Never log document content — only the message.
       console.error("[queue] batch item failed:", (err as Error).message);
-      await recordBatchFailure(job.data.batchId, (err as Error).message);
+      await recordBatchFailure(job.data.organizationId, job.data.batchId, (err as Error).message);
       throw err; // let pg-boss apply retry policy
     }
   });

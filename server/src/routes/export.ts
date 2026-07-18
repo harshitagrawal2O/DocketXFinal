@@ -1,10 +1,11 @@
 import { Router } from "express";
 import HTMLtoDOCX from "html-to-docx";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
+import { requireTenantDb } from "../auth/org.js";
 import { getRole } from "../auth/roles.js";
 
 export const exportRouter = Router();
-exportRouter.use(requireAuth);
+exportRouter.use(requireAuth, requireTenantDb);
 
 /**
  * Convert the current document HTML (sent by the client, which owns the live
@@ -12,7 +13,7 @@ exportRouter.use(requireAuth);
  * Save-as-PDF are handled client-side via a print stylesheet.
  */
 exportRouter.post("/documents/:id/export/docx", async (req: AuthedRequest, res) => {
-  const role = await getRole(req.params.id!, req.user!.id);
+  const role = await getRole(req.tenantDb!, req.params.id!, req.user!.id);
   if (!role) return res.status(403).json({ error: "Not a member" });
 
   const { html, title } = req.body ?? {};

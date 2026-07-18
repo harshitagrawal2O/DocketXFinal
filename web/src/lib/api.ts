@@ -1,7 +1,17 @@
 import type {
+  AddCreditsRequest,
+  AdminUsageSummary,
   AgentTurnDTO,
   AnalyzeTemplateRequest,
   AuditPage,
+  CreateInviteRequest,
+  InviteDTO,
+  OrganizationDTO,
+  OrgMemberDTO,
+  SetApiKeyRequest,
+  SetDatabaseRequest,
+  UpdateMemberRoleRequest,
+  UpdateOrgProfileRequest,
   DiffProposal,
   DocumentSummary,
   DraftTemplateRequest,
@@ -78,10 +88,10 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
-  register: (email: string, name: string, password: string) =>
+  register: (email: string, name: string, password: string, inviteToken?: string) =>
     req<SessionUser>("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, name, password }),
+      body: JSON.stringify({ email, name, password, inviteToken }),
     }),
   logout: () => req<{ ok: true }>("/api/auth/logout", { method: "POST" }),
 };
@@ -253,6 +263,28 @@ export const batchesApi = {
 // ---- Usage & billing ----
 export const usageApi = {
   summary: (days = 30) => req<UsageSummary>(`/api/usage/summary?days=${days}`),
+};
+
+// ---- Admin portal (org-admin only) ----
+export const adminApi = {
+  organization: () => req<OrganizationDTO>("/api/admin/organization"),
+  updateOrganization: (body: UpdateOrgProfileRequest) =>
+    req<OrganizationDTO>("/api/admin/organization", { method: "PATCH", body: JSON.stringify(body) }),
+  setApiKey: (body: SetApiKeyRequest) =>
+    req<OrganizationDTO>("/api/admin/organization/api-key", { method: "PUT", body: JSON.stringify(body) }),
+  clearApiKey: () => req<OrganizationDTO>("/api/admin/organization/api-key", { method: "DELETE" }),
+  setDatabase: (body: SetDatabaseRequest) =>
+    req<OrganizationDTO>("/api/admin/organization/database", { method: "PUT", body: JSON.stringify(body) }),
+  clearDatabase: () => req<OrganizationDTO>("/api/admin/organization/database", { method: "DELETE" }),
+  members: () => req<OrgMemberDTO[]>("/api/admin/members"),
+  updateMemberRole: (userId: string, body: UpdateMemberRoleRequest) =>
+    req<OrgMemberDTO>(`/api/admin/members/${userId}`, { method: "PATCH", body: JSON.stringify(body) }),
+  removeMember: (userId: string) => req<{ ok: true }>(`/api/admin/members/${userId}`, { method: "DELETE" }),
+  invites: () => req<InviteDTO[]>("/api/admin/invites"),
+  createInvite: (body: CreateInviteRequest) => req<InviteDTO>("/api/admin/invites", { method: "POST", body: JSON.stringify(body) }),
+  revokeInvite: (id: string) => req<{ ok: true }>(`/api/admin/invites/${id}`, { method: "DELETE" }),
+  addCredits: (body: AddCreditsRequest) => req<OrganizationDTO>("/api/admin/credits", { method: "PUT", body: JSON.stringify(body) }),
+  usage: (days = 30) => req<AdminUsageSummary>(`/api/admin/usage?days=${days}`),
 };
 
 // ---- Interactive intake (chat-first document creation) ----

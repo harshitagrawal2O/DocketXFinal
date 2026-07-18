@@ -63,4 +63,8 @@ export interface SessionUser {
   email: string;
   /** Presence color for CollaborationCursor. */
   color: string;
+  organizationId: string | null;
+  organizationName: string | null;
+  /** Org-level role — distinct from the per-document Role. Gates the Admin portal nav item. */
+  orgRole: "admin" | "member" | null;
 }

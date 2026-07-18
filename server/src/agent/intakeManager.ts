@@ -1,11 +1,21 @@
 import type Anthropic from "@anthropic-ai/sdk";
+import type { PrismaClient } from "@prisma/client";
 import type { IntakeSSEEvent } from "@docket/shared";
+
+export interface IntakeOwner {
+  id: string;
+  name: string;
+  email: string;
+  color: string;
+}
 
 /** In-memory intake chat sessions (swap for Redis/DB when scaling horizontally). */
 export interface IntakeSession {
   id: string;
-  userId: string;
-  userName: string;
+  owner: IntakeOwner;
+  /** This user's organization's own database — every document/template lookup in this session goes through it. */
+  tenantDb: PrismaClient;
+  organizationId: string;
   history: Anthropic.MessageParam[];
   subscribers: Set<(e: IntakeSSEEvent) => void>;
   buffer: IntakeSSEEvent[];
@@ -15,11 +25,12 @@ export interface IntakeSession {
 
 const sessions = new Map<string, IntakeSession>();
 
-export function createSession(id: string, userId: string, userName: string): IntakeSession {
+export function createSession(id: string, owner: IntakeOwner, tenantDb: PrismaClient, organizationId: string): IntakeSession {
   const s: IntakeSession = {
     id,
-    userId,
-    userName,
+    owner,
+    tenantDb,
+    organizationId,
     history: [],
     subscribers: new Set(),
     buffer: [],

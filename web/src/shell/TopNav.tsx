@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "@/session/SessionContext";
 
-export type NavView = "dashboard" | "templates" | "settings";
+export type NavView = "dashboard" | "templates" | "settings" | "admin";
 
 interface Props {
   active: NavView;
@@ -44,13 +44,14 @@ export function TopNav({ active, onNavigate }: Props) {
             Docket
           </span>
 
-          {/* Firm/workspace switcher — cosmetic, non-functional. */}
-          <div className="hidden cursor-pointer items-center gap-1 rounded border border-outline-variant/50 bg-surface-container-low px-3 py-1.5 transition-colors hover:bg-surface-container md:flex">
-            <span className="text-label-sm uppercase text-on-surface-variant">Firm Workspace</span>
-            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">
-              unfold_more
-            </span>
-          </div>
+          {/* Real organization name — no multi-org switching yet, so this is
+              informational only, not a dropdown (a user belongs to exactly
+              one organization). */}
+          {user?.organizationName && (
+            <div className="hidden items-center gap-1 rounded border border-outline-variant/50 bg-surface-container-low px-3 py-1.5 md:flex">
+              <span className="truncate text-label-sm uppercase text-on-surface-variant">{user.organizationName}</span>
+            </div>
+          )}
 
           <div className="ml-4 hidden items-center gap-stack-md lg:flex">
             {/* "Dashboard" and "Documents" both route to the dashboard view for now. */}
@@ -73,6 +74,16 @@ export function TopNav({ active, onNavigate }: Props) {
             >
               Templates
             </button>
+            {user?.orgRole === "admin" && (
+              <button
+                type="button"
+                className={active === "admin" ? ACTIVE_LINK : INACTIVE_LINK}
+                aria-current={active === "admin" ? "page" : undefined}
+                onClick={() => onNavigate("admin")}
+              >
+                Admin
+              </button>
+            )}
           </div>
         </div>
 

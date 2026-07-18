@@ -1,21 +1,23 @@
 import { Router } from "express";
 import { prisma } from "../db.js";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
+import { requireTenantDb } from "../auth/org.js";
 import { getRole, requireCap } from "../auth/roles.js";
 import type { DocumentSummary, Role } from "@docket/shared";
 
 export const documentsRouter = Router();
 
-documentsRouter.use(requireAuth);
+documentsRouter.use(requireAuth, requireTenantDb);
 
 documentsRouter.get("/", async (req: AuthedRequest, res) => {
-  const memberships = await prisma.documentMember.findMany({
+  const db = req.tenantDb!;
+  const memberships = await db.documentMember.findMany({
     where: { userId: req.user!.id },
     include: { document: true },
     orderBy: { document: { updatedAt: "desc" } },
   });
   const docIds = memberships.map((m) => m.documentId);
-  const pending = await prisma.diffProposal.findMany({
+  const pending = await db.diffProposal.findMany({
     where: { documentId: { in: docIds }, status: { in: ["staged", "streaming"] } },
     select: { documentId: true },
     distinct: ["documentId"],
@@ -36,12 +38,20 @@ documentsRouter.get("/", async (req: AuthedRequest, res) => {
 documentsRouter.post("/", async (req: AuthedRequest, res) => {
   const { title, kind } = req.body ?? {};
   if (!title) return res.status(400).json({ error: "title required" });
-  const doc = await prisma.document.create({
+  const doc = await req.tenantDb!.document.create({
     data: {
       title,
       kind: kind ?? "contract",
       ownerId: req.user!.id,
-      members: { create: { userId: req.user!.id, role: "owner" } },
+      members: {
+        create: {
+          userId: req.user!.id,
+          userName: req.user!.name,
+          userEmail: req.user!.email,
+          userColor: req.user!.color,
+          role: "owner",
+        },
+      },
     },
   });
   const summary: DocumentSummary = {
@@ -56,11 +66,12 @@ documentsRouter.post("/", async (req: AuthedRequest, res) => {
 });
 
 documentsRouter.get("/:id", async (req: AuthedRequest, res) => {
-  const role = await getRole(req.params.id!, req.user!.id);
+  const db = req.tenantDb!;
+  const role = await getRole(db, req.params.id!, req.user!.id);
   if (!role) return res.status(403).json({ error: "Not a member" });
-  const doc = await prisma.document.findUniqueOrThrow({
+  const doc = await db.document.findUniqueOrThrow({
     where: { id: req.params.id },
-    include: { members: { include: { user: true } } },
+    include: { members: true },
   });
   return res.json({
     summary: {
@@ -71,7 +82,7 @@ documentsRouter.get("/:id", async (req: AuthedRequest, res) => {
       updatedAt: doc.updatedAt.toISOString(),
       status: "draft",
     } satisfies DocumentSummary,
-    members: doc.members.map((m) => ({ userId: m.userId, name: m.user.name, email: m.user.email, color: m.user.color, role: m.role })),
+    members: doc.members.map((m) => ({ userId: m.userId, name: m.userName, email: m.userEmail, color: m.userColor, role: m.role })),
     // Present only for template-generated docs; client seeds it into the empty
     // Yjs doc on first open (guarded so only one client seeds).
     initialHtml: doc.initialHtml ?? null,
@@ -81,14 +92,24 @@ documentsRouter.get("/:id", async (req: AuthedRequest, res) => {
 // Owner-only sharing management.
 documentsRouter.post("/:id/members", requireCap("manage_sharing"), async (req: AuthedRequest, res) => {
   const { email, role } = req.body ?? {};
+  // User lookup is control-plane (the invitee may not be in this org's tenant
+  // database at all yet) — the denormalized snapshot below is what the
+  // tenant database actually needs for display.
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return res.status(404).json({ error: "No user with that email" });
-  const member = await prisma.documentMember.upsert({
+  const member = await req.tenantDb!.documentMember.upsert({
     where: { documentId_userId: { documentId: req.params.id!, userId: user.id } },
     update: { role },
-    create: { documentId: req.params.id!, userId: user.id, role },
+    create: {
+      documentId: req.params.id!,
+      userId: user.id,
+      userName: user.name,
+      userEmail: user.email,
+      userColor: user.color,
+      role,
+    },
   });
-  await prisma.auditEvent.create({
+  await req.tenantDb!.auditEvent.create({
     data: { documentId: req.params.id!, type: "role_changed", userId: req.user!.id, userName: req.user!.name, detail: { target: user.name, role } },
   });
   return res.json({ userId: user.id, name: user.name, role: member.role });
@@ -96,27 +117,26 @@ documentsRouter.post("/:id/members", requireCap("manage_sharing"), async (req: A
 
 documentsRouter.patch("/:id/members/:userId", requireCap("manage_sharing"), async (req: AuthedRequest, res) => {
   const { role } = req.body ?? {};
-  const member = await prisma.documentMember.update({
+  const member = await req.tenantDb!.documentMember.update({
     where: { documentId_userId: { documentId: req.params.id!, userId: req.params.userId! } },
     data: { role },
-    include: { user: true },
   });
-  await prisma.auditEvent.create({
-    data: { documentId: req.params.id!, type: "role_changed", userId: req.user!.id, userName: req.user!.name, detail: { target: member.user.name, role } },
+  await req.tenantDb!.auditEvent.create({
+    data: { documentId: req.params.id!, type: "role_changed", userId: req.user!.id, userName: req.user!.name, detail: { target: member.userName, role } },
   });
-  return res.json({ userId: member.userId, name: member.user.name, role: member.role });
+  return res.json({ userId: member.userId, name: member.userName, role: member.role });
 });
 
 documentsRouter.delete("/:id/members/:userId", requireCap("manage_sharing"), async (req: AuthedRequest, res) => {
   if (req.params.userId === req.user!.id) return res.status(400).json({ error: "Owner cannot remove themself" });
-  const member = await prisma.documentMember.findUnique({
+  const db = req.tenantDb!;
+  const member = await db.documentMember.findUnique({
     where: { documentId_userId: { documentId: req.params.id!, userId: req.params.userId! } },
-    include: { user: true },
   });
   if (!member) return res.status(404).json({ error: "Not a member" });
-  await prisma.documentMember.delete({ where: { documentId_userId: { documentId: req.params.id!, userId: req.params.userId! } } });
-  await prisma.auditEvent.create({
-    data: { documentId: req.params.id!, type: "role_changed", userId: req.user!.id, userName: req.user!.name, detail: { target: member.user.name, role: "removed" } },
+  await db.documentMember.delete({ where: { documentId_userId: { documentId: req.params.id!, userId: req.params.userId! } } });
+  await db.auditEvent.create({
+    data: { documentId: req.params.id!, type: "role_changed", userId: req.user!.id, userName: req.user!.name, detail: { target: member.userName, role: "removed" } },
   });
   return res.json({ ok: true });
 });

@@ -1,30 +1,31 @@
 import { Router } from "express";
-import { prisma } from "../db.js";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
+import { requireTenantDb } from "../auth/org.js";
 import type { UsageSummary, UsageDayPoint, UsageByKind, UsageByUser } from "@docket/shared";
 
 export const usageRouter = Router();
-usageRouter.use(requireAuth);
+usageRouter.use(requireAuth, requireTenantDb);
 
 /**
- * Usage & billing aggregate (§4 metering). Scoped to the CALLER's own usage —
- * there is no firm/org model yet, so firm-wide aggregation across every member
- * would leak other users' activity. Revisit once a firm/tenant concept exists.
+ * Usage & billing aggregate (§4 metering). Scoped to the CALLER's own usage
+ * within their organization's database — see the Admin portal's org-wide
+ * credits/usage view (routes/admin.ts) for the whole-organization aggregate.
  */
 usageRouter.get("/usage/summary", async (req: AuthedRequest, res) => {
   const days = Math.min(90, Math.max(1, Number(req.query.days ?? 30)));
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   const userId = req.user!.id;
+  const db = req.tenantDb!;
 
   let events: { kind: string; inputTokens: number; outputTokens: number; createdAt: Date; userId: string | null }[];
   let documentsCreated: number;
   try {
     [events, documentsCreated] = await Promise.all([
-      prisma.usageEvent.findMany({
+      db.usageEvent.findMany({
         where: { userId, createdAt: { gte: since } },
         select: { kind: true, inputTokens: true, outputTokens: true, createdAt: true, userId: true },
       }),
-      prisma.document.count({ where: { ownerId: userId, createdAt: { gte: since } } }),
+      db.document.count({ where: { ownerId: userId, createdAt: { gte: since } } }),
     ]);
   } catch (err) {
     console.error("[usage] summary query failed:", (err as Error).message);

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
+import { requireTenantDb } from "../auth/org.js";
 import { createId } from "../util/id.js";
 import { createSession, getSession, subscribeIntake, emitIntake } from "../agent/intakeManager.js";
 import { runIntakeTurn, GREETING } from "../agent/intake.js";
@@ -8,14 +9,15 @@ import { rateLimit } from "../middleware/rateLimit.js";
 import type { IntakeMessageRequest, IntakeStartResponse } from "@docket/shared";
 
 export const intakeRouter = Router();
-intakeRouter.use(requireAuth);
+intakeRouter.use(requireAuth, requireTenantDb);
 
 const llmLimit = rateLimit({ bucket: "intake", max: 40, windowMs: 60 * 1000 });
 
 // Start a chat intake session. Viki's opening greeting is canned (no model call).
 intakeRouter.post("/intake", requireLLM, (req: AuthedRequest, res) => {
   const sessionId = createId("intake");
-  const session = createSession(sessionId, req.user!.id, req.user!.name);
+  const owner = { id: req.user!.id, name: req.user!.name, email: req.user!.email, color: req.user!.color };
+  const session = createSession(sessionId, owner, req.tenantDb!, req.org!.id);
   session.history.push({ role: "assistant", content: GREETING });
   const body: IntakeStartResponse = { sessionId, greeting: GREETING };
   return res.json(body);
@@ -24,7 +26,7 @@ intakeRouter.post("/intake", requireLLM, (req: AuthedRequest, res) => {
 // SSE stream of intake events.
 intakeRouter.get("/intake/:id/stream", (req: AuthedRequest, res) => {
   const session = getSession(req.params.id!);
-  if (!session || session.userId !== req.user!.id) return res.status(404).json({ error: "Session not found" });
+  if (!session || session.owner.id !== req.user!.id) return res.status(404).json({ error: "Session not found" });
 
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
@@ -48,7 +50,7 @@ intakeRouter.get("/intake/:id/stream", (req: AuthedRequest, res) => {
 // Send a user message; Viki responds asynchronously over the SSE stream.
 intakeRouter.post("/intake/:id/message", llmLimit, (req: AuthedRequest, res) => {
   const session = getSession(req.params.id!);
-  if (!session || session.userId !== req.user!.id) return res.status(404).json({ error: "Session not found" });
+  if (!session || session.owner.id !== req.user!.id) return res.status(404).json({ error: "Session not found" });
   const { message } = (req.body ?? {}) as IntakeMessageRequest;
   if (!message || !message.trim()) return res.status(400).json({ error: "message required" });
   if (session.busy) return res.status(409).json({ error: "Viki is still responding" });

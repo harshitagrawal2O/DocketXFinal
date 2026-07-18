@@ -1,5 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { prisma } from "../db.js";
+import type { PrismaClient } from "@prisma/client";
 
 /**
  * Persistent conversation memory (per document): distinct from ActiveRun's
@@ -16,8 +16,8 @@ import { prisma } from "../db.js";
 // entire history of a long-lived document.
 const MAX_TURNS_LOADED = 20;
 
-export async function loadRecentTurns(documentId: string): Promise<Anthropic.MessageParam[]> {
-  const rows = await prisma.agentTurn.findMany({
+export async function loadRecentTurns(tenantDb: PrismaClient, documentId: string): Promise<Anthropic.MessageParam[]> {
+  const rows = await tenantDb.agentTurn.findMany({
     where: { documentId },
     orderBy: { createdAt: "desc" },
     take: MAX_TURNS_LOADED,
@@ -26,6 +26,7 @@ export async function loadRecentTurns(documentId: string): Promise<Anthropic.Mes
 }
 
 export async function recordTurn(
+  tenantDb: PrismaClient,
   documentId: string,
   agentRunId: string | null,
   role: "user" | "assistant",
@@ -33,7 +34,7 @@ export async function recordTurn(
 ): Promise<void> {
   // Best-effort: a failure here must never break the run itself.
   try {
-    await prisma.agentTurn.create({ data: { documentId, agentRunId, role, content } });
+    await tenantDb.agentTurn.create({ data: { documentId, agentRunId, role, content } });
   } catch (err) {
     console.error(`[viki] failed to record conversation turn for ${documentId}:`, (err as Error).message);
   }

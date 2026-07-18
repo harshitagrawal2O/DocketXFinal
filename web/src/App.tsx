@@ -8,8 +8,9 @@ import { DocumentsDashboard } from "@/documents/DocumentsDashboard";
 import { DocumentWorkspace } from "@/documents/DocumentWorkspace";
 import { TemplatesView } from "@/templates/TemplatesView";
 import { SettingsShell } from "@/settings/SettingsShell";
+import { AdminShell } from "@/admin/AdminShell";
 
-type Screen = "dashboard" | "templates" | "settings";
+type Screen = "dashboard" | "templates" | "settings" | "admin";
 
 export function App() {
   const { user, loading, error } = useSession();
@@ -85,6 +86,8 @@ export function App() {
 
         {screen === "settings" ? (
           <SettingsShell />
+        ) : screen === "admin" ? (
+          user.orgRole === "admin" ? <AdminShell /> : <SettingsShell />
         ) : screen === "templates" ? (
           <TemplatesView
             onOpenDocument={(id) => {

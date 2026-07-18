@@ -1,21 +1,25 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { PrismaClient } from "@prisma/client";
 import type { TemplateDraft, TemplateDTO, TemplateVariable } from "@docket/shared";
 import { recordUsage } from "./usage.js";
 import { withLLMSlot } from "../llm/limiter.js";
+import { resolveAnthropicApiKey } from "../llm/orgApiKey.js";
+
+/** Every call here needs the caller's tenant database (for usage metering) and organization (for the org's own Anthropic key + credit deduction). */
+export interface AgentCtx {
+  tenantDb: PrismaClient;
+  organizationId?: string | null;
+  userId?: string;
+}
 
 /** All non-streaming Viki calls go through the concurrency limiter. */
-function createMessage(params: Anthropic.MessageCreateParamsNonStreaming): Promise<Anthropic.Message> {
-  return withLLMSlot(() => client().messages.create(params));
+async function createMessage(ctx: AgentCtx, params: Anthropic.MessageCreateParamsNonStreaming): Promise<Anthropic.Message> {
+  const apiKey = await resolveAnthropicApiKey(ctx.organizationId);
+  return withLLMSlot(() => new Anthropic({ apiKey }).messages.create(params));
 }
 
 const MODEL = process.env.VIKI_MODEL ?? "claude-opus-4-8";
 const WEB_SEARCH_ENABLED = process.env.VIKI_WEB_SEARCH === "true";
-
-function client(): Anthropic {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
-  return new Anthropic({ apiKey });
-}
 
 const REGISTER_TEMPLATE_TOOL: Anthropic.Tool = {
   name: "register_template",
@@ -86,8 +90,8 @@ function extractRegisterTemplate(msg: Anthropic.Message): TemplateDraft {
 }
 
 /** Turn an uploaded document into a fillable template. */
-export async function analyzeTemplate(text: string, title?: string, userId?: string): Promise<TemplateDraft> {
-  const msg = await createMessage({
+export async function analyzeTemplate(ctx: AgentCtx, text: string, title?: string): Promise<TemplateDraft> {
+  const msg = await createMessage(ctx, {
     model: MODEL,
     max_tokens: 8192,
     system: ANALYZE_SYSTEM,
@@ -100,19 +104,19 @@ export async function analyzeTemplate(text: string, title?: string, userId?: str
       },
     ],
   });
-  await recordUsage({ kind: "template_analyze", model: MODEL, usage: msg.usage, userId });
+  await recordUsage({ tenantDb: ctx.tenantDb, organizationId: ctx.organizationId, kind: "template_analyze", model: MODEL, usage: msg.usage, userId: ctx.userId });
   return extractRegisterTemplate(msg);
 }
 
 /** Draft a brand-new template from an instruction (optionally web-search-backed). */
-export async function draftTemplate(instruction: string, useWebSearch = false, userId?: string): Promise<TemplateDraft> {
+export async function draftTemplate(ctx: AgentCtx, instruction: string, useWebSearch = false): Promise<TemplateDraft> {
   const tools: Anthropic.ToolUnion[] = [REGISTER_TEMPLATE_TOOL];
   const canSearch = useWebSearch && WEB_SEARCH_ENABLED;
   if (canSearch) {
     // Anthropic server-side web search tool; executed by the API within the turn.
     tools.push({ type: "web_search_20250305", name: "web_search", max_uses: 3 } as unknown as Anthropic.ToolUnion);
   }
-  const msg = await createMessage({
+  const msg = await createMessage(ctx, {
     model: MODEL,
     max_tokens: 8192,
     system: DRAFT_SYSTEM,
@@ -121,7 +125,7 @@ export async function draftTemplate(instruction: string, useWebSearch = false, u
     tool_choice: canSearch ? { type: "auto" } : { type: "tool", name: "register_template" },
     messages: [{ role: "user", content: `Draft a template: ${instruction}` }],
   });
-  await recordUsage({ kind: "template_draft", model: MODEL, usage: msg.usage, userId });
+  await recordUsage({ tenantDb: ctx.tenantDb, organizationId: ctx.organizationId, kind: "template_draft", model: MODEL, usage: msg.usage, userId: ctx.userId });
   return extractRegisterTemplate(msg);
 }
 
@@ -146,12 +150,12 @@ const FILL_TOOL: Anthropic.Tool = {
 
 /** Fill a template's variables from a free-text case brief. */
 export async function fillTemplateFromBrief(
+  ctx: AgentCtx,
   template: Pick<TemplateDTO, "title" | "variables" | "bodyHtml">,
   brief: string,
-  userId?: string,
 ): Promise<Record<string, string>> {
   const varSpec = template.variables.map((v) => `- ${v.key} (${v.type}${v.required ? ", required" : ""}): ${v.label}${v.hint ? ` — ${v.hint}` : ""}`).join("\n");
-  const msg = await createMessage({
+  const msg = await createMessage(ctx, {
     model: MODEL,
     max_tokens: 4096,
     system:
@@ -165,7 +169,7 @@ export async function fillTemplateFromBrief(
       },
     ],
   });
-  await recordUsage({ kind: "personalize", model: MODEL, usage: msg.usage, userId });
+  await recordUsage({ tenantDb: ctx.tenantDb, organizationId: ctx.organizationId, kind: "personalize", model: MODEL, usage: msg.usage, userId: ctx.userId });
   const block = msg.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "fill_values");
   if (!block) throw new Error("Viki did not return values");
   const input = block.input as { values: { key: string; value: string }[] };
@@ -215,8 +219,8 @@ export interface PersonalizedDocument {
 const FROM_SCRATCH_SYSTEM = `You are Viki, an advanced legal/CA drafting assistant for Indian law and CA firms. Draft a COMPLETE document from scratch for the matter described, when no suitable template exists. Follow the same rules as personalisation: precise current Indian legal drafting; current statutory framework only (never the repealed IPC/CrPC/Evidence Act); cite a section only if real and certain; NEVER invent facts — leave <strong>[TO CONFIRM: description]</strong> blanks and list them under unresolved; include protective boilerplate (governing law, dispute resolution, notices, execution/stamp block). Finish by calling produce_document.`;
 
 /** Draft a full document from scratch (no template) for the intake flow. */
-export async function draftDocumentFromScratch(instruction: string, userId?: string): Promise<PersonalizedDocument> {
-  const msg = await createMessage({
+export async function draftDocumentFromScratch(ctx: AgentCtx, instruction: string): Promise<PersonalizedDocument> {
+  const msg = await createMessage(ctx, {
     model: MODEL,
     max_tokens: 8192,
     system: FROM_SCRATCH_SYSTEM,
@@ -224,7 +228,7 @@ export async function draftDocumentFromScratch(instruction: string, userId?: str
     tool_choice: { type: "tool", name: "produce_document" },
     messages: [{ role: "user", content: `Draft this document:\n"""\n${instruction}\n"""` }],
   });
-  await recordUsage({ kind: "intake", model: MODEL, usage: msg.usage, userId });
+  await recordUsage({ tenantDb: ctx.tenantDb, organizationId: ctx.organizationId, kind: "intake", model: MODEL, usage: msg.usage, userId: ctx.userId });
   const block = msg.content.find(
     (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "produce_document",
   );
@@ -244,14 +248,14 @@ export async function draftDocumentFromScratch(instruction: string, userId?: str
  * the human review pipeline in the editor.
  */
 export async function personalizeDocument(
+  ctx: AgentCtx,
   template: Pick<TemplateDTO, "title" | "variables" | "bodyHtml">,
   brief: string,
-  userId?: string,
 ): Promise<PersonalizedDocument> {
   const varSpec = template.variables
     .map((v) => `- {{${v.key}}} (${v.type}${v.required ? ", required" : ""}): ${v.label}${v.hint ? ` — ${v.hint}` : ""}`)
     .join("\n");
-  const msg = await createMessage({
+  const msg = await createMessage(ctx, {
     model: MODEL,
     max_tokens: 8192,
     system: PERSONALIZE_SYSTEM,
@@ -264,7 +268,7 @@ export async function personalizeDocument(
       },
     ],
   });
-  await recordUsage({ kind: "personalize", model: MODEL, usage: msg.usage, userId });
+  await recordUsage({ tenantDb: ctx.tenantDb, organizationId: ctx.organizationId, kind: "personalize", model: MODEL, usage: msg.usage, userId: ctx.userId });
   const block = msg.content.find(
     (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "produce_document",
   );

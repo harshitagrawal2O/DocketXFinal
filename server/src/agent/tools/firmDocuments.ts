@@ -1,15 +1,19 @@
-import { prisma } from "../../db.js";
+import type { PrismaClient } from "@prisma/client";
 import { whenLoaded } from "../../yjs/docStore.js";
 import { flattenFragment } from "../../yjs/anchors.js";
 import { getFragment } from "../../yjs/mutations.js";
 
 /**
- * Lets Viki look at the user's OTHER documents — e.g. "match the indemnity
- * clause we used in the Acme NDA". Scoped strictly to documents this same
- * user already has access to (DocumentMember); there is no firm/workspace
- * concept in this schema, so "other documents in the firm" means "other
- * documents this user can already open," which is the correct access
- * boundary until a real multi-tenant model exists.
+ * Lets Viki look at the firm's OTHER documents — e.g. "match the indemnity
+ * clause we used in the Acme NDA". Scoped to documents where SOME member of
+ * the caller's organization is a DocumentMember.
+ *
+ * This does NOT simply query every Document row in `tenantDb` — organizations
+ * that haven't set up their own dedicated database (see tenantDb.ts) share
+ * the platform's default database, so an unscoped query would return OTHER
+ * organizations' documents too. `orgUserIds` (the calling org's own member
+ * ids, from auth/org.ts's getOrgUserIds) is what keeps this correctly scoped
+ * to "this firm" regardless of physical database layout.
  */
 
 const MAX_RESULTS = 8;
@@ -33,16 +37,27 @@ async function safeText(documentId: string): Promise<string> {
   return flattenFragment(getFragment(doc)).text;
 }
 
-export async function searchFirmDocuments(userId: string, excludeDocumentId: string, query: string): Promise<DocSearchHit[]> {
-  const memberships = await prisma.documentMember.findMany({
-    where: { userId, documentId: { not: excludeDocumentId } },
-    include: { document: true },
-    orderBy: { document: { updatedAt: "desc" } },
+export async function searchFirmDocuments(
+  tenantDb: PrismaClient,
+  orgUserIds: string[],
+  excludeDocumentId: string,
+  query: string,
+): Promise<DocSearchHit[]> {
+  const memberships = await tenantDb.documentMember.findMany({
+    where: { userId: { in: orgUserIds }, documentId: { not: excludeDocumentId } },
+    select: { documentId: true },
+    distinct: ["documentId"],
+  });
+  const docIds = memberships.map((m) => m.documentId);
+  if (docIds.length === 0) return [];
+
+  const candidates = await tenantDb.document.findMany({
+    where: { id: { in: docIds } },
+    orderBy: { updatedAt: "desc" },
     take: 50,
   });
 
   const q = query.trim().toLowerCase();
-  const candidates = memberships.map((m) => m.document);
   const matched = q ? candidates.filter((d) => d.title.toLowerCase().includes(q) || d.kind.toLowerCase().includes(q)) : candidates;
   const pool = (matched.length > 0 ? matched : candidates).slice(0, MAX_RESULTS);
 
@@ -66,18 +81,19 @@ export interface DocReadResult {
   truncated: boolean;
 }
 
-/** Returns null if the document doesn't exist or this user has no access to it. */
-export async function readFirmDocument(userId: string, documentId: string): Promise<DocReadResult | null> {
-  const member = await prisma.documentMember.findUnique({
-    where: { documentId_userId: { documentId, userId } },
-    include: { document: true },
+/** Returns null if the document doesn't exist, or no one in this organization is a member of it. */
+export async function readFirmDocument(tenantDb: PrismaClient, orgUserIds: string[], documentId: string): Promise<DocReadResult | null> {
+  const membership = await tenantDb.documentMember.findFirst({
+    where: { documentId, userId: { in: orgUserIds } },
   });
-  if (!member) return null;
+  if (!membership) return null;
+  const doc = await tenantDb.document.findUnique({ where: { id: documentId } });
+  if (!doc) return null;
 
   const full = await safeText(documentId);
   const truncated = full.length > MAX_READ_CHARS;
   return {
-    title: member.document.title,
+    title: doc.title,
     text: truncated ? full.slice(0, MAX_READ_CHARS) : full,
     truncated,
   };

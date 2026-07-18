@@ -1,22 +1,22 @@
 import { Router } from "express";
-import { prisma } from "../db.js";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
+import { requireTenantDb } from "../auth/org.js";
 import { getRole } from "../auth/roles.js";
 import type { AuditEventDTO, AuditPage } from "@docket/shared";
 
 export const auditRouter = Router();
-auditRouter.use(requireAuth);
+auditRouter.use(requireAuth, requireTenantDb);
 
 const PAGE = 50;
 
 auditRouter.get("/documents/:id/audit", async (req: AuthedRequest, res) => {
-  const role = await getRole(req.params.id!, req.user!.id);
+  const role = await getRole(req.tenantDb!, req.params.id!, req.user!.id);
   if (!role) return res.status(403).json({ error: "Not a member" });
 
   const type = req.query.type ? String(req.query.type) : undefined;
   const cursor = req.query.cursor ? String(req.query.cursor) : undefined;
 
-  const rows = await prisma.auditEvent.findMany({
+  const rows = await req.tenantDb!.auditEvent.findMany({
     where: { documentId: req.params.id!, ...(type ? { type } : {}) },
     orderBy: { createdAt: "desc" },
     take: PAGE + 1,

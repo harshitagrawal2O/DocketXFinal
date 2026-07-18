@@ -1,6 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
+import { requireTenantDb } from "../auth/org.js";
 import { extractText, MAX_UPLOAD_BYTES, UnsupportedFileError, FileParseError } from "../templates/fileExtract.js";
 import {
   listTemplates,
@@ -34,14 +35,14 @@ import type {
 } from "@docket/shared";
 
 export const templatesRouter = Router();
-templatesRouter.use(requireAuth);
+templatesRouter.use(requireAuth, requireTenantDb);
 
 templatesRouter.get("/templates", async (req: AuthedRequest, res) => {
-  res.json(await listTemplates(req.user!.id));
+  res.json(await listTemplates(req.tenantDb!, req.user!.id));
 });
 
 templatesRouter.get("/templates/:id", async (req: AuthedRequest, res) => {
-  const t = await getTemplate(req.params.id!, req.user!.id);
+  const t = await getTemplate(req.tenantDb!, req.params.id!, req.user!.id);
   if (!t) return res.status(404).json({ error: "Template not found" });
   return res.json(t);
 });
@@ -51,6 +52,7 @@ templatesRouter.post("/templates", async (req: AuthedRequest, res) => {
   const b = (req.body ?? {}) as UpsertTemplateRequest;
   if (!b.title || !b.bodyHtml) return res.status(400).json({ error: "title and bodyHtml required" });
   const t = await createOwnedTemplate(
+    req.tenantDb!,
     { title: b.title, category: b.category ?? "other", kind: b.kind ?? "contract", description: b.description ?? "", bodyHtml: b.bodyHtml, variables: b.variables ?? [] },
     req.user!.id,
   );
@@ -61,7 +63,7 @@ templatesRouter.post("/templates", async (req: AuthedRequest, res) => {
 templatesRouter.put("/templates/:id", async (req: AuthedRequest, res) => {
   const b = (req.body ?? {}) as UpsertTemplateRequest;
   if (!b.title || !b.bodyHtml) return res.status(400).json({ error: "title and bodyHtml required" });
-  const result = await updateTemplate(req.params.id!, req.user!.id, {
+  const result = await updateTemplate(req.tenantDb!, req.params.id!, req.user!.id, {
     title: b.title,
     category: b.category ?? "other",
     kind: b.kind ?? "contract",
@@ -75,7 +77,7 @@ templatesRouter.put("/templates/:id", async (req: AuthedRequest, res) => {
 });
 
 templatesRouter.delete("/templates/:id", async (req: AuthedRequest, res) => {
-  const result = await deleteTemplate(req.params.id!, req.user!.id);
+  const result = await deleteTemplate(req.tenantDb!, req.params.id!, req.user!.id);
   if (result === "not_found") return res.status(404).json({ error: "Template not found" });
   if (result === "readonly") return res.status(403).json({ error: "System presets cannot be deleted." });
   return res.json({ ok: true });
@@ -83,9 +85,9 @@ templatesRouter.delete("/templates/:id", async (req: AuthedRequest, res) => {
 
 // Copy any visible template into an editable, firm-owned copy.
 templatesRouter.post("/templates/:id/clone", async (req: AuthedRequest, res) => {
-  const src = await getTemplate(req.params.id!, req.user!.id);
+  const src = await getTemplate(req.tenantDb!, req.params.id!, req.user!.id);
   if (!src) return res.status(404).json({ error: "Template not found" });
-  const t = await cloneTemplate(src, req.user!.id);
+  const t = await cloneTemplate(req.tenantDb!, src, req.user!.id);
   return res.json(t);
 });
 
@@ -93,9 +95,10 @@ templatesRouter.post("/templates/:id/clone", async (req: AuthedRequest, res) => 
 templatesRouter.post("/templates/analyze", tplLlmLimit, requireLLM, async (req: AuthedRequest, res) => {
   const { text, title } = (req.body ?? {}) as AnalyzeTemplateRequest;
   if (!text || text.trim().length < 40) return res.status(400).json({ error: "Provide the document text to analyze" });
+  const ctx = { tenantDb: req.tenantDb!, organizationId: req.org!.id, userId: req.user!.id };
   try {
-    const draft = await analyzeTemplate(text, title, req.user!.id);
-    const t = await createTemplate(draft, "uploaded", req.user!.id);
+    const draft = await analyzeTemplate(ctx, text, title);
+    const t = await createTemplate(req.tenantDb!, draft, "uploaded", req.user!.id);
     return res.json(t);
   } catch (err) {
     return res.status(502).json({ error: (err as Error).message });
@@ -139,9 +142,10 @@ templatesRouter.post(
     }
 
     const title = typeof req.body?.title === "string" && req.body.title.trim() ? req.body.title.trim() : undefined;
+    const ctx = { tenantDb: req.tenantDb!, organizationId: req.org!.id, userId: req.user!.id };
     try {
-      const draft = await analyzeTemplate(text, title, req.user!.id);
-      const t = await createTemplate(draft, "uploaded", req.user!.id);
+      const draft = await analyzeTemplate(ctx, text, title);
+      const t = await createTemplate(req.tenantDb!, draft, "uploaded", req.user!.id);
       return res.json(t);
     } catch (err) {
       return res.status(502).json({ error: (err as Error).message });
@@ -153,9 +157,10 @@ templatesRouter.post(
 templatesRouter.post("/templates/draft", tplLlmLimit, requireLLM, async (req: AuthedRequest, res) => {
   const { instruction, useWebSearch } = (req.body ?? {}) as DraftTemplateRequest;
   if (!instruction) return res.status(400).json({ error: "instruction required" });
+  const ctx = { tenantDb: req.tenantDb!, organizationId: req.org!.id, userId: req.user!.id };
   try {
-    const draft = await draftTemplate(instruction, Boolean(useWebSearch), req.user!.id);
-    const t = await createTemplate(draft, "viki", req.user!.id);
+    const draft = await draftTemplate(ctx, instruction, Boolean(useWebSearch));
+    const t = await createTemplate(req.tenantDb!, draft, "viki", req.user!.id);
     return res.json(t);
   } catch (err) {
     return res.status(502).json({ error: (err as Error).message });
@@ -164,24 +169,26 @@ templatesRouter.post("/templates/draft", tplLlmLimit, requireLLM, async (req: Au
 
 // Generate one case-specific document (form-fill and/or Viki-from-brief).
 templatesRouter.post("/templates/:id/generate", tplLlmLimit, async (req: AuthedRequest, res) => {
-  const t = await getTemplate(req.params.id!, req.user!.id);
+  const t = await getTemplate(req.tenantDb!, req.params.id!, req.user!.id);
   if (!t) return res.status(404).json({ error: "Template not found" });
   const { documentTitle, values, brief } = (req.body ?? {}) as GenerateFromTemplateRequest;
   if (!documentTitle) return res.status(400).json({ error: "documentTitle required" });
+  const owner = { id: req.user!.id, name: req.user!.name, email: req.user!.email, color: req.user!.color };
 
   // Viki-from-brief path: advanced case personalisation — Viki drafts the whole
   // document tailored to the matter (clause-level), not just a variable fill.
   if (brief && brief.trim()) {
     if (!isLLMAvailable()) return res.status(503).json({ error: "Viki is not configured (no ANTHROPIC_API_KEY). Use form-fill instead.", code: "llm_unavailable" });
     try {
-      const personalized = await personalizeDocument(t, brief, req.user!.id);
+      const ctx = { tenantDb: req.tenantDb!, organizationId: req.org!.id, userId: req.user!.id };
+      const personalized = await personalizeDocument(ctx, t, brief);
       const documentId = await generateDocumentFromHtml(
+        req.tenantDb!,
         personalized.bodyHtml,
         documentTitle,
         t.kind,
         t.id,
-        req.user!.id,
-        req.user!.name,
+        owner,
         personalized.personalizationNotes,
       );
       return res.json({ documentId, personalizationNotes: personalized.personalizationNotes, unresolved: personalized.unresolved });
@@ -191,14 +198,14 @@ templatesRouter.post("/templates/:id/generate", tplLlmLimit, async (req: AuthedR
   }
 
   // Pure form-fill path: deterministic {{variable}} substitution.
-  const documentId = await generateDocument(t, documentTitle, values ?? {}, req.user!.id, req.user!.name);
+  const documentId = await generateDocument(req.tenantDb!, t, documentTitle, values ?? {}, owner);
   return res.json({ documentId });
 });
 
 // Batch: one document per row (deterministic form-fill, sync) OR one per brief
 // (Viki-personalised, queued on the durable job queue → returns a batchId).
 templatesRouter.post("/templates/:id/generate-batch", tplLlmLimit, async (req: AuthedRequest, res) => {
-  const t = await getTemplate(req.params.id!, req.user!.id);
+  const t = await getTemplate(req.tenantDb!, req.params.id!, req.user!.id);
   if (!t) return res.status(404).json({ error: "Template not found" });
   const { titlePattern, rows, briefs } = (req.body ?? {}) as GenerateBatchRequest;
   if (!titlePattern) return res.status(400).json({ error: "titlePattern required" });
@@ -210,8 +217,8 @@ templatesRouter.post("/templates/:id/generate-batch", tplLlmLimit, async (req: A
       templateId: t.id,
       titlePattern,
       briefs,
-      ownerId: req.user!.id,
-      ownerName: req.user!.name,
+      organizationId: req.org!.id,
+      owner: { id: req.user!.id, name: req.user!.name, email: req.user!.email, color: req.user!.color },
     });
     return res.json({ batchId });
   }
@@ -220,9 +227,10 @@ templatesRouter.post("/templates/:id/generate-batch", tplLlmLimit, async (req: A
   if (!Array.isArray(rows) || rows.length === 0) {
     return res.status(400).json({ error: "Provide non-empty rows[] (form-fill) or briefs[] (Viki)" });
   }
+  const owner = { id: req.user!.id, name: req.user!.name, email: req.user!.email, color: req.user!.color };
   const documentIds: string[] = [];
   for (const row of rows) {
-    const id = await generateDocument(t, renderTitle(titlePattern, row), row, req.user!.id, req.user!.name);
+    const id = await generateDocument(req.tenantDb!, t, renderTitle(titlePattern, row), row, owner);
     documentIds.push(id);
   }
   return res.json({ documentIds });
@@ -230,7 +238,7 @@ templatesRouter.post("/templates/:id/generate-batch", tplLlmLimit, async (req: A
 
 // Poll a queued batch's progress.
 templatesRouter.get("/batches/:batchId", async (req: AuthedRequest, res) => {
-  const b = await getBatch(req.params.batchId!, req.user!.id);
+  const b = await getBatch(req.tenantDb!, req.params.batchId!, req.user!.id);
   if (!b) return res.status(404).json({ error: "Batch not found" });
   return res.json(b);
 });

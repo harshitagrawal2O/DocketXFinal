@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import type { AgentSSEEvent } from "@docket/shared";
 
 /**
@@ -11,6 +12,10 @@ export interface ActiveRun {
   documentId: string;
   userId: string;
   userName: string;
+  /** This run's organization's own database (tenant-plane data — Document, DiffProposal, AuditEvent, AgentTurn, ...). */
+  tenantDb: PrismaClient;
+  /** Control-plane Organization id — used to deduct credits as usage accrues. */
+  organizationId: string;
   abort: AbortController;
   /** SSE subscribers for this run. */
   subscribers: Set<(e: AgentSSEEvent) => void>;

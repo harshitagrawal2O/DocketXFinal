@@ -4,6 +4,7 @@ import cors from "cors";
 import { createServer } from "node:http";
 import { WebSocketServer } from "ws";
 import { attachUser } from "./auth/session.js";
+import { attachOrg } from "./auth/org.js";
 import { attachYjsWebSocket } from "./yjs/wsServer.js";
 import { authRouter } from "./routes/auth.js";
 import { documentsRouter } from "./routes/documents.js";
@@ -15,6 +16,7 @@ import { templatesRouter } from "./routes/templates.js";
 import { exportRouter } from "./routes/export.js";
 import { intakeRouter } from "./routes/intake.js";
 import { usageRouter } from "./routes/usage.js";
+import { adminRouter } from "./routes/admin.js";
 
 // Backstop: Express 4 does not forward a rejected promise from an async
 // middleware/handler to the error middleware — an uncaught rejection would
@@ -41,6 +43,7 @@ app.use(
 );
 app.use(express.json({ limit: "2mb" }));
 app.use(attachUser);
+app.use(attachOrg);
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
@@ -54,6 +57,7 @@ app.use("/api", templatesRouter);
 app.use("/api", exportRouter);
 app.use("/api", intakeRouter);
 app.use("/api", usageRouter);
+app.use("/api", adminRouter);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

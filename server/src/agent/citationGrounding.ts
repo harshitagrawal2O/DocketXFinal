@@ -1,7 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { PrismaClient } from "@prisma/client";
 import type { Citation } from "@docket/shared";
 import { verifyHunkCitations, type VerificationResult } from "./citations.js";
 import { withLLMSlot } from "../llm/limiter.js";
+import { resolveAnthropicApiKey } from "../llm/orgApiKey.js";
 import { recordUsage } from "./usage.js";
 import { isLLMAvailable } from "../llm/availability.js";
 
@@ -43,10 +45,6 @@ const ASSESS_TOOL: Anthropic.Tool = {
   },
 };
 
-function client(): Anthropic {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
-}
-
 interface Vote {
   supported: boolean;
   inForce: boolean;
@@ -54,10 +52,17 @@ interface Vote {
   reason: string;
 }
 
-async function castVote(citation: Citation, proposition: string, lens: string, userId?: string): Promise<Vote | null> {
+interface GroundingContext {
+  tenantDb: PrismaClient;
+  organizationId?: string | null;
+  userId?: string;
+}
+
+async function castVote(citation: Citation, proposition: string, lens: string, ctx: GroundingContext): Promise<Vote | null> {
   try {
+    const apiKey = await resolveAnthropicApiKey(ctx.organizationId);
     const msg = await withLLMSlot(() =>
-      client().messages.create({
+      new Anthropic({ apiKey }).messages.create({
         model: MODEL,
         max_tokens: 512,
         system: `You are a skeptical Indian-law citation checker. Be strict and uncharitable: if you are not confident the citation is real, in force, AND genuinely supports the proposition, mark it unsupported. Focus on this lens — ${lens}`,
@@ -71,7 +76,7 @@ async function castVote(citation: Citation, proposition: string, lens: string, u
         ],
       }),
     );
-    await recordUsage({ kind: "agent_run", model: MODEL, usage: msg.usage, userId });
+    await recordUsage({ tenantDb: ctx.tenantDb, organizationId: ctx.organizationId, kind: "agent_run", model: MODEL, usage: msg.usage, userId: ctx.userId });
     const block = msg.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "assess_citation");
     if (!block) return null;
     return block.input as Vote;
@@ -81,9 +86,9 @@ async function castVote(citation: Citation, proposition: string, lens: string, u
 }
 
 /** Ground a single citation with a perspective-diverse panel; fail closed. */
-async function groundCitation(citation: Citation, proposition: string, userId?: string): Promise<{ ok: boolean; note?: string }> {
+async function groundCitation(citation: Citation, proposition: string, ctx: GroundingContext): Promise<{ ok: boolean; note?: string }> {
   const lenses = Array.from({ length: VOTES }, (_, i) => LENSES[i % LENSES.length]!);
-  const votes = await Promise.all(lenses.map((lens) => castVote(citation, proposition, lens, userId)));
+  const votes = await Promise.all(lenses.map((lens) => castVote(citation, proposition, lens, ctx)));
   const valid = votes.filter((v): v is Vote => v !== null);
   if (valid.length === 0) return { ok: false, note: "Citation could not be verified (grounding unavailable)." };
 
@@ -102,7 +107,7 @@ async function groundCitation(citation: Citation, proposition: string, userId?: 
 export async function verifyHunkCitationsFull(
   citations: Citation[],
   proposition: string,
-  userId?: string,
+  ctx: GroundingContext,
 ): Promise<VerificationResult> {
   const pre = verifyHunkCitations(citations);
   if (!pre.ok || citations.length === 0) return pre;
@@ -111,7 +116,7 @@ export async function verifyHunkCitationsFull(
   const grounded: Citation[] = [];
   const failures: string[] = [];
   for (const c of pre.citations) {
-    const result = await groundCitation(c, proposition, userId);
+    const result = await groundCitation(c, proposition, ctx);
     if (result.ok) {
       grounded.push({ ...c, verified: true });
     } else {

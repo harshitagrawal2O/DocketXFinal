@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { withLLMSlot } from "../llm/limiter.js";
+import { resolveAnthropicApiKey } from "../llm/orgApiKey.js";
 
 /**
  * PROVIDER SEAM: the one function runner.ts calls to talk to an LLM. Today
@@ -15,6 +16,8 @@ export interface ProviderTurnResult {
 }
 
 export interface RunVikiTurnParams {
+  /** One organization, one Anthropic key (see llm/orgApiKey.ts) — omit to use the platform key. */
+  organizationId?: string | null;
   model: string;
   system: string;
   tools: Anthropic.ToolUnion[];
@@ -29,15 +32,10 @@ export interface RunVikiTurnParams {
   onServerToolUse?: () => void;
 }
 
-function client(): Anthropic {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
-  return new Anthropic({ apiKey });
-}
-
 export async function runVikiTurn(params: RunVikiTurnParams): Promise<ProviderTurnResult> {
+  const apiKey = await resolveAnthropicApiKey(params.organizationId);
   return withLLMSlot(async () => {
-    const stream = client().messages.stream(
+    const stream = new Anthropic({ apiKey }).messages.stream(
       {
         model: params.model,
         max_tokens: params.maxTokens,

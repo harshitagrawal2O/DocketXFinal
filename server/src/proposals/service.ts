@@ -1,5 +1,4 @@
-import type { Prisma } from "@prisma/client";
-import { prisma } from "../db.js";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { whenLoaded } from "../yjs/docStore.js";
 import { applyAccept, currentRangeOffsets, rangesOverlap } from "../yjs/mutations.js";
 import { upsertProposal } from "./broadcast.js";
@@ -37,12 +36,13 @@ interface Actor {
 }
 
 async function audit(
+  tenantDb: PrismaClient,
   documentId: string,
   type: string,
   actor: Actor | null,
   extra: { proposalId?: string; agentRunId?: string; detail?: Record<string, string | number | boolean | null> },
 ): Promise<void> {
-  await prisma.auditEvent.create({
+  await tenantDb.auditEvent.create({
     data: {
       documentId,
       type,
@@ -62,11 +62,12 @@ async function audit(
  * (Phase 4: first-accept-wins, exactly one transaction + one AuditEvent).
  */
 export async function acceptProposal(
+  tenantDb: PrismaClient,
   proposalId: string,
   actor: Actor,
   opts: { editedText?: string } = {},
 ): Promise<DiffProposal> {
-  return prisma.$transaction(async (tx) => {
+  return tenantDb.$transaction(async (tx) => {
     const row = await tx.diffProposal.findUniqueOrThrow({ where: { id: proposalId } });
     if (TERMINAL.includes(row.status as ProposalStatus)) return toDTO(row);
     if (row.status === "outdated") throw new Error("Proposal is outdated; re-run on current text");
@@ -102,7 +103,7 @@ export async function acceptProposal(
       },
     });
 
-    await audit(row.documentId, isEdit ? "proposal_edited_accepted" : "proposal_accepted", actor, {
+    await audit(tenantDb, row.documentId, isEdit ? "proposal_edited_accepted" : "proposal_accepted", actor, {
       proposalId: row.id,
       agentRunId: row.agentRunId,
       detail: isEdit
@@ -117,8 +118,8 @@ export async function acceptProposal(
 }
 
 /** Reject: flip to rejected, keep visible (never delete), audit, broadcast. */
-export async function rejectProposal(proposalId: string, actor: Actor): Promise<DiffProposal> {
-  return prisma.$transaction(async (tx) => {
+export async function rejectProposal(tenantDb: PrismaClient, proposalId: string, actor: Actor): Promise<DiffProposal> {
+  return tenantDb.$transaction(async (tx) => {
     const row = await tx.diffProposal.findUniqueOrThrow({ where: { id: proposalId } });
     if (TERMINAL.includes(row.status as ProposalStatus)) return toDTO(row);
 
@@ -131,7 +132,7 @@ export async function rejectProposal(proposalId: string, actor: Actor): Promise<
         resolvedByName: actor.name,
       },
     });
-    await audit(row.documentId, "proposal_rejected", actor, { proposalId: row.id, agentRunId: row.agentRunId });
+    await audit(tenantDb, row.documentId, "proposal_rejected", actor, { proposalId: row.id, agentRunId: row.agentRunId });
     const dto = toDTO(updated);
     upsertProposal(dto);
     return dto;
@@ -144,11 +145,12 @@ export async function rejectProposal(proposalId: string, actor: Actor): Promise<
  * left staged (relative anchors keep them attached).
  */
 export async function markOutdatedForEdit(
+  tenantDb: PrismaClient,
   documentId: string,
   editRange: { start: number; end: number },
 ): Promise<DiffProposal[]> {
   const doc = await whenLoaded(documentId);
-  const staged = await prisma.diffProposal.findMany({
+  const staged = await tenantDb.diffProposal.findMany({
     where: { documentId, status: "staged" },
   });
 
@@ -157,11 +159,11 @@ export async function markOutdatedForEdit(
     const range = currentRangeOffsets(doc, row.anchorStart, row.anchorEnd);
     if (!range) continue;
     if (rangesOverlap(editRange.start, editRange.end, range.start, range.end)) {
-      const updated = await prisma.diffProposal.update({
+      const updated = await tenantDb.diffProposal.update({
         where: { id: row.id },
         data: { status: "outdated" },
       });
-      await audit(documentId, "proposal_outdated", null, {
+      await audit(tenantDb, documentId, "proposal_outdated", null, {
         proposalId: row.id,
         agentRunId: row.agentRunId,
       });
@@ -181,13 +183,13 @@ export async function markOutdatedForEdit(
  * stays authoritative on the status transition without needing to translate
  * between ProseMirror and flat-text coordinate systems.
  */
-export async function markOutdatedByIds(documentId: string, proposalIds: string[]): Promise<DiffProposal[]> {
+export async function markOutdatedByIds(tenantDb: PrismaClient, documentId: string, proposalIds: string[]): Promise<DiffProposal[]> {
   const flipped: DiffProposal[] = [];
   for (const id of proposalIds) {
-    const row = await prisma.diffProposal.findUnique({ where: { id } });
+    const row = await tenantDb.diffProposal.findUnique({ where: { id } });
     if (!row || row.documentId !== documentId || row.status !== "staged") continue;
-    const updated = await prisma.diffProposal.update({ where: { id }, data: { status: "outdated" } });
-    await audit(documentId, "proposal_outdated", null, { proposalId: id, agentRunId: row.agentRunId });
+    const updated = await tenantDb.diffProposal.update({ where: { id }, data: { status: "outdated" } });
+    await audit(tenantDb, documentId, "proposal_outdated", null, { proposalId: id, agentRunId: row.agentRunId });
     const dto = toDTO(updated);
     upsertProposal(dto);
     flipped.push(dto);
@@ -199,12 +201,12 @@ export async function markOutdatedByIds(documentId: string, proposalIds: string[
  * When accepting a proposal changes text under another run's staged hunk, that
  * other hunk becomes outdated (Phase 4: overlapping hunks from two runs).
  */
-export async function reconcileOverlaps(documentId: string, acceptedRange: { start: number; end: number }): Promise<void> {
-  await markOutdatedForEdit(documentId, acceptedRange);
+export async function reconcileOverlaps(tenantDb: PrismaClient, documentId: string, acceptedRange: { start: number; end: number }): Promise<void> {
+  await markOutdatedForEdit(tenantDb, documentId, acceptedRange);
 }
 
-export async function listProposals(documentId: string): Promise<DiffProposal[]> {
-  const rows = await prisma.diffProposal.findMany({
+export async function listProposals(tenantDb: PrismaClient, documentId: string): Promise<DiffProposal[]> {
+  const rows = await tenantDb.diffProposal.findMany({
     where: { documentId },
     orderBy: [{ agentRunId: "asc" }, { hunkIndex: "asc" }],
   });

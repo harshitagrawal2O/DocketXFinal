@@ -15,7 +15,7 @@ interface SessionState {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, name: string, password: string) => Promise<void>;
+  register: (email: string, name: string, password: string, inviteToken?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -53,9 +53,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setUser(u);
   }, []);
 
-  const register = useCallback(async (email: string, name: string, password: string) => {
+  const register = useCallback(async (email: string, name: string, password: string, inviteToken?: string) => {
     setError(null);
-    const u = await authApi.register(email, name, password);
+    const u = await authApi.register(email, name, password, inviteToken);
     setUser(u);
   }, []);
 

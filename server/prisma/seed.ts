@@ -35,6 +35,14 @@ const RUN_A = "seed-run-a-terms";
 const RUN_B = "seed-run-b-indemnity";
 const RUN_C = "seed-run-c-jurisdiction";
 
+const ORG_ID = "seed-org-default";
+
+const SEED_USERS = [
+  { id: USER_PRIYA, email: "priya@docket.test", name: "Priya Nair", color: "#4f46e5" },
+  { id: USER_ARJUN, email: "arjun@docket.test", name: "Arjun Mehta", color: "#0891b2" },
+  { id: USER_MEERA, email: "meera@docket.test", name: "Meera Rao", color: "#db2777" },
+];
+
 /** Synthetic contract body. Each string becomes a Tiptap paragraph block. */
 const CONTRACT: string[] = [
   "MASTER SERVICES AGREEMENT",
@@ -156,24 +164,27 @@ const HUNKS: HunkSpec[] = [
 async function main(): Promise<void> {
   console.log("[seed] starting Docket v2 seed…");
 
+  // --- 0. Default organization (bootstrap: no databaseUrlEnc, so its tenant
+  //        data lives on this SAME database — see schema.prisma's header). ---
+  await prisma.organization.upsert({
+    where: { id: ORG_ID },
+    update: {},
+    create: { id: ORG_ID, name: "Docket Seed Firm", slug: "docket-seed-firm" },
+  });
+
   // --- 1. Users (with presence colors for CollaborationCursor) ---
-  await prisma.user.upsert({
-    where: { id: USER_PRIYA },
-    update: {},
-    create: { id: USER_PRIYA, email: "priya@docket.test", name: "Priya Nair", color: "#4f46e5" },
-  });
-  await prisma.user.upsert({
-    where: { id: USER_ARJUN },
-    update: {},
-    create: { id: USER_ARJUN, email: "arjun@docket.test", name: "Arjun Mehta", color: "#0891b2" },
-  });
-  // Modeled as a `commenter`: roles.ts gives `viewer` no capabilities, but the
-  // pilot needs a reviewer who can comment yet cannot touch hunks.
-  await prisma.user.upsert({
-    where: { id: USER_MEERA },
-    update: {},
-    create: { id: USER_MEERA, email: "meera@docket.test", name: "Meera Rao", color: "#db2777" },
-  });
+  for (const [i, u] of SEED_USERS.entries()) {
+    await prisma.user.upsert({
+      where: { id: u.id },
+      update: {},
+      // Priya (first seed user) is this org's admin; the rest are members.
+      // Modeled as a `commenter` document role for Meera: roles.ts gives
+      // `viewer` no capabilities, but the pilot needs a reviewer who can
+      // comment yet cannot touch hunks — that's a per-document role below,
+      // distinct from this org-level admin/member role.
+      create: { id: u.id, email: u.email, name: u.name, color: u.color, organizationId: ORG_ID, orgRole: i === 0 ? "admin" : "member" },
+    });
+  }
   console.log("[seed] users ready: Priya (owner), Arjun (editor), Meera (commenter)");
 
   // --- 2. Document + members ---
@@ -188,16 +199,17 @@ async function main(): Promise<void> {
     },
   });
 
-  const members: Array<{ userId: string; role: string }> = [
-    { userId: USER_PRIYA, role: "owner" },
-    { userId: USER_ARJUN, role: "editor" },
-    { userId: USER_MEERA, role: "commenter" },
-  ];
-  for (const m of members) {
+  const memberRoles: Record<string, string> = {
+    [USER_PRIYA]: "owner",
+    [USER_ARJUN]: "editor",
+    [USER_MEERA]: "commenter",
+  };
+  for (const u of SEED_USERS) {
+    const role = memberRoles[u.id]!;
     await prisma.documentMember.upsert({
-      where: { documentId_userId: { documentId: DOC_ID, userId: m.userId } },
-      update: { role: m.role },
-      create: { documentId: DOC_ID, userId: m.userId, role: m.role },
+      where: { documentId_userId: { documentId: DOC_ID, userId: u.id } },
+      update: { role },
+      create: { documentId: DOC_ID, userId: u.id, userName: u.name, userEmail: u.email, userColor: u.color, role },
     });
   }
   console.log("[seed] document + 3 members ready");

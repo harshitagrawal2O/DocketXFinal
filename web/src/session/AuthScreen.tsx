@@ -1,13 +1,22 @@
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
 import { useSession } from "./SessionContext";
 
 type Mode = "login" | "register";
 
+/** An admin-issued invite link looks like /?invite=<token>&email=<email> — parsed once, not re-read on every render. */
+function parseInviteFromUrl(): { token: string; email: string } | null {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("invite");
+  if (!token) return null;
+  return { token, email: params.get("email") ?? "" };
+}
+
 export function AuthScreen() {
   const { login, register } = useSession();
-  const [mode, setMode] = useState<Mode>("login");
-  const [email, setEmail] = useState("");
+  const invite = useMemo(parseInviteFromUrl, []);
+  const [mode, setMode] = useState<Mode>(invite ? "register" : "login");
+  const [email, setEmail] = useState(invite?.email ?? "");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -19,7 +28,7 @@ export function AuthScreen() {
     setError(null);
     try {
       if (mode === "login") await login(email, password);
-      else await register(email, name, password);
+      else await register(email, name, password, invite?.token);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
     } finally {
@@ -37,6 +46,12 @@ export function AuthScreen() {
             <p className="muted">Agentic legal drafting, reviewed by humans.</p>
           </div>
         </div>
+
+        {invite && (
+          <div className="auth-error" style={{ background: "#eef6ee", color: "#1c5e2a", borderColor: "#bfe3c4" }}>
+            You've been invited to join a firm on Docket. Create your account below to accept.
+          </div>
+        )}
 
         <div className="auth-tabs">
           <button

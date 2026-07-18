@@ -1,5 +1,4 @@
-import type { Prisma } from "@prisma/client";
-import { prisma } from "../db.js";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import type { BatchStatus, TemplateDraft, TemplateDTO, TemplateSummary, TemplateVariable } from "@docket/shared";
 
 type Row = Prisma.TemplateGetPayload<{}>;
@@ -56,24 +55,24 @@ export function renderTitle(pattern: string, values: Record<string, string>): st
   return pattern.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_m, key: string) => values[key]?.trim() || key);
 }
 
-export async function listTemplates(userId: string): Promise<TemplateSummary[]> {
-  const rows = await prisma.template.findMany({
+export async function listTemplates(tenantDb: PrismaClient, userId: string): Promise<TemplateSummary[]> {
+  const rows = await tenantDb.template.findMany({
     where: { OR: [{ ownerId: null }, { ownerId: userId }] },
     orderBy: [{ source: "asc" }, { category: "asc" }, { title: "asc" }],
   });
   return rows.map(toSummary);
 }
 
-export async function getTemplate(id: string, userId: string): Promise<TemplateDTO | null> {
-  const row = await prisma.template.findUnique({ where: { id } });
+export async function getTemplate(tenantDb: PrismaClient, id: string, userId: string): Promise<TemplateDTO | null> {
+  const row = await tenantDb.template.findUnique({ where: { id } });
   if (!row) return null;
   if (row.ownerId && row.ownerId !== userId) return null;
   return toTemplateDTO(row);
 }
 
 /** Clone any visible template into a new firm-owned, editable copy ("Copy as New Template"). */
-export async function cloneTemplate(source: TemplateDTO, ownerId: string): Promise<TemplateDTO> {
-  const row = await prisma.template.create({
+export async function cloneTemplate(tenantDb: PrismaClient, source: TemplateDTO, ownerId: string): Promise<TemplateDTO> {
+  const row = await tenantDb.template.create({
     data: {
       ownerId,
       title: `${source.title} (copy)`,
@@ -90,10 +89,11 @@ export async function cloneTemplate(source: TemplateDTO, ownerId: string): Promi
 
 /** Create an owned template from scratch (Create Template). */
 export async function createOwnedTemplate(
+  tenantDb: PrismaClient,
   body: { title: string; category: string; kind: string; description: string; bodyHtml: string; variables: TemplateVariable[] },
   ownerId: string,
 ): Promise<TemplateDTO> {
-  const row = await prisma.template.create({
+  const row = await tenantDb.template.create({
     data: {
       ownerId,
       title: body.title,
@@ -110,15 +110,16 @@ export async function createOwnedTemplate(
 
 /** Update an owned template. Builtins (ownerId null) are read-only. */
 export async function updateTemplate(
+  tenantDb: PrismaClient,
   id: string,
   ownerId: string,
   body: { title: string; category: string; kind: string; description: string; bodyHtml: string; variables: TemplateVariable[] },
 ): Promise<TemplateDTO | "not_found" | "readonly"> {
-  const existing = await prisma.template.findUnique({ where: { id } });
+  const existing = await tenantDb.template.findUnique({ where: { id } });
   if (!existing) return "not_found";
   if (existing.ownerId == null) return "readonly";
   if (existing.ownerId !== ownerId) return "not_found";
-  const row = await prisma.template.update({
+  const row = await tenantDb.template.update({
     where: { id },
     data: {
       title: body.title,
@@ -132,17 +133,17 @@ export async function updateTemplate(
   return toTemplateDTO(row);
 }
 
-export async function deleteTemplate(id: string, ownerId: string): Promise<"ok" | "not_found" | "readonly"> {
-  const existing = await prisma.template.findUnique({ where: { id } });
+export async function deleteTemplate(tenantDb: PrismaClient, id: string, ownerId: string): Promise<"ok" | "not_found" | "readonly"> {
+  const existing = await tenantDb.template.findUnique({ where: { id } });
   if (!existing) return "not_found";
   if (existing.ownerId == null) return "readonly";
   if (existing.ownerId !== ownerId) return "not_found";
-  await prisma.template.delete({ where: { id } });
+  await tenantDb.template.delete({ where: { id } });
   return "ok";
 }
 
-export async function createTemplate(draft: TemplateDraft, source: "uploaded" | "viki", ownerId: string): Promise<TemplateDTO> {
-  const row = await prisma.template.create({
+export async function createTemplate(tenantDb: PrismaClient, draft: TemplateDraft, source: "uploaded" | "viki", ownerId: string): Promise<TemplateDTO> {
+  const row = await tenantDb.template.create({
     data: {
       ownerId,
       title: draft.title,
@@ -163,37 +164,37 @@ export async function createTemplate(draft: TemplateDraft, source: "uploaded" | 
  * first open, so content flows through the real Tiptap schema.
  */
 export async function generateDocument(
+  tenantDb: PrismaClient,
   template: TemplateDTO,
   documentTitle: string,
   values: Record<string, string>,
-  ownerId: string,
-  ownerName: string,
+  owner: { id: string; name: string; email: string; color: string },
 ): Promise<string> {
   const html = render(template.bodyHtml, values, template.variables);
-  const doc = await prisma.document.create({
+  const doc = await tenantDb.document.create({
     data: {
       title: documentTitle,
       kind: template.kind,
-      ownerId,
+      ownerId: owner.id,
       initialHtml: html,
       templateId: template.id,
-      members: { create: { userId: ownerId, role: "owner" } },
+      members: { create: { userId: owner.id, userName: owner.name, userEmail: owner.email, userColor: owner.color, role: "owner" } },
     },
   });
-  await prisma.auditEvent.create({
+  await tenantDb.auditEvent.create({
     data: {
       documentId: doc.id,
       type: "version_saved",
-      userId: ownerId,
-      userName: ownerName,
+      userId: owner.id,
+      userName: owner.name,
       detail: { generatedFromTemplate: template.title },
     },
   });
   return doc.id;
 }
 
-export async function getBatch(batchId: string, ownerId: string): Promise<BatchStatus | null> {
-  const b = await prisma.batch.findUnique({ where: { id: batchId } });
+export async function getBatch(tenantDb: PrismaClient, batchId: string, ownerId: string): Promise<BatchStatus | null> {
+  const b = await tenantDb.batch.findUnique({ where: { id: batchId } });
   if (!b || b.ownerId !== ownerId) return null;
   return {
     id: b.id,
@@ -214,30 +215,30 @@ export async function getBatch(batchId: string, ownerId: string): Promise<BatchS
  * the whole body has been drafted for the case). Records what was personalised.
  */
 export async function generateDocumentFromHtml(
+  tenantDb: PrismaClient,
   html: string,
   documentTitle: string,
   kind: TemplateDTO["kind"],
   templateId: string | null,
-  ownerId: string,
-  ownerName: string,
+  owner: { id: string; name: string; email: string; color: string },
   personalizationNotes: string[],
 ): Promise<string> {
-  const doc = await prisma.document.create({
+  const doc = await tenantDb.document.create({
     data: {
       title: documentTitle,
       kind,
-      ownerId,
+      ownerId: owner.id,
       initialHtml: html,
       templateId,
-      members: { create: { userId: ownerId, role: "owner" } },
+      members: { create: { userId: owner.id, userName: owner.name, userEmail: owner.email, userColor: owner.color, role: "owner" } },
     },
   });
-  await prisma.auditEvent.create({
+  await tenantDb.auditEvent.create({
     data: {
       documentId: doc.id,
       type: "version_saved",
-      userId: ownerId,
-      userName: ownerName,
+      userId: owner.id,
+      userName: owner.name,
       detail: {
         generatedFromTemplate: templateId,
         personalized: true,

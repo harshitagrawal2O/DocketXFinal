@@ -1,9 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { PrismaClient } from "@prisma/client";
 import { listTemplates, getTemplate, generateDocumentFromHtml } from "../templates/service.js";
 import { personalizeDocument, draftDocumentFromScratch } from "./templateAgent.js";
 import { recordUsage } from "./usage.js";
 import { emitIntake, type IntakeSession } from "./intakeManager.js";
 import { withLLMSlot } from "../llm/limiter.js";
+import { resolveAnthropicApiKey } from "../llm/orgApiKey.js";
 import type { IntakeTemplateMatch } from "@docket/shared";
 
 const MODEL = process.env.VIKI_MODEL ?? "claude-opus-4-8";
@@ -12,14 +14,8 @@ const MAX_TOOL_ITERS = 3;
 export const GREETING =
   "Hi, I'm Viki — I help draft legal and CA documents. What do you need today? Tell me in plain words (for example: \"a mutual NDA with a Bangalore vendor\", \"an employment agreement for a senior engineer\", or \"a legal notice for a bounced cheque\"), and I'll match it to a template and draft it for your matter.";
 
-function client(): Anthropic {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
-  return new Anthropic({ apiKey });
-}
-
-async function systemPrompt(userId: string): Promise<string> {
-  const catalog = await listTemplates(userId);
+async function systemPrompt(tenantDb: PrismaClient, userId: string): Promise<string> {
+  const catalog = await listTemplates(tenantDb, userId);
   const lines = catalog
     .map((t) => `- id=${t.id} | ${t.title} [${t.category}/${t.kind}] — ${t.description}`)
     .join("\n");
@@ -68,18 +64,19 @@ const TOOLS: Anthropic.Tool[] = [
 
 /** Run one Viki turn in an intake session, streaming to SSE subscribers. */
 export async function runIntakeTurn(session: IntakeSession): Promise<void> {
-  const { id, userId } = session;
+  const { id, owner, tenantDb, organizationId } = session;
   if (session.busy) return;
   session.busy = true;
   try {
-    const system = await systemPrompt(userId);
+    const system = await systemPrompt(tenantDb, owner.id);
 
     for (let iter = 0; iter < MAX_TOOL_ITERS; iter++) {
       emitIntake(id, { type: "state", state: iter === 0 ? "thinking" : "drafting" });
 
       let assistantText = "";
+      const apiKey = await resolveAnthropicApiKey(organizationId);
       const final = await withLLMSlot(async () => {
-        const stream = client().messages.stream({
+        const stream = new Anthropic({ apiKey }).messages.stream({
           model: MODEL,
           max_tokens: 4096,
           system,
@@ -94,7 +91,7 @@ export async function runIntakeTurn(session: IntakeSession): Promise<void> {
         }
         return await stream.finalMessage();
       });
-      await recordUsage({ kind: "intake", model: MODEL, usage: final.usage, userId });
+      await recordUsage({ tenantDb, organizationId, kind: "intake", model: MODEL, usage: final.usage, userId: owner.id });
       session.history.push({ role: "assistant", content: final.content });
 
       const toolUses = final.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
@@ -132,24 +129,25 @@ export async function runIntakeTurn(session: IntakeSession): Promise<void> {
 }
 
 async function executeTool(session: IntakeSession, tu: Anthropic.ToolUseBlock): Promise<string> {
-  const { userId, userName } = session;
+  const { owner, tenantDb, organizationId } = session;
+  const ctx = { tenantDb, organizationId, userId: owner.id };
 
   if (tu.name === "use_template") {
     const input = tu.input as { templateId: string; documentTitle: string; brief: string };
-    const template = await getTemplate(input.templateId, userId);
+    const template = await getTemplate(tenantDb, input.templateId, owner.id);
     if (!template) return `Template ${input.templateId} not found. Suggest another or draft from scratch.`;
     emitIntake(session.id, {
       type: "template_matches",
       templates: [{ id: template.id, title: template.title, description: template.description }] as IntakeTemplateMatch[],
     });
-    const personalized = await personalizeDocument(template, input.brief, userId);
+    const personalized = await personalizeDocument(ctx, template, input.brief);
     const documentId = await generateDocumentFromHtml(
+      tenantDb,
       personalized.bodyHtml,
       input.documentTitle,
       template.kind,
       template.id,
-      userId,
-      userName,
+      owner,
       personalized.personalizationNotes,
     );
     emitIntake(session.id, {
@@ -164,14 +162,14 @@ async function executeTool(session: IntakeSession, tu: Anthropic.ToolUseBlock): 
 
   if (tu.name === "draft_from_scratch") {
     const input = tu.input as { documentTitle: string; instruction: string };
-    const drafted = await draftDocumentFromScratch(input.instruction, userId);
+    const drafted = await draftDocumentFromScratch(ctx, input.instruction);
     const documentId = await generateDocumentFromHtml(
+      tenantDb,
       drafted.bodyHtml,
       input.documentTitle,
       "contract",
       null,
-      userId,
-      userName,
+      owner,
       drafted.personalizationNotes,
     );
     emitIntake(session.id, {
