@@ -1,76 +1,51 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { withLLMSlot } from "../llm/limiter.js";
-import { resolveAnthropicApiKey } from "../llm/orgApiKey.js";
+import type Anthropic from "@anthropic-ai/sdk";
+import { runAnthropicTurn } from "./providers/anthropic.js";
+import { runGeminiTurn } from "./providers/gemini.js";
 
-/**
- * PROVIDER SEAM: the one function runner.ts calls to talk to an LLM. Today
- * only Anthropic is implemented; a Gemini adapter with this same signature
- * can be swapped in later (behind a VIKI_PROVIDER env switch) without
- * touching runner.ts's iteration/tool-round control flow.
- */
+export interface ProviderUsage {
+  input_tokens: number;
+  output_tokens: number;
+}
+
 export interface ProviderTurnResult {
   toolUse: Anthropic.ToolUseBlock | null;
   /** Opaque — fed back verbatim as the assistant turn when continuing this run. */
   assistantContent: Anthropic.MessageParam["content"];
-  usage: Anthropic.Usage;
+  usage: ProviderUsage;
+  /** The model actually used — each provider resolves its own (VIKI_MODEL vs VIKI_GEMINI_MODEL); callers report this to recordUsage instead of guessing. */
+  modelUsed: string;
 }
 
 export interface RunVikiTurnParams {
-  /** One organization, one Anthropic key (see llm/orgApiKey.ts) — omit to use the platform key. */
+  /** One organization, one Anthropic key (see llm/orgApiKey.ts) — omit to use the platform key. Gemini is currently platform-key-only (GEMINI_API_KEY). */
   organizationId?: string | null;
-  model: string;
   system: string;
   tools: Anthropic.ToolUnion[];
   toolChoice: Anthropic.MessageCreateParamsStreaming["tool_choice"];
+  /**
+   * Anthropic's message/content-block shapes are this app's internal wire
+   * format for conversation history, regardless of which provider is
+   * active — see providers/gemini.ts for the translation to/from Gemini's
+   * own Content/Part shapes. This keeps runner.ts provider-agnostic.
+   */
   messages: Anthropic.MessageParam[];
   maxTokens: number;
   signal: AbortSignal;
   /** Cumulative raw JSON text of the content block currently streaming (resets each new block). */
   onRawJsonDelta: (raw: string) => void;
   onDraftingStart: () => void;
-  /** Fires when Anthropic's server-executed web_search tool starts a call. */
+  /** Fires when a server-executed web search tool call starts (Anthropic's web_search or Gemini's googleSearch grounding). */
   onServerToolUse?: () => void;
 }
 
+/**
+ * PROVIDER SEAM: the one function runner.ts calls to talk to an LLM. Picks
+ * the active provider from VIKI_PROVIDER ("anthropic", default, or
+ * "gemini") — runner.ts's iteration/tool-round control flow never needs to
+ * know which one is actually running.
+ */
 export async function runVikiTurn(params: RunVikiTurnParams): Promise<ProviderTurnResult> {
-  const apiKey = await resolveAnthropicApiKey(params.organizationId);
-  return withLLMSlot(async () => {
-    const stream = new Anthropic({ apiKey }).messages.stream(
-      {
-        model: params.model,
-        max_tokens: params.maxTokens,
-        system: params.system,
-        tools: params.tools,
-        tool_choice: params.toolChoice,
-        messages: params.messages,
-      },
-      { signal: params.signal },
-    );
-
-    // Reset per content block, not per stream: a turn that used the
-    // server-side web_search tool has an earlier server_tool_use block
-    // streaming its own JSON input ahead of the model's real tool_use call —
-    // without resetting, that block's text would prefix-concatenate onto the
-    // real tool call's JSON and corrupt the caller's checklist/hunk parsing.
-    let raw = "";
-    let drafting = false;
-    for await (const ev of stream) {
-      if (ev.type === "content_block_start") {
-        raw = "";
-        if (ev.content_block.type === "server_tool_use") params.onServerToolUse?.();
-      }
-      if (ev.type === "content_block_delta" && ev.delta.type === "input_json_delta") {
-        if (!drafting) {
-          drafting = true;
-          params.onDraftingStart();
-        }
-        raw += ev.delta.partial_json;
-        params.onRawJsonDelta(raw);
-      }
-    }
-
-    const finalMsg = await stream.finalMessage();
-    const toolUse = finalMsg.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use") ?? null;
-    return { toolUse, assistantContent: finalMsg.content, usage: finalMsg.usage };
-  });
+  const provider = (process.env.VIKI_PROVIDER ?? "anthropic").trim().toLowerCase();
+  if (provider === "gemini") return runGeminiTurn(params);
+  return runAnthropicTurn(params);
 }

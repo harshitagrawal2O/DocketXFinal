@@ -18,8 +18,7 @@ import { getOrgUserIds } from "../auth/org.js";
 import type { Citation, ChecklistItem } from "@docket/shared";
 import type { Prisma } from "@prisma/client";
 
-const MODEL = process.env.VIKI_MODEL ?? "claude-opus-4-8";
-/** Anthropic server-executed web search tool (account-gated) — same flag/pattern as templateAgent.ts. */
+/** Anthropic server-executed web search tool (account-gated) — same flag/pattern as templateAgent.ts. Gemini maps this to its own googleSearch grounding tool when VIKI_PROVIDER=gemini (see providers/gemini.ts). */
 const WEB_SEARCH_ENABLED = process.env.VIKI_WEB_SEARCH === "true";
 
 interface RawHunk {
@@ -269,7 +268,6 @@ export async function runAgent(run: ActiveRun): Promise<void> {
 
         const result = await runVikiTurn({
           organizationId: run.organizationId,
-          model: MODEL,
           system: SYSTEM_PROMPT,
           tools,
           toolChoice,
@@ -304,7 +302,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
             }
           },
         });
-        await recordUsage({ tenantDb: run.tenantDb, organizationId: run.organizationId, kind: "agent_run", model: MODEL, usage: result.usage, userId: run.userId, documentId });
+        await recordUsage({ tenantDb: run.tenantDb, organizationId: run.organizationId, kind: "agent_run", model: result.modelUsed, usage: result.usage, userId: run.userId, documentId });
 
         const tu = result.toolUse;
         if (!tu) throw new Error("Viki returned no tool call");
