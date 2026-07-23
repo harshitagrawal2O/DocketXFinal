@@ -87,9 +87,12 @@ export function attachYjsWebSocket(wss: WebSocketServer): void {
     const [pathPart, queryPart] = url.slice(1).split("?");
     const documentId = pathPart || "default";
     const token = new URLSearchParams(queryPart ?? "").get("token");
+    // Connection-level events only — never log token contents or document text.
+    console.log(`[yjs] connection attempt documentId=${documentId} hasToken=${Boolean(token)}`);
 
     const payload = token ? verifyWsToken(token) : null;
     if (!payload || payload.documentId !== documentId) {
+      console.log(`[yjs] rejecting documentId=${documentId}: ${!token ? "no token" : !payload ? "invalid/expired token" : "token documentId mismatch"}`);
       conn.close(4001, "Unauthorized: missing or invalid connection token");
       return;
     }
@@ -106,6 +109,7 @@ export function attachYjsWebSocket(wss: WebSocketServer): void {
     await whenLoaded(tenantDb, documentId);
     const room = getRoom(tenantDb, documentId);
     room.conns.add(conn);
+    console.log(`[yjs] accepted documentId=${documentId} orgId=${payload.organizationId} roomConns=${room.conns.size}`);
 
     conn.binaryType = "arraybuffer";
 

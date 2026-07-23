@@ -31,6 +31,9 @@ const yjsServer = createServer((_req, res) => {
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ ok: true }));
 });
+yjsServer.on("upgrade", (req) => {
+  console.log(`[yjs] raw HTTP upgrade received: ${req.url}`);
+});
 const wss = new WebSocketServer({ server: yjsServer });
 attachYjsWebSocket(wss);
 yjsServer.on("error", (err: NodeJS.ErrnoException) => {
