@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --exclude \"**/.yjs-data/**\" --exclude \"**/*.log\" --exclude \"**/*.ldb\" src/index.ts",
+    "postinstall": "prisma generate",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "start:api": "node dist/server.js",
