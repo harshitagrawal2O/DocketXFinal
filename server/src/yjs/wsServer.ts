@@ -28,6 +28,19 @@ import { verifyWsToken } from "./wsToken.js";
 const MESSAGE_SYNC = 0;
 const MESSAGE_AWARENESS = 1;
 
+/**
+ * Reverse proxies in front of a deployed WS server (Render's included)
+ * commonly drop a connection after ~30-60s of no traffic, even though the
+ * underlying process is completely healthy — this is what "the server goes
+ * down after inactivity" almost always actually is. A standard WebSocket
+ * ping/pong (protocol-level, not our own MESSAGE_SYNC/AWARENESS framing) at
+ * an interval safely under that window keeps the connection looking
+ * "active" to any intermediary. Also doubles as dead-connection cleanup:
+ * a socket that never pongs back within one interval gets terminated
+ * instead of lingering in a room's conns set forever.
+ */
+const HEARTBEAT_INTERVAL_MS = 25_000;
+
 interface Room {
   doc: Y.Doc;
   awareness: awarenessProtocol.Awareness;
@@ -81,8 +94,25 @@ async function resolveTenantDb(organizationId: string): Promise<PrismaClient> {
   return getTenantClient(org);
 }
 
+const isAlive = new WeakMap<WebSocket, boolean>();
+
 export function attachYjsWebSocket(wss: WebSocketServer): void {
+  const heartbeat = setInterval(() => {
+    wss.clients.forEach((conn) => {
+      if (isAlive.get(conn) === false) {
+        conn.terminate(); // never ponged back since the last check — dead, not just idle
+        return;
+      }
+      isAlive.set(conn, false);
+      conn.ping();
+    });
+  }, HEARTBEAT_INTERVAL_MS);
+  wss.on("close", () => clearInterval(heartbeat));
+
   wss.on("connection", async (conn: WebSocket, req: IncomingMessage) => {
+    isAlive.set(conn, true);
+    conn.on("pong", () => isAlive.set(conn, true));
+
     const url = req.url ?? "/";
     const [pathPart, queryPart] = url.slice(1).split("?");
     const documentId = pathPart || "default";
