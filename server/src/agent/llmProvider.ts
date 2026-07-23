@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { runAnthropicTurn } from "./providers/anthropic.js";
 import { runGeminiTurn } from "./providers/gemini.js";
+import { runOpenAITurn } from "./providers/openai.js";
 
 export interface ProviderUsage {
   input_tokens: number;
@@ -40,12 +41,13 @@ export interface RunVikiTurnParams {
 
 /**
  * PROVIDER SEAM: the one function runner.ts calls to talk to an LLM. Picks
- * the active provider from VIKI_PROVIDER ("anthropic", default, or
- * "gemini") — runner.ts's iteration/tool-round control flow never needs to
- * know which one is actually running.
+ * the active provider from VIKI_PROVIDER ("anthropic", default, "gemini",
+ * or "openai") — runner.ts's iteration/tool-round control flow never needs
+ * to know which one is actually running.
  */
 export async function runVikiTurn(params: RunVikiTurnParams): Promise<ProviderTurnResult> {
   const provider = (process.env.VIKI_PROVIDER ?? "anthropic").trim().toLowerCase();
   if (provider === "gemini") return runGeminiTurn(params);
+  if (provider === "openai") return runOpenAITurn(params);
   return runAnthropicTurn(params);
 }
