@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { Anthropic } from "@anthropic-ai/sdk";
 import * as Y from "yjs";
 import { createId } from "../util/id.js";
 import { whenLoaded } from "../yjs/docStore.js";

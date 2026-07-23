@@ -1,4 +1,4 @@
-import type Anthropic from "@anthropic-ai/sdk";
+import type { Anthropic } from "@anthropic-ai/sdk";
 import type { PrismaClient } from "@prisma/client";
 import type { IntakeSSEEvent } from "@docket/shared";
 

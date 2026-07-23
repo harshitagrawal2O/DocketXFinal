@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { Anthropic } from "@anthropic-ai/sdk";
 import type { PrismaClient } from "@prisma/client";
 import { listTemplates, getTemplate, generateDocumentFromHtml } from "../templates/service.js";
 import { personalizeDocument, draftDocumentFromScratch } from "./templateAgent.js";

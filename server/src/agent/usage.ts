@@ -1,6 +1,6 @@
 import { prisma } from "../db.js";
 import type { PrismaClient } from "@prisma/client";
-import type Anthropic from "@anthropic-ai/sdk";
+import type { Anthropic } from "@anthropic-ai/sdk";
 
 /**
  * Record per-call LLM token usage for cost metering / billing (§4 AI discipline).

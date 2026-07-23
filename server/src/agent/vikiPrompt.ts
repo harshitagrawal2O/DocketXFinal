@@ -1,4 +1,4 @@
-import type Anthropic from "@anthropic-ai/sdk";
+import type { Anthropic } from "@anthropic-ai/sdk";
 
 /**
  * Viki's system prompt + structured-output tool schemas.

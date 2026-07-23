@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { Anthropic } from "@anthropic-ai/sdk";
 import { withLLMSlot } from "../../llm/limiter.js";
 import { resolveAnthropicApiKey } from "../../llm/orgApiKey.js";
 import type { ProviderTurnResult, RunVikiTurnParams } from "../llmProvider.js";

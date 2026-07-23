@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { Anthropic } from "@anthropic-ai/sdk";
 import type { PrismaClient } from "@prisma/client";
 import type { Citation } from "@docket/shared";
 import { verifyHunkCitations, type VerificationResult } from "./citations.js";

@@ -1,4 +1,4 @@
-import type Anthropic from "@anthropic-ai/sdk";
+import type { Anthropic } from "@anthropic-ai/sdk";
 import { runAnthropicTurn } from "./providers/anthropic.js";
 import { runGeminiTurn } from "./providers/gemini.js";
 import { runOpenAITurn } from "./providers/openai.js";

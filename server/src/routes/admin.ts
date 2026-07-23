@@ -1,5 +1,5 @@
 import { Router } from "express";
-import Anthropic from "@anthropic-ai/sdk";
+import { Anthropic } from "@anthropic-ai/sdk";
 import { prisma } from "../db.js";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
 import { requireOrgAdmin, requireTenantDb, getOrgUserIds } from "../auth/org.js";

@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { Anthropic } from "@anthropic-ai/sdk";
 import type { PrismaClient } from "@prisma/client";
 import type { TemplateDraft, TemplateDTO, TemplateVariable } from "@docket/shared";
 import { recordUsage } from "./usage.js";

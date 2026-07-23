@@ -1,5 +1,5 @@
 import { GoogleGenAI, FunctionCallingConfigMode, type Content, type Part, type Tool as GeminiTool } from "@google/genai";
-import type Anthropic from "@anthropic-ai/sdk";
+import type { Anthropic } from "@anthropic-ai/sdk";
 import { withLLMSlot } from "../../llm/limiter.js";
 import type { ProviderTurnResult, RunVikiTurnParams } from "../llmProvider.js";
 
