@@ -5,11 +5,24 @@ import * as syncProtocol from "y-protocols/sync";
 import * as awarenessProtocol from "y-protocols/awareness";
 import * as encoding from "lib0/encoding";
 import * as decoding from "lib0/decoding";
+import type { PrismaClient } from "@prisma/client";
+import { prisma } from "../db.js";
+import { getTenantClient } from "../tenantDb.js";
 import { getDoc, whenLoaded } from "./docStore.js";
+import { verifyWsToken } from "./wsToken.js";
 
 /**
  * Minimal y-websocket-compatible server built on y-protocols. One room per
  * documentId (path = /<documentId>), so per-doc rooms are isolated.
+ *
+ * Every connection must carry a `?token=` query param minted by
+ * GET /api/documents/:id/yjs-token (see wsToken.ts for why: this process and
+ * the REST API are separate services/domains once deployed, so a session
+ * cookie set by the API doesn't reach this WS upgrade request the way it
+ * would if everything were one process). The token's organizationId is what
+ * lets this process resolve the correct tenant database to persist into —
+ * there's no other way to go from a bare documentId to an organization (see
+ * docStore.ts's header comment).
  */
 
 const MESSAGE_SYNC = 0;
@@ -23,10 +36,10 @@ interface Room {
 
 const rooms = new Map<string, Room>();
 
-function getRoom(documentId: string): Room {
+function getRoom(tenantDb: PrismaClient, documentId: string): Room {
   let room = rooms.get(documentId);
   if (room) return room;
-  const doc = getDoc(documentId);
+  const doc = getDoc(tenantDb, documentId);
   const awareness = new awarenessProtocol.Awareness(doc);
   awareness.setLocalState(null);
   room = { doc, awareness, conns: new Set() };
@@ -59,11 +72,39 @@ function getRoom(documentId: string): Room {
   return room;
 }
 
+async function resolveTenantDb(organizationId: string): Promise<PrismaClient> {
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { id: true, databaseUrlEnc: true },
+  });
+  if (!org) throw new Error(`Organization ${organizationId} not found`);
+  return getTenantClient(org);
+}
+
 export function attachYjsWebSocket(wss: WebSocketServer): void {
   wss.on("connection", async (conn: WebSocket, req: IncomingMessage) => {
-    const documentId = (req.url ?? "/").slice(1).split("?")[0] || "default";
-    await whenLoaded(documentId);
-    const room = getRoom(documentId);
+    const url = req.url ?? "/";
+    const [pathPart, queryPart] = url.slice(1).split("?");
+    const documentId = pathPart || "default";
+    const token = new URLSearchParams(queryPart ?? "").get("token");
+
+    const payload = token ? verifyWsToken(token) : null;
+    if (!payload || payload.documentId !== documentId) {
+      conn.close(4001, "Unauthorized: missing or invalid connection token");
+      return;
+    }
+
+    let tenantDb: PrismaClient;
+    try {
+      tenantDb = await resolveTenantDb(payload.organizationId);
+    } catch (err) {
+      console.error("[yjs] failed to resolve tenant database:", (err as Error).message);
+      conn.close(1011, "Server error resolving document's organization");
+      return;
+    }
+
+    await whenLoaded(tenantDb, documentId);
+    const room = getRoom(tenantDb, documentId);
     room.conns.add(conn);
 
     conn.binaryType = "arraybuffer";

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import type { SessionUser } from "@docket/shared";
+import { docsApi } from "@/lib/api";
 
 const YJS_WS_URL = import.meta.env.VITE_YJS_WS_URL ?? "ws://localhost:4001";
 
@@ -24,21 +25,33 @@ export function useDocConnection(
   const [conn, setConn] = useState<DocConnection | null>(null);
 
   useEffect(() => {
-    const ydoc = new Y.Doc();
-    const provider = new WebsocketProvider(YJS_WS_URL, documentId, ydoc, {
-      connect: true,
+    let cancelled = false;
+    let ydoc: Y.Doc | null = null;
+    let provider: WebsocketProvider | null = null;
+
+    // The WS server and the API are separate services once deployed, so a
+    // session cookie alone doesn't authorize the connection — fetch a
+    // short-lived signed token first (see server/src/yjs/wsToken.ts).
+    void docsApi.yjsToken(documentId).then(({ token }) => {
+      if (cancelled) return;
+      ydoc = new Y.Doc();
+      provider = new WebsocketProvider(YJS_WS_URL, documentId, ydoc, {
+        connect: true,
+        params: { token },
+      });
+      // Presence for CollaborationCursor.
+      provider.awareness.setLocalStateField("user", {
+        name: user.name,
+        color: user.color,
+      });
+      setConn({ ydoc, provider });
     });
-    // Presence for CollaborationCursor.
-    provider.awareness.setLocalStateField("user", {
-      name: user.name,
-      color: user.color,
-    });
-    setConn({ ydoc, provider });
 
     return () => {
-      provider.awareness.setLocalState(null);
-      provider.destroy();
-      ydoc.destroy();
+      cancelled = true;
+      provider?.awareness.setLocalState(null);
+      provider?.destroy();
+      ydoc?.destroy();
       setConn(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

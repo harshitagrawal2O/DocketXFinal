@@ -1,22 +1,15 @@
 import "./loadEnv.js";
-import express from "express";
-import cors from "cors";
 import { createServer } from "node:http";
 import { WebSocketServer } from "ws";
-import { attachUser } from "./auth/session.js";
-import { attachOrg } from "./auth/org.js";
+import { app } from "./app.js";
 import { attachYjsWebSocket } from "./yjs/wsServer.js";
-import { authRouter } from "./routes/auth.js";
-import { documentsRouter } from "./routes/documents.js";
-import { proposalsRouter } from "./routes/proposals.js";
-import { agentRunsRouter } from "./routes/agentRuns.js";
-import { versionsRouter } from "./routes/versions.js";
-import { auditRouter } from "./routes/audit.js";
-import { templatesRouter } from "./routes/templates.js";
-import { exportRouter } from "./routes/export.js";
-import { intakeRouter } from "./routes/intake.js";
-import { usageRouter } from "./routes/usage.js";
-import { adminRouter } from "./routes/admin.js";
+
+/**
+ * LOCAL DEV entrypoint only: runs the Express API, the Yjs WS server, and
+ * the queue worker together in one process, exactly as before. In a real
+ * deployment these three run separately — see server/api/index.ts (Vercel,
+ * API only) and server/src/realtimeEntry.ts (Render, Yjs WS + worker).
+ */
 
 // Backstop: Express 4 does not forward a rejected promise from an async
 // middleware/handler to the error middleware — an uncaught rejection would
@@ -33,38 +26,6 @@ process.on("uncaughtException", (err) => {
 
 const PORT = Number(process.env.PORT ?? 4000);
 const YJS_PORT = Number(process.env.YJS_PORT ?? 4001);
-
-const app = express();
-app.use(
-  cors({
-    origin: process.env.WEB_ORIGIN ?? true,
-    credentials: true,
-  }),
-);
-app.use(express.json({ limit: "2mb" }));
-app.use(attachUser);
-app.use(attachOrg);
-
-app.get("/health", (_req, res) => res.json({ ok: true }));
-
-app.use("/api/auth", authRouter);
-app.use("/api/documents", documentsRouter);
-app.use("/api", proposalsRouter);
-app.use("/api", agentRunsRouter);
-app.use("/api", versionsRouter);
-app.use("/api", auditRouter);
-app.use("/api", templatesRouter);
-app.use("/api", exportRouter);
-app.use("/api", intakeRouter);
-app.use("/api", usageRouter);
-app.use("/api", adminRouter);
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  // Never log document contents — only the message.
-  console.error("[api] error:", err.message);
-  res.status(500).json({ error: err.message });
-});
 
 /**
  * A failure to LISTEN (e.g. EADDRINUSE — something else already on this port)

@@ -79,7 +79,7 @@ export async function acceptProposal(
     // getDoc() alone can race the async leveldb load on first access in this
     // process — a false "anchors don't resolve" would wrongly flip a valid
     // proposal to outdated instead of applying it. Await the load.
-    const doc = await whenLoaded(row.documentId);
+    const doc = await whenLoaded(tenantDb, row.documentId);
     const ok = applyAccept(doc, row.anchorStart, row.anchorEnd, text, "viki-accept");
     if (!ok) {
       // Anchors no longer resolve — treat as outdated rather than corrupt text.
@@ -88,7 +88,7 @@ export async function acceptProposal(
         data: { status: "outdated" },
       });
       const dto = toDTO(outdated);
-      upsertProposal(dto);
+      upsertProposal(tenantDb, dto);
       return dto;
     }
 
@@ -112,7 +112,7 @@ export async function acceptProposal(
     });
 
     const dto = toDTO(updated);
-    upsertProposal(dto);
+    upsertProposal(tenantDb, dto);
     return dto;
   });
 }
@@ -134,7 +134,7 @@ export async function rejectProposal(tenantDb: PrismaClient, proposalId: string,
     });
     await audit(tenantDb, row.documentId, "proposal_rejected", actor, { proposalId: row.id, agentRunId: row.agentRunId });
     const dto = toDTO(updated);
-    upsertProposal(dto);
+    upsertProposal(tenantDb, dto);
     return dto;
   });
 }
@@ -149,7 +149,7 @@ export async function markOutdatedForEdit(
   documentId: string,
   editRange: { start: number; end: number },
 ): Promise<DiffProposal[]> {
-  const doc = await whenLoaded(documentId);
+  const doc = await whenLoaded(tenantDb, documentId);
   const staged = await tenantDb.diffProposal.findMany({
     where: { documentId, status: "staged" },
   });
@@ -168,7 +168,7 @@ export async function markOutdatedForEdit(
         agentRunId: row.agentRunId,
       });
       const dto = toDTO(updated);
-      upsertProposal(dto);
+      upsertProposal(tenantDb, dto);
       flipped.push(dto);
     }
   }
@@ -191,7 +191,7 @@ export async function markOutdatedByIds(tenantDb: PrismaClient, documentId: stri
     const updated = await tenantDb.diffProposal.update({ where: { id }, data: { status: "outdated" } });
     await audit(tenantDb, documentId, "proposal_outdated", null, { proposalId: id, agentRunId: row.agentRunId });
     const dto = toDTO(updated);
-    upsertProposal(dto);
+    upsertProposal(tenantDb, dto);
     flipped.push(dto);
   }
   return flipped;

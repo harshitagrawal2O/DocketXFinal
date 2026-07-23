@@ -3,6 +3,7 @@ import { prisma } from "../db.js";
 import { requireAuth, type AuthedRequest } from "../auth/session.js";
 import { requireTenantDb } from "../auth/org.js";
 import { getRole, requireCap } from "../auth/roles.js";
+import { mintWsToken } from "../yjs/wsToken.js";
 import type { DocumentSummary, Role } from "@docket/shared";
 
 export const documentsRouter = Router();
@@ -87,6 +88,17 @@ documentsRouter.get("/:id", async (req: AuthedRequest, res) => {
     // Yjs doc on first open (guarded so only one client seeds).
     initialHtml: doc.initialHtml ?? null,
   });
+});
+
+// Short-lived token authorizing this user's next Yjs WS connection to this
+// document — see yjs/wsToken.ts for why this exists (API and WS server are
+// separate services/domains once deployed, so a session cookie alone
+// doesn't carry across).
+documentsRouter.get("/:id/yjs-token", async (req: AuthedRequest, res) => {
+  const role = await getRole(req.tenantDb!, req.params.id!, req.user!.id);
+  if (!role) return res.status(403).json({ error: "Not a member" });
+  const token = mintWsToken({ documentId: req.params.id!, organizationId: req.org!.id, userId: req.user!.id });
+  return res.json({ token });
 });
 
 // Owner-only sharing management.

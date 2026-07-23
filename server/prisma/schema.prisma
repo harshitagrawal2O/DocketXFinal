@@ -123,11 +123,12 @@ model Document {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  members   DocumentMember[]
-  proposals DiffProposal[]
-  audit     AuditEvent[]
-  versions  Version[]
-  turns     AgentTurn[]
+  members    DocumentMember[]
+  proposals  DiffProposal[]
+  audit      AuditEvent[]
+  versions   Version[]
+  turns      AgentTurn[]
+  yjsUpdates YjsUpdate[]
 }
 
 model DocumentMember {
@@ -255,6 +256,24 @@ model AgentTurn {
   agentRunId String?
   role       String // user | assistant
   content    String
+  createdAt  DateTime @default(now())
+
+  @@index([documentId, createdAt])
+}
+
+// Append-only Yjs update log — the persistence layer for live document
+// content itself (separate from Version, which is named/manual snapshots).
+// Replaces local-disk y-leveldb storage: the realtime WS server (Render) has
+// no persistent disk on the free tier, so live document state must live in
+// this org's own tenant database instead of the WS process's local
+// filesystem. Periodically compacted (see yjs/pgPersistence.ts) so the log
+// doesn't grow unboundedly — old rows get replaced by one row holding the
+// full current state via Y.encodeStateAsUpdate.
+model YjsUpdate {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  data       Bytes
   createdAt  DateTime @default(now())
 
   @@index([documentId, createdAt])

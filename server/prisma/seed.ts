@@ -1,7 +1,8 @@
 import "../src/loadEnv.js";
 import { PrismaClient, Prisma } from "@prisma/client";
 import * as Y from "yjs";
-import { getDoc, whenLoaded, persistence } from "../src/yjs/docStore.js";
+import { whenLoaded } from "../src/yjs/docStore.js";
+import { appendUpdate } from "../src/yjs/pgPersistence.js";
 import { getFragment, snapshotText } from "../src/yjs/mutations.js";
 import { flattenFragment, anchorAtOffset, locateText } from "../src/yjs/anchors.js";
 import { BUILTIN_TEMPLATES } from "../src/templates/builtin.js";
@@ -18,7 +19,7 @@ import { BUILTIN_TEMPLATES } from "../src/templates/builtin.js";
  *    deliberately BROKEN-citation hunk to exercise the blocked path.
  *
  * Anchors are real serialized Yjs relative positions. The canonical Y.Doc is
- * built on the shared docStore so y-leveldb persists the same content the WS
+ * built on the shared docStore so Postgres persists the same content the WS
  * server serves. Confidentiality: only the synthetic clause text I authored is
  * ever logged — never client data (claude.md invariant #7).
  */
@@ -214,9 +215,9 @@ async function main(): Promise<void> {
   }
   console.log("[seed] document + 3 members ready");
 
-  // --- 3. Build the canonical Y.Doc on the shared docStore so y-leveldb
+  // --- 3. Build the canonical Y.Doc on the shared docStore so Postgres
   //        persists the SAME content the WS server will serve. ---
-  const doc = await whenLoaded(DOC_ID);
+  const doc = await whenLoaded(prisma, DOC_ID);
   const frag = getFragment(doc);
   // Check actual TEXT length, not frag.length (child-node count) — a doc can
   // have paragraph element shells with no text inside them (e.g. left behind
@@ -341,13 +342,12 @@ async function main(): Promise<void> {
   console.log("[seed] baseline version snapshot stored");
 
   // --- 7. Durably persist the Y.Doc so the WS server serves it after seeding ---
-  await persistence.storeUpdate(DOC_ID, Y.encodeStateAsUpdate(doc));
-  try {
-    await persistence.flushDocument(DOC_ID);
-  } catch {
-    // flushDocument merges stored updates; safe to ignore if unavailable.
-  }
-  console.log("[seed] Y.Doc flushed to y-leveldb");
+  // (pgPersistence's attachPersistence listener, wired up inside whenLoaded
+  // above, already streams every update as it happens — this is just an
+  // explicit final write to be certain the full state is captured even if
+  // no update event fired during seeding.)
+  await appendUpdate(prisma, DOC_ID, Y.encodeStateAsUpdate(doc));
+  console.log("[seed] Y.Doc persisted to Postgres");
 
   // --- 8. Builtin (global) template library ---
   for (const t of BUILTIN_TEMPLATES) {

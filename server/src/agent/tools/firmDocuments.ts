@@ -28,12 +28,12 @@ export interface DocSearchHit {
   snippet: string;
 }
 
-async function safeText(documentId: string): Promise<string> {
+async function safeText(tenantDb: PrismaClient, documentId: string): Promise<string> {
   // whenLoaded (not getDoc) — a cross-document read may be this document's
   // FIRST access in this process, and getDoc alone can race the async
-  // leveldb load and return an empty doc (the same bug fixed for the
+  // persistence load and return an empty doc (the same bug fixed for the
   // primary document in this run; see docStore.ts).
-  const doc = await whenLoaded(documentId);
+  const doc = await whenLoaded(tenantDb, documentId);
   return flattenFragment(getFragment(doc)).text;
 }
 
@@ -63,7 +63,7 @@ export async function searchFirmDocuments(
 
   const hits: DocSearchHit[] = [];
   for (const d of pool) {
-    const text = await safeText(d.id);
+    const text = await safeText(tenantDb, d.id);
     hits.push({
       id: d.id,
       title: d.title,
@@ -90,7 +90,7 @@ export async function readFirmDocument(tenantDb: PrismaClient, orgUserIds: strin
   const doc = await tenantDb.document.findUnique({ where: { id: documentId } });
   if (!doc) return null;
 
-  const full = await safeText(documentId);
+  const full = await safeText(tenantDb, documentId);
   const truncated = full.length > MAX_READ_CHARS;
   return {
     title: doc.title,

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: docket-realtime
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build -w packages/shared && npm run build -w server
+    startCommand: node server/dist/src/realtimeEntry.js
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: WORKER_MODE
+        value: external
+      # Set the rest (DATABASE_URL, DIRECT_URL, CREDENTIALS_ENCRYPTION_KEY,
+      # YJS_TOKEN_SECRET) in the Render dashboard — see the deployment README
+      # for the exact list. Never commit real secret values into this file.

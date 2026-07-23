@@ -1,42 +1,22 @@
+import type { PrismaClient } from "@prisma/client";
 import * as Y from "yjs";
-import { LeveldbPersistence } from "y-leveldb";
 import { snapshotText } from "./mutations.js";
-import { existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { loadIntoDoc, attachPersistence } from "./pgPersistence.js";
 
 /**
  * One gc-disabled Y.Doc per document, kept warm in memory and persisted to
- * y-leveldb. gc:false is REQUIRED so version-history snapshots (Phase 5) can
- * reconstruct past states — see docs/phase-0-findings.md.
+ * the document's own tenant database (see pgPersistence.ts) rather than
+ * local disk — the realtime WS server (Render free tier) has no persistent
+ * disk, so live document content must live in Postgres instead of a local
+ * y-leveldb directory. gc:false is REQUIRED so version-history snapshots
+ * can reconstruct past states — see docs/phase-0-findings.md.
  *
- * A relative YJS_DATA_DIR resolves against process.cwd() — which is NOT
- * stable across how this monorepo gets invoked: `npm run dev -w server` runs
- * with cwd=server/, but an ad-hoc `tsx`/`node` script from the repo root (or
- * the seed script, or a one-off debug invocation) resolves the SAME relative
- * path against a DIFFERENT directory. That silently produces two unrelated
- * leveldb stores — real content written by one process looks "empty" to
- * another, with no error. Anchor a relative path to the server package root
- * instead (found by walking up from this file to the nearest package.json —
- * robust to running from source, src/yjs/, or compiled, dist/src/yjs/), so
- * every entry point agrees on one real directory. An absolute YJS_DATA_DIR
- * (if ever set) is still honored as-is.
+ * Every function here takes `tenantDb` explicitly — the same pattern used
+ * everywhere else in this app since the multi-tenant split (see
+ * auth/org.ts) — because a document's content lives in whichever physical
+ * database its organization uses, and there is no way to determine that
+ * from a bare documentId alone.
  */
-function findServerRoot(startDir: string): string {
-  let dir = startDir;
-  for (let i = 0; i < 6; i++) {
-    if (existsSync(join(dir, "package.json"))) return dir;
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return startDir; // fallback: shouldn't happen inside this package
-}
-
-const serverRoot = findServerRoot(dirname(fileURLToPath(import.meta.url)));
-const rawDataDir = process.env.YJS_DATA_DIR ?? "./.yjs-data";
-const DATA_DIR = isAbsolute(rawDataDir) ? rawDataDir : resolve(serverRoot, rawDataDir);
-const persistence = new LeveldbPersistence(DATA_DIR);
 
 interface Entry {
   doc: Y.Doc;
@@ -45,18 +25,22 @@ interface Entry {
 
 const registry = new Map<string, Entry>();
 
-export function getDoc(documentId: string): Y.Doc {
+/**
+ * Only the FIRST call for a given documentId actually uses `tenantDb` (to
+ * load history and attach the persistence listener) — once registered, the
+ * in-memory doc is returned regardless of which tenantDb a later caller
+ * passes. documentIds are globally unique (cuid) and every real call site
+ * already has the correct tenantDb for its own request, so in practice this
+ * never mismatches.
+ */
+export function getDoc(tenantDb: PrismaClient, documentId: string): Y.Doc {
   let entry = registry.get(documentId);
   if (entry) return entry.doc;
 
   const doc = new Y.Doc({ gc: false });
   const loaded = (async () => {
-    const persisted = await persistence.getYDoc(documentId);
-    Y.applyUpdate(doc, Y.encodeStateAsUpdate(persisted));
-    // Persist every update back to leveldb.
-    doc.on("update", (update: Uint8Array) => {
-      void persistence.storeUpdate(documentId, update);
-    });
+    await loadIntoDoc(tenantDb, documentId, doc);
+    attachPersistence(tenantDb, documentId, doc);
   })();
 
   entry = { doc, loaded };
@@ -64,25 +48,32 @@ export function getDoc(documentId: string): Y.Doc {
   return doc;
 }
 
-export async function whenLoaded(documentId: string): Promise<Y.Doc> {
-  const entry = registry.get(documentId) ?? (getDoc(documentId), registry.get(documentId)!);
+export async function whenLoaded(tenantDb: PrismaClient, documentId: string): Promise<Y.Doc> {
+  const entry = registry.get(documentId) ?? (getDoc(tenantDb, documentId), registry.get(documentId)!);
   await entry.loaded;
   return entry.doc;
 }
 
-export function getText(documentId: string): string {
-  return snapshotText(getDoc(documentId));
+export async function getText(tenantDb: PrismaClient, documentId: string): Promise<string> {
+  return snapshotText(await whenLoaded(tenantDb, documentId));
 }
 
-/** Encode a named snapshot of the current doc state (for a Version row). */
-export function encodeSnapshot(documentId: string): Uint8Array {
-  const doc = getDoc(documentId);
+/**
+ * Encode a named snapshot of the current doc state (for a Version row).
+ * whenLoaded (not getDoc) — this may be this process's FIRST touch of this
+ * documentId (e.g. the API process saving a version for a document whose
+ * live edits have only ever gone through the separate realtime process),
+ * and getDoc alone can race the async Postgres load, encoding a snapshot of
+ * a still-empty doc instead of its real content.
+ */
+export async function encodeSnapshot(tenantDb: PrismaClient, documentId: string): Promise<Uint8Array> {
+  const doc = await whenLoaded(tenantDb, documentId);
   return Y.encodeSnapshotV2(Y.snapshot(doc));
 }
 
 /** Reconstruct the document text at a stored snapshot (for diff/version view). */
-export function textAtSnapshot(documentId: string, snapshotBytes: Uint8Array): string {
-  const doc = getDoc(documentId);
+export async function textAtSnapshot(tenantDb: PrismaClient, documentId: string, snapshotBytes: Uint8Array): Promise<string> {
+  const doc = await whenLoaded(tenantDb, documentId);
   const snap = Y.decodeSnapshotV2(snapshotBytes);
   const restored = Y.createDocFromSnapshot(doc, snap);
   return snapshotText(restored);
@@ -93,12 +84,10 @@ export function textAtSnapshot(documentId: string, snapshotBytes: Uint8Array): s
  * We compute the state-vector diff and reset the current fragment content to
  * match the snapshot's text within a transaction tagged as a rollback.
  */
-export function rollbackToSnapshot(documentId: string, snapshotBytes: Uint8Array): void {
-  const doc = getDoc(documentId);
+export async function rollbackToSnapshot(tenantDb: PrismaClient, documentId: string, snapshotBytes: Uint8Array): Promise<void> {
+  const doc = await whenLoaded(tenantDb, documentId);
   const snap = Y.decodeSnapshotV2(snapshotBytes);
   const restored = Y.createDocFromSnapshot(doc, snap);
   const update = Y.encodeStateAsUpdate(restored);
   Y.applyUpdate(doc, update, "rollback");
 }
-
-export { persistence };

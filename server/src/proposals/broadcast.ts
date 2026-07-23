@@ -1,4 +1,4 @@
-import * as Y from "yjs";
+import type { PrismaClient } from "@prisma/client";
 import { getDoc } from "../yjs/docStore.js";
 import type { DiffProposal } from "@docket/shared";
 
@@ -10,21 +10,7 @@ import type { DiffProposal } from "@docket/shared";
  */
 const PROPOSALS_MAP = "proposals";
 
-function proposalsMap(documentId: string): Y.Map<DiffProposal> {
-  return getDoc(documentId).getMap<DiffProposal>(PROPOSALS_MAP);
-}
-
-export function upsertProposal(p: DiffProposal): void {
-  const map = proposalsMap(p.documentId);
+export function upsertProposal(tenantDb: PrismaClient, p: DiffProposal): void {
+  const map = getDoc(tenantDb, p.documentId).getMap<DiffProposal>(PROPOSALS_MAP);
   map.doc!.transact(() => map.set(p.id, p), "proposal-broadcast");
-}
-
-export function upsertMany(documentId: string, ps: DiffProposal[]): void {
-  const map = proposalsMap(documentId);
-  map.doc!.transact(() => ps.forEach((p) => map.set(p.id, p)), "proposal-broadcast");
-}
-
-export function removeProposal(documentId: string, proposalId: string): void {
-  const map = proposalsMap(documentId);
-  map.doc!.transact(() => map.delete(proposalId), "proposal-broadcast");
 }

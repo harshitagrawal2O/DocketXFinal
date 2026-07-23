@@ -6,6 +6,8 @@
     "dev": "tsx watch --exclude \"**/.yjs-data/**\" --exclude \"**/*.log\" --exclude \"**/*.ldb\" src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
+    "start:api": "node dist/server.js",
+    "start:realtime": "node dist/src/realtimeEntry.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
@@ -28,7 +30,6 @@
     "pdfjs-dist": "^6.1.200",
     "pg-boss": "^10.1.5",
     "ws": "^8.18.0",
-    "y-leveldb": "^0.1.2",
     "y-protocols": "^1.0.6",
     "yjs": "^13.6.21"
   },

@@ -36,7 +36,7 @@ proposalsRouter.post("/proposals/:pid/accept", requireCap("review", docIdForProp
     const result = await acceptProposal(db, req.params.pid!, { userId: req.user!.id, name: req.user!.name });
     // Flip other runs' hunks that overlapped the newly-accepted range.
     if (result.status === "accepted" || result.status === "edited_accepted") {
-      const range = currentRangeOffsets(await whenLoaded(p.documentId), result.anchorStart, result.anchorEnd);
+      const range = currentRangeOffsets(await whenLoaded(db, p.documentId), result.anchorStart, result.anchorEnd);
       if (range) await reconcileOverlaps(db, p.documentId, range);
       // Automatic version snapshot on every accepted agent change (Phase 5).
       await saveVersion(db, p.documentId, `Auto: accepted change`, true, { userId: req.user!.id, name: req.user!.name });

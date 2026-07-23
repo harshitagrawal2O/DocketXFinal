@@ -111,6 +111,8 @@ export const docsApi = {
       /** Non-null for template-generated docs awaiting client-side seeding. */
       initialHtml: string | null;
     }>(`/api/documents/${id}`),
+  /** Short-lived token authorizing the next Yjs WS connection to this document — see server/src/yjs/wsToken.ts. */
+  yjsToken: (id: string) => req<{ token: string }>(`/api/documents/${id}/yjs-token`),
   addMember: (id: string, email: string, role: Role) =>
     req<{ userId: string; name: string; role: Role }>(`/api/documents/${id}/members`, {
       method: "POST",

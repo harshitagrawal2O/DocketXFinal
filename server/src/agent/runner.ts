@@ -135,7 +135,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
 
   // getDoc() alone can race the async leveldb load on a doc's first access in
   // this process (returns a fresh, momentarily-empty Y.Doc) — await the load.
-  const doc = await whenLoaded(documentId);
+  const doc = await whenLoaded(run.tenantDb, documentId);
   const snapshot = flattenFragment(getFragment(doc)).text;
 
   // Selection-scoped bounds resolved against the current doc.
@@ -427,7 +427,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
         await audit(documentId, "proposal_staged", run, { agentRunId: runId, proposalId: pid, detail: { hunkIndex: row.hunkIndex } });
 
         const dto = toDTO(row);
-        upsertProposal(dto);
+        upsertProposal(run.tenantDb, dto);
         totalStaged++;
         stagedReasonings.push(h.reasoning);
 
