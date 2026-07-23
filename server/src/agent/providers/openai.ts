@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 import type { Anthropic } from "@anthropic-ai/sdk";
 import { withLLMSlot } from "../../llm/limiter.js";
 import type { ProviderTurnResult, RunVikiTurnParams } from "../llmProvider.js";
