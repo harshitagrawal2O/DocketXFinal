@@ -4,7 +4,7 @@ import { useSession } from "./SessionContext";
 
 type Mode = "login" | "register";
 
-/** An admin-issued invite link looks like /?invite=<token>&email=<email> — parsed once, not re-read on every render. */
+/** An admin-issued invite link looks like /?invite=<token>&email=<email>. */
 function parseInviteFromUrl(): { token: string; email: string } | null {
   const params = new URLSearchParams(window.location.search);
   const token = params.get("invite");
@@ -37,33 +37,48 @@ export function AuthScreen() {
   }
 
   return (
-    <div className="auth-screen">
-      <form className="auth-card" onSubmit={onSubmit}>
-        <div className="auth-brand">
-          <span className="auth-logo">D</span>
+    <div className="flex min-h-screen items-center justify-center bg-background px-6 py-10 paper-texture">
+      <form
+        className="w-full max-w-md rounded-xl border border-outline-variant bg-surface-container-lowest p-8 shadow-[0_20px_40px_-10px_rgba(28,37,48,0.06)]"
+        onSubmit={onSubmit}
+      >
+        <div className="mb-8 flex items-center gap-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary font-headline-md text-headline-md text-on-primary">
+            D
+          </span>
           <div>
-            <h1>Docket</h1>
-            <p className="muted">Agentic legal drafting, reviewed by humans.</p>
+            <h1 className="font-headline-lg text-headline-lg text-primary">Docket</h1>
+            <p className="mt-1 font-body-md text-body-md text-on-surface-variant">
+              Agentic legal drafting, reviewed by humans.
+            </p>
           </div>
         </div>
 
         {invite && (
-          <div className="auth-error" style={{ background: "#eef6ee", color: "#1c5e2a", borderColor: "#bfe3c4" }}>
+          <div className="mb-5 rounded-lg border border-success bg-success-container px-4 py-3 font-body-md text-body-md text-success">
             You've been invited to join a firm on Docket. Create your account below to accept.
           </div>
         )}
 
-        <div className="auth-tabs">
+        <div className="mb-6 grid grid-cols-2 rounded-lg bg-surface-container p-1">
           <button
             type="button"
-            className={mode === "login" ? "active" : ""}
+            className={`rounded-md px-4 py-2 font-label-md text-label-md transition-colors ${
+              mode === "login"
+                ? "bg-surface-container-lowest text-primary shadow-sm"
+                : "text-on-surface-variant hover:text-primary"
+            }`}
             onClick={() => setMode("login")}
           >
             Sign in
           </button>
           <button
             type="button"
-            className={mode === "register" ? "active" : ""}
+            className={`rounded-md px-4 py-2 font-label-md text-label-md transition-colors ${
+              mode === "register"
+                ? "bg-surface-container-lowest text-primary shadow-sm"
+                : "text-on-surface-variant hover:text-primary"
+            }`}
             onClick={() => setMode("register")}
           >
             Create account
@@ -71,9 +86,10 @@ export function AuthScreen() {
         </div>
 
         {mode === "register" && (
-          <label className="field">
-            <span>Name</span>
+          <label className="mb-4 block">
+            <span className="mb-2 block font-label-md text-label-md text-on-surface-variant">Name</span>
             <input
+              className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-body-md text-on-surface outline-none transition-colors placeholder:text-outline focus:border-primary"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -83,9 +99,10 @@ export function AuthScreen() {
           </label>
         )}
 
-        <label className="field">
-          <span>Email</span>
+        <label className="mb-4 block">
+          <span className="mb-2 block font-label-md text-label-md text-on-surface-variant">Email</span>
           <input
+            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-body-md text-on-surface outline-none transition-colors placeholder:text-outline focus:border-primary"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -95,9 +112,10 @@ export function AuthScreen() {
           />
         </label>
 
-        <label className="field">
-          <span>Password</span>
+        <label className="mb-5 block">
+          <span className="mb-2 block font-label-md text-label-md text-on-surface-variant">Password</span>
           <input
+            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 font-body-md text-body-md text-on-surface outline-none transition-colors placeholder:text-outline focus:border-primary"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -107,13 +125,21 @@ export function AuthScreen() {
           />
         </label>
 
-        {error && <div className="auth-error">{error}</div>}
+        {error && (
+          <div className="mb-5 rounded-lg border border-error/30 bg-error-container px-4 py-3 font-body-md text-body-md text-on-error-container">
+            {error}
+          </div>
+        )}
 
-        <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
-          {busy ? "Working…" : mode === "login" ? "Sign in" : "Create account"}
+        <button
+          className="flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3 font-label-md text-label-md text-on-primary transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          type="submit"
+          disabled={busy}
+        >
+          {busy ? "Working..." : mode === "login" ? "Sign in" : "Create account"}
         </button>
 
-        <p className="muted auth-hint">
+        <p className="mt-5 font-body-md text-body-md text-on-surface-variant">
           Dev shortcut: set <code>localStorage.docket_dev_user_id</code> to impersonate a
           seeded user, then reload.
         </p>
