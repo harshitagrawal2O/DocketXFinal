@@ -24,9 +24,31 @@ import { adminRouter } from "./routes/admin.js";
  */
 export const app = express();
 
+const configuredWebOrigins = (process.env.WEB_ORIGIN ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter((origin) => origin && !origin.includes("REPLACE_WITH"));
+
+function isAllowedWebOrigin(origin: string): boolean {
+  if (configuredWebOrigins.includes(origin)) return true;
+  try {
+    const url = new URL(origin);
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
+    return url.protocol === "https:" && url.hostname.endsWith(".vercel.app");
+  } catch {
+    return false;
+  }
+}
+
 app.use(
   cors({
-    origin: process.env.WEB_ORIGIN ?? true,
+    origin(origin, callback) {
+      if (!origin || isAllowedWebOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error(`CORS blocked origin: ${origin}`));
+    },
     credentials: true,
   }),
 );
