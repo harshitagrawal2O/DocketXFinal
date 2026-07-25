@@ -2,9 +2,9 @@
   "installCommand": "cd .. && npm ci",
   "buildCommand": "cd .. && npx prisma generate --schema=server/prisma/schema.prisma && npm run build -w packages/shared && npm run build -w server",
   "functions": {
-    "dist/server.js": {
+    "api/index.ts": {
       "maxDuration": 10
     }
   },
-  "rewrites": [{ "source": "/(.*)", "destination": "/dist/server.js" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
 }
