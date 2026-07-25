@@ -21,7 +21,14 @@
 // needed this; AuditEvent/Version already did this for the same reason
 // before organizations existed at all).
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" covers local dev (Windows/Mac/whatever this runs on); Vercel's
+  // Node.js Function runtime is Amazon Linux, which needs its own matching
+  // query-engine binary explicitly listed here — prisma generate only builds
+  // for the platform it runs on unless told otherwise, and a mismatch here
+  // is a common cause of a serverless function crashing on every request
+  // while working perfectly locally.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
