@@ -2,7 +2,9 @@
   "installCommand": "cd .. && npm ci",
   "buildCommand": "cd .. && npm run build -w packages/shared && npm run build -w server",
   "functions": {
-    "dist/server.js": {}
+    "dist/server.js": {
+      "maxDuration": 10
+    }
   },
   "rewrites": [{ "source": "/(.*)", "destination": "/dist/server.js" }]
 }
