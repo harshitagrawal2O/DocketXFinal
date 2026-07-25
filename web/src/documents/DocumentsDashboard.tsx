@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DocumentSummary, Role } from "@docket/shared";
-import { docsApi } from "@/lib/api";
+import { ApiError, docsApi } from "@/lib/api";
 
 const KIND_LABEL: Record<DocumentSummary["kind"], string> = {
   contract: "Contract",
@@ -107,7 +107,7 @@ export function DocumentsDashboard({
     docsApi
       .list()
       .then((d) => alive && setDocs(d))
-      .catch(() => alive && setError("Could not load your documents."));
+      .catch((e: unknown) => alive && setError(e instanceof ApiError ? e.message : "Could not load your documents."));
     return () => {
       alive = false;
     };

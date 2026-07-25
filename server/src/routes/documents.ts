@@ -11,59 +11,71 @@ export const documentsRouter = Router();
 documentsRouter.use(requireAuth, requireTenantDb);
 
 documentsRouter.get("/", async (req: AuthedRequest, res) => {
-  const db = req.tenantDb!;
-  const memberships = await db.documentMember.findMany({
-    where: { userId: req.user!.id },
-    include: { document: true },
-    orderBy: { document: { updatedAt: "desc" } },
-  });
-  const docIds = memberships.map((m) => m.documentId);
-  const pending = await db.diffProposal.findMany({
-    where: { documentId: { in: docIds }, status: { in: ["staged", "streaming"] } },
-    select: { documentId: true },
-    distinct: ["documentId"],
-  });
-  const inReview = new Set(pending.map((p) => p.documentId));
+  try {
+    const db = req.tenantDb!;
+    const memberships = await db.documentMember.findMany({
+      where: { userId: req.user!.id },
+      include: { document: true },
+      orderBy: { document: { updatedAt: "desc" } },
+    });
+    const docIds = memberships.map((m) => m.documentId);
+    const pending = await db.diffProposal.findMany({
+      where: { documentId: { in: docIds }, status: { in: ["staged", "streaming"] } },
+      select: { documentId: true },
+      distinct: ["documentId"],
+    });
+    const inReview = new Set(pending.map((p) => p.documentId));
 
-  const summaries: DocumentSummary[] = memberships.map((m) => ({
-    id: m.document.id,
-    title: m.document.title,
-    kind: m.document.kind as DocumentSummary["kind"],
-    myRole: m.role as Role,
-    updatedAt: m.document.updatedAt.toISOString(),
-    status: inReview.has(m.documentId) ? "in_review" : "draft",
-  }));
-  res.json(summaries);
+    const summaries: DocumentSummary[] = memberships.map((m) => ({
+      id: m.document.id,
+      title: m.document.title,
+      kind: m.document.kind as DocumentSummary["kind"],
+      myRole: m.role as Role,
+      updatedAt: m.document.updatedAt.toISOString(),
+      status: inReview.has(m.documentId) ? "in_review" : "draft",
+    }));
+    res.json(summaries);
+  } catch (err) {
+    const message = (err as Error).message;
+    console.error("[documents] list failed:", (err as Error).stack ?? message);
+    res.status(500).json({ error: message });
+  }
 });
 
 documentsRouter.post("/", async (req: AuthedRequest, res) => {
-  const { title, kind } = req.body ?? {};
-  if (!title) return res.status(400).json({ error: "title required" });
-  const doc = await req.tenantDb!.document.create({
-    data: {
-      title,
-      kind: kind ?? "contract",
-      ownerId: req.user!.id,
-      members: {
-        create: {
-          userId: req.user!.id,
-          userName: req.user!.name,
-          userEmail: req.user!.email,
-          userColor: req.user!.color,
-          role: "owner",
+  try {
+    const { title, kind } = req.body ?? {};
+    if (!title) return res.status(400).json({ error: "title required" });
+    const doc = await req.tenantDb!.document.create({
+      data: {
+        title,
+        kind: kind ?? "contract",
+        ownerId: req.user!.id,
+        members: {
+          create: {
+            userId: req.user!.id,
+            userName: req.user!.name,
+            userEmail: req.user!.email,
+            userColor: req.user!.color,
+            role: "owner",
+          },
         },
       },
-    },
-  });
-  const summary: DocumentSummary = {
-    id: doc.id,
-    title: doc.title,
-    kind: doc.kind as DocumentSummary["kind"],
-    myRole: "owner",
-    updatedAt: doc.updatedAt.toISOString(),
-    status: "draft",
-  };
-  return res.json(summary);
+    });
+    const summary: DocumentSummary = {
+      id: doc.id,
+      title: doc.title,
+      kind: doc.kind as DocumentSummary["kind"],
+      myRole: "owner",
+      updatedAt: doc.updatedAt.toISOString(),
+      status: "draft",
+    };
+    return res.json(summary);
+  } catch (err) {
+    const message = (err as Error).message;
+    console.error("[documents] create failed:", (err as Error).stack ?? message);
+    return res.status(500).json({ error: message });
+  }
 });
 
 documentsRouter.get("/:id", async (req: AuthedRequest, res) => {

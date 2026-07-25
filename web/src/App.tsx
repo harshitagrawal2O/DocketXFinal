@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { DocumentSummary } from "@docket/shared";
 import { useSession } from "@/session/SessionContext";
 import { AuthScreen } from "@/session/AuthScreen";
-import { docsApi } from "@/lib/api";
+import { ApiError, docsApi } from "@/lib/api";
 import { TopNav, type NavView } from "@/shell/TopNav";
 import { DocumentsDashboard } from "@/documents/DocumentsDashboard";
 import { DocumentWorkspace } from "@/documents/DocumentWorkspace";
@@ -67,8 +67,8 @@ export function App() {
       setDocsReloadKey((k) => k + 1);
       setScreen("dashboard");
       setSelectedId(doc.id);
-    } catch {
-      setCreateError("Could not create the document. Please try again.");
+    } catch (e) {
+      setCreateError(e instanceof ApiError ? e.message : "Could not create the document. Please try again.");
     }
   }
 
