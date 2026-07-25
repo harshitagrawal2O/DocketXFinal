@@ -54,3 +54,5 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   console.error("[api] error:", err.message);
   res.status(500).json({ error: err.message });
 });
+
+export default app;

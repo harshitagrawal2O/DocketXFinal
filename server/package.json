@@ -2,6 +2,9 @@
   "name": "server",
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "tsx watch --exclude \"**/.yjs-data/**\" --exclude \"**/*.log\" --exclude \"**/*.ldb\" src/index.ts",
     "postinstall": "prisma generate",
