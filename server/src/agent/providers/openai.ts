@@ -85,24 +85,26 @@ export async function runOpenAITurn(params: RunVikiTurnParams): Promise<Provider
     );
 
     let drafting = false;
-    let toolCallId: string | undefined;
-    let toolCallName: string | undefined;
-    let argsAccum = "";
+    const toolCalls = new Map<number, { id?: string; name?: string; args: string }>();
     let inputTokens = 0;
     let outputTokens = 0;
 
     for await (const chunk of stream) {
-      const tc = chunk.choices[0]?.delta?.tool_calls?.[0];
-      if (tc) {
-        if (!drafting) {
-          drafting = true;
-          params.onDraftingStart();
-        }
-        if (tc.id) toolCallId = tc.id;
-        if (tc.function?.name) toolCallName = tc.function.name;
-        if (tc.function?.arguments) {
-          argsAccum += tc.function.arguments;
-          params.onRawJsonDelta(argsAccum);
+      for (const choice of chunk.choices ?? []) {
+        for (const tc of choice.delta?.tool_calls ?? []) {
+          if (!drafting) {
+            drafting = true;
+            params.onDraftingStart();
+          }
+          const index = tc.index ?? 0;
+          const current = toolCalls.get(index) ?? { args: "" };
+          if (tc.id) current.id = tc.id;
+          if (tc.function?.name) current.name = tc.function.name;
+          if (tc.function?.arguments) {
+            current.args += tc.function.arguments;
+            params.onRawJsonDelta(current.args);
+          }
+          toolCalls.set(index, current);
         }
       }
       if (chunk.usage) {
@@ -112,17 +114,18 @@ export async function runOpenAITurn(params: RunVikiTurnParams): Promise<Provider
     }
 
     const usage = { input_tokens: inputTokens, output_tokens: outputTokens };
-    if (!toolCallId || !toolCallName) {
+    const selected = Array.from(toolCalls.values()).find((tc) => tc.id && tc.name);
+    if (!selected?.id || !selected.name) {
       return { toolUse: null, assistantContent: [], usage, modelUsed: MODEL };
     }
 
     let input: unknown = {};
     try {
-      input = argsAccum ? JSON.parse(argsAccum) : {};
+      input = selected.args ? JSON.parse(selected.args) : {};
     } catch {
       input = {};
     }
-    const toolUse: Anthropic.ToolUseBlock = { type: "tool_use", id: toolCallId, name: toolCallName, input };
+    const toolUse: Anthropic.ToolUseBlock = { type: "tool_use", id: selected.id, name: selected.name, input };
     return { toolUse, assistantContent: [toolUse], usage, modelUsed: MODEL };
   });
 }

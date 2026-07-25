@@ -488,7 +488,7 @@ export async function runAgent(run: ActiveRun): Promise<void> {
       emit(runId, { type: "run_interrupted", agentRunId: runId });
     } else {
       // Never log document contents; only the error message.
-      console.error(`[viki] run ${runId} error:`, (err as Error).message);
+      console.error(`[viki] run ${runId} error:`, (err as Error).stack ?? (err as Error).message);
       assistantSummary = summarizeAssistantTurn({ stagedReasonings, blockedReasons: allBlockedReasons, errorMessage: (err as Error).message });
       emit(runId, { type: "error", message: (err as Error).message });
     }

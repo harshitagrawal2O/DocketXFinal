@@ -72,8 +72,8 @@ export function stopRun(runId: string): boolean {
   return true;
 }
 
-/** Terminal run: keep briefly so late SSE subscribers can drain, then drop. */
-const DRAIN_TTL_MS = 5000;
+/** Terminal run: keep long enough for late/retried SSE subscribers to drain. */
+const DRAIN_TTL_MS = 2 * 60 * 1000;
 /**
  * A run paused on a clarifying question needs to survive until a HUMAN types
  * an answer — seconds to several minutes, not milliseconds. Using the short
